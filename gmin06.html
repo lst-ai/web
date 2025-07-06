@@ -1,0 +1,385 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快樂的井字遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fef3c7;
+            min-height: 100vh;
+        }
+        
+        .board {
+            background-color: #f59e0b;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cell {
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cell:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes flash {
+            0%, 50%, 100% { opacity: 1; transform: scale(1); }
+            25%, 75% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .symbol {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        
+        .flashing {
+            animation: flash 0.5s ease-in-out infinite;
+        }
+        
+        .fadeOut {
+            animation: fadeOut 1s ease-in-out forwards;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .winner-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 20;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .winner-message.show {
+            opacity: 1;
+        }
+        
+        .footer a {
+            color: #d97706;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer a:hover {
+            color: #92400e;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h1 class="text-3xl font-bold text-center text-amber-600 mb-2">快樂的井字遊戲</h1>
+        <p class="text-center text-amber-500 mb-3">😄 vs ❤️</p>
+        <p class="text-center text-gray-600 text-sm mb-4">三子連線即可獲勝</p>
+        
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center">
+                <span class="text-2xl">😄</span>
+                <span id="player1-score" class="ml-2 text-lg font-semibold text-amber-600">0</span>
+            </div>
+            <div class="bg-amber-100 px-4 py-1 rounded-full">
+                <span id="status" class="text-amber-800 font-medium">輪到 😄</span>
+            </div>
+            <div class="flex items-center">
+                <span id="player2-score" class="mr-2 text-lg font-semibold text-rose-700">0</span>
+                <span class="text-2xl">❤️</span>
+            </div>
+        </div>
+        
+        <div class="board relative w-full aspect-square rounded-xl mb-4">
+            <div class="grid grid-cols-3 grid-rows-3 h-full w-full">
+                <div class="cell flex items-center justify-center" data-index="0"></div>
+                <div class="cell flex items-center justify-center" data-index="1"></div>
+                <div class="cell flex items-center justify-center" data-index="2"></div>
+                <div class="cell flex items-center justify-center" data-index="3"></div>
+                <div class="cell flex items-center justify-center" data-index="4"></div>
+                <div class="cell flex items-center justify-center" data-index="5"></div>
+                <div class="cell flex items-center justify-center" data-index="6"></div>
+                <div class="cell flex items-center justify-center" data-index="7"></div>
+                <div class="cell flex items-center justify-center" data-index="8"></div>
+            </div>
+            <div id="confetti-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+            <div id="winner-message" class="winner-message">獲勝者：<span id="winner-symbol"></span></div>
+        </div>
+        
+        <button id="restart" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg font-medium shadow-md transition-colors">
+            重新開始
+        </button>
+        
+        <div class="footer mt-6 text-center text-sm text-gray-600">
+            遊戲設計與製作：Lu ShuTing｜了解更多 
+            <a href="https://www.facebook.com/yobi.lu" target="_blank">ⓕ https://www.facebook.com/yobi.lu</a> ｜
+            📧 luuyobi@gmail.com
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = document.querySelectorAll('.cell');
+            const status = document.getElementById('status');
+            const restartBtn = document.getElementById('restart');
+            const player1Score = document.getElementById('player1-score');
+            const player2Score = document.getElementById('player2-score');
+            const confettiContainer = document.getElementById('confetti-container');
+            const winnerMessage = document.getElementById('winner-message');
+            const winnerSymbol = document.getElementById('winner-symbol');
+            
+            let board = ['', '', '', '', '', '', '', '', ''];
+            let currentPlayer = 'smile';
+            let gameActive = true;
+            let scores = { smile: 0, heart: 0 };
+            
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // 橫行
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // 直行
+                [0, 4, 8], [2, 4, 6]             // 對角線
+            ];
+            
+            const symbols = {
+                smile: '<span class="symbol">😄</span>',
+                heart: '<span class="symbol">❤️</span>'
+            };
+            
+            const playerNames = {
+                smile: '😄',
+                heart: '❤️'
+            };
+            
+            function handleCellClick(clickedCellEvent) {
+                const clickedCell = clickedCellEvent.target.closest('.cell');
+                if (!clickedCell) return;
+                
+                const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+                
+                if (board[clickedCellIndex] !== '' || !gameActive) {
+                    return;
+                }
+                
+                board[clickedCellIndex] = currentPlayer;
+                clickedCell.innerHTML = symbols[currentPlayer];
+                
+                checkResult();
+            }
+            
+            function checkResult() {
+                let roundWon = false;
+                let winningPattern = null;
+                
+                for (let i = 0; i < winPatterns.length; i++) {
+                    const [a, b, c] = winPatterns[i];
+                    
+                    if (board[a] === '' || board[b] === '' || board[c] === '') {
+                        continue;
+                    }
+                    
+                    if (board[a] === board[b] && board[b] === board[c]) {
+                        roundWon = true;
+                        winningPattern = winPatterns[i];
+                        break;
+                    }
+                }
+                
+                if (roundWon) {
+                    gameActive = false;
+                    scores[currentPlayer]++;
+                    updateScores();
+                    
+                    // 顯示獲勝者
+                    winnerSymbol.innerHTML = playerNames[currentPlayer];
+                    
+                    // 閃爍獲勝的三個符號
+                    flashWinningCells(winningPattern);
+                    
+                    // 創建慶賀彩帶
+                    createConfetti();
+                    
+                    // 5秒後顯示獲勝訊息並緩慢消失
+                    setTimeout(() => {
+                        winnerMessage.classList.add('show');
+                        
+                        // 緩慢淡出獲勝的符號
+                        fadeOutWinningCells(winningPattern);
+                        
+                        // 2秒後重置遊戲
+                        setTimeout(() => {
+                            resetGame();
+                        }, 2000);
+                    }, 5000);
+                    
+                    return;
+                }
+                
+                let roundDraw = !board.includes('');
+                if (roundDraw) {
+                    gameActive = false;
+                    setTimeout(resetGame, 1000);
+                    return;
+                }
+                
+                changePlayer();
+            }
+            
+            function flashWinningCells(pattern) {
+                const [a, b, c] = pattern;
+                
+                // 獲取獲勝的單元格
+                const winningCells = [
+                    document.querySelector(`.cell[data-index="${a}"]`),
+                    document.querySelector(`.cell[data-index="${b}"]`),
+                    document.querySelector(`.cell[data-index="${c}"]`)
+                ];
+                
+                // 為每個獲勝單元格添加閃爍動畫
+                winningCells.forEach(cell => {
+                    const symbolElement = cell.querySelector('.symbol');
+                    if (symbolElement) {
+                        symbolElement.classList.add('flashing');
+                    }
+                });
+            }
+            
+            function fadeOutWinningCells(pattern) {
+                const [a, b, c] = pattern;
+                
+                // 獲取獲勝的單元格
+                const winningCells = [
+                    document.querySelector(`.cell[data-index="${a}"]`),
+                    document.querySelector(`.cell[data-index="${b}"]`),
+                    document.querySelector(`.cell[data-index="${c}"]`)
+                ];
+                
+                // 為每個獲勝單元格添加淡出動畫
+                winningCells.forEach(cell => {
+                    const symbolElement = cell.querySelector('.symbol');
+                    if (symbolElement) {
+                        symbolElement.classList.remove('flashing');
+                        symbolElement.classList.add('fadeOut');
+                    }
+                });
+            }
+            
+            function createConfetti() {
+                // 清除之前的彩帶
+                confettiContainer.innerHTML = '';
+                
+                // 創建彩帶
+                const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080'];
+                const confettiCount = 100;
+                
+                for (let i = 0; i < confettiCount; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        const size = Math.random() * 10 + 5;
+                        const shape = Math.random() > 0.5 ? 'circle' : 'rect';
+                        
+                        confetti.style.backgroundColor = color;
+                        confetti.style.width = `${size}px`;
+                        confetti.style.height = `${size}px`;
+                        
+                        if (shape === 'circle') {
+                            confetti.style.borderRadius = '50%';
+                        }
+                        
+                        // 初始位置
+                        const boardRect = document.querySelector('.board').getBoundingClientRect();
+                        const startX = Math.random() * boardRect.width;
+                        
+                        confetti.style.left = `${startX}px`;
+                        confetti.style.top = '0px';
+                        
+                        // 動畫
+                        const duration = Math.random() * 3 + 3;
+                        
+                        // 隨機移動
+                        const endX = startX + (Math.random() * 200 - 100);
+                        const endY = boardRect.height;
+                        
+                        confetti.animate([
+                            { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+                            { transform: `translate(${endX - startX}px, ${endY}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                        ], {
+                            duration: duration * 1000,
+                            delay: Math.random() * 2000,
+                            easing: 'cubic-bezier(0.1, 0.8, 0.9, 1)',
+                            fill: 'forwards'
+                        });
+                        
+                        confettiContainer.appendChild(confetti);
+                        
+                        // 7秒後移除彩帶
+                        setTimeout(() => {
+                            if (confetti.parentNode === confettiContainer) {
+                                confettiContainer.removeChild(confetti);
+                            }
+                        }, 7000);
+                    }, Math.random() * 2000); // 隨機延遲彩帶出現時間
+                }
+            }
+            
+            function changePlayer() {
+                currentPlayer = currentPlayer === 'smile' ? 'heart' : 'smile';
+                status.textContent = `輪到 ${playerNames[currentPlayer]}`;
+            }
+            
+            function updateScores() {
+                player1Score.textContent = scores.smile;
+                player2Score.textContent = scores.heart;
+            }
+            
+            function resetGame() {
+                board = ['', '', '', '', '', '', '', '', ''];
+                gameActive = true;
+                currentPlayer = 'smile';
+                
+                cells.forEach(cell => {
+                    cell.innerHTML = '';
+                });
+                
+                status.textContent = `輪到 ${playerNames[currentPlayer]}`;
+                confettiContainer.innerHTML = '';
+                winnerMessage.classList.remove('show');
+            }
+            
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+            
+            restartBtn.addEventListener('click', resetGame);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ac3ddfc315f1cc',t:'MTc1MTc3NDkxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
