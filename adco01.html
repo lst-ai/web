@@ -1,0 +1,1117 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-數位教學神器大解鎖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #ffd8b8 0%, #f5e3ff 100%);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .card-container {
+            perspective: 1000px;
+        }
+
+        .card {
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            height: 100%;
+        }
+
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            overflow-y: auto;
+        }
+
+        .flipped {
+            transform: rotateY(180deg);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transform: scale(0);
+            transition: transform 0.3s ease;
+        }
+
+        .badge.show {
+            transform: scale(1);
+        }
+
+        .draggable {
+            cursor: grab;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+        }
+
+        .drop-target {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .drop-target.highlight {
+            border-color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+
+        .drop-target.correct {
+            border-color: #22c55e;
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+
+        .drop-target.incorrect {
+            border-color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .celebration.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .celebration-content {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 90%;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-30px);}
+            60% {transform: translateY(-15px);}
+        }
+
+        .tool-title {
+            font-size: 1.75rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航 -->
+    <nav class="bg-gradient-to-r from-orange-400 to-purple-500 text-white p-4 shadow-lg">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold text-center">LST遊戲室-數位教學神器大解鎖</h1>
+            <p class="text-xl text-center mt-2">趣味互動 × 教師專屬推薦 × 工具配對全攻略！</p>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- 歡迎區塊 -->
+        <div class="bg-white rounded-xl p-8 mb-8 shadow-xl border-l-4 border-orange-400">
+            <h2 class="text-3xl font-bold mb-4 text-purple-700">歡迎來到數位工具遊戲室！</h2>
+            <p class="text-xl mb-6 text-gray-700">探索這些強大的數位工具，讓您的教學更有趣、更高效！</p>
+            <div class="flex flex-wrap gap-4">
+                <button id="startExplore" class="bg-orange-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors shadow-md">開始探索</button>
+                <button id="startQuiz" class="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition-colors shadow-md">找到適合我的課程</button>
+                <button id="startGame" class="bg-teal-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-teal-700 transition-colors shadow-md">工具配對遊戲</button>
+            </div>
+        </div>
+
+        <!-- 工具卡片區 -->
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">數位工具探索</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12" id="toolCards">
+            <!-- Padlet 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-red-500">
+                        <div class="flex-1">
+                            <div class="bg-red-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">P</div>
+                            <h3 class="tool-title text-center mb-4 text-red-600">Padlet</h3>
+                            <p class="text-gray-700 text-center">教師課堂互動即時牆</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-red-500">
+                        <h3 class="tool-title mb-4 text-red-600">Padlet｜教師課堂互動即時牆</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">•</span>
+                                <span>QR 掃碼即用，免帳號快速進入課堂</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">•</span>
+                                <span>適合點名、投票、討論與回饋任務</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">•</span>
+                                <span>支援圖文影音上傳，方便紀錄多元觀點</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">•</span>
+                                <span>多種牆面版型，配合教案自由變化</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">•</span>
+                                <span>雙向互動設計，讓師生交流更自然</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-red-500 mr-2">•</span>
+                                <span>貼文可匯出 PDF/Excel，方便彙整報告</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Padlet TA 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-orange-500">
+                        <div class="flex-1">
+                            <div class="bg-orange-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">PT</div>
+                            <h3 class="tool-title text-center mb-4 text-orange-600">Padlet TA</h3>
+                            <p class="text-gray-700 text-center">AI 備課與教學設計助理</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-orange-500">
+                        <h3 class="tool-title mb-4 text-orange-600">Padlet TA｜AI 備課與教學設計助理</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-2">•</span>
+                                <span>一鍵產生選擇題與解析，可轉 Google 表單</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-2">•</span>
+                                <span>智慧分組工具，依能力或特質分同異質組別</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-2">•</span>
+                                <span>教案與簡報自動生成，教學流程、資源一應俱全</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-2">•</span>
+                                <span>閱讀段落分級，適性教學更精準</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-2">•</span>
+                                <span>教師小工具包含 QR、短連結、抽籤器等</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-2">•</span>
+                                <span>節省備課時間，提升教學設計效率</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wordwall 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-yellow-500">
+                        <div class="flex-1">
+                            <div class="bg-yellow-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">W</div>
+                            <h3 class="tool-title text-center mb-4 text-yellow-600">Wordwall</h3>
+                            <p class="text-gray-700 text-center">互動式出題 + 探索已有資源</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-yellow-500">
+                        <h3 class="tool-title mb-4 text-yellow-600">Wordwall｜互動式出題 + 探索已有資源</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">•</span>
+                                <span>40+款互動模板，配對、問答、轉盤應用廣泛</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">•</span>
+                                <span>繁中支援語音，語文與社會課超實用</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">•</span>
+                                <span>快速建立即玩遊戲，教師出題無負擔</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">•</span>
+                                <span>自動記分、即時回饋，節省批閱時間</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">•</span>
+                                <span>AI出題｜善用小工具出題更便利</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-yellow-500 mr-2">•</span>
+                                <span>暖身、小組競賽、課後複習首選</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NotebookLM 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-green-500">
+                        <div class="flex-1">
+                            <div class="bg-green-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">N</div>
+                            <h3 class="tool-title text-center mb-4 text-green-600">NotebookLM</h3>
+                            <p class="text-gray-700 text-center">AI 教師知識統整與Podcast製作幫手</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-green-500">
+                        <h3 class="tool-title mb-4 text-green-600">NotebookLM｜AI 教師知識統整與Podcast製作幫手</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">•</span>
+                                <span>教材上傳即讀懂，自動摘要＋知識卡片彙整</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">•</span>
+                                <span>生成雙人 Podcast 對話腳本，教師可朗讀製作聽力資源</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">•</span>
+                                <span>問答產出對教材掌握更深入，設計提問更省力</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">•</span>
+                                <span>降低 AI 幻覺風險，答案依據資料本身，提升可信度</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">•</span>
+                                <span>教材統整 + 教案大綱自動生成，備課完整不中斷</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">•</span>
+                                <span>與 Google 文件整合，教案可直接轉存與分享</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ChatGPT 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-blue-500">
+                        <div class="flex-1">
+                            <div class="bg-blue-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">C</div>
+                            <h3 class="tool-title text-center mb-4 text-blue-600">ChatGPT</h3>
+                            <p class="text-gray-700 text-center">教師創意設計與語言應用萬能助手</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-blue-500">
+                        <h3 class="tool-title mb-4 text-blue-600">ChatGPT｜教師創意設計與語言應用萬能助手</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-blue-500 mr-2">•</span>
+                                <span>教案、評語、活動一鍵生成，節省構思時間</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-blue-500 mr-2">•</span>
+                                <span>自訂角色語氣輸出腳本，情境模擬真實教學語境</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-blue-500 mr-2">•</span>
+                                <span>創建專屬 GPT，打造個人化 AI 助教陪你備課</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-blue-500 mr-2">•</span>
+                                <span>語言轉換、句型改寫超強大，語文課應用靈活</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-blue-500 mr-2">•</span>
+                                <span>發想問題與活動流程設計最佳工具，創意不斷電</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-blue-500 mr-2">•</span>
+                                <span>信件、公告、簡報草稿一次完成，行政教學兩用</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gemini 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-purple-500">
+                        <div class="flex-1">
+                            <div class="bg-purple-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">G</div>
+                            <h3 class="tool-title text-center mb-4 text-purple-600">Gemini</h3>
+                            <p class="text-gray-700 text-center">Google 教師整合輸出與創作神器</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-purple-500">
+                        <h3 class="tool-title mb-4 text-purple-600">Gemini｜Google 教師整合輸出與創作神器</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-purple-500 mr-2">•</span>
+                                <span>整合 Google 文件內容並重組摘要，簡報、課綱、回應函草稿快速完成</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-purple-500 mr-2">•</span>
+                                <span>支援網路查詢與補全資料，與時事同步，教材更新快</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-purple-500 mr-2">•</span>
+                                <span>彙整資訊成條列大綱或表格，適合教學進度與課程設計書</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-purple-500 mr-2">•</span>
+                                <span>可寫程式、生成小遊戲腳本，資訊、科技、專題課程超適用</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-purple-500 mr-2">•</span>
+                                <span>自然語言操作簡單上手，熟悉 Google 環境即會用</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-purple-500 mr-2">•</span>
+                                <span>適合行政簡報、報告整合、跨文件彙整分析</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canva 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-pink-500">
+                        <div class="flex-1">
+                            <div class="bg-pink-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">C</div>
+                            <h3 class="tool-title text-center mb-4 text-pink-600">Canva</h3>
+                            <p class="text-gray-700 text-center">教學視覺化設計 + 小遊戲創作平台</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-pink-500">
+                        <h3 class="tool-title mb-4 text-pink-600">Canva｜教學視覺化設計 + 小遊戲創作平台</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-pink-500 mr-2">•</span>
+                                <span>數千種簡報與學習單模板，教案視覺一次搞定</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-pink-500 mr-2">•</span>
+                                <span>拖拉操作上手快，非設計背景也能美編教材</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-pink-500 mr-2">•</span>
+                                <span>製作動畫簡報、影片、動態學習單，吸睛又易懂</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-pink-500 mr-2">•</span>
+                                <span>教師共備與學生合作功能強，支援多方即時共編</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-pink-500 mr-2">•</span>
+                                <span>匯出 PDF、PPT、影片皆可，課堂展示或成果上傳都方便</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-pink-500 mr-2">•</span>
+                                <span>搭配 Vibe Coding 製作互動小遊戲，引導式教學任務更有趣</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gamma 卡片 -->
+            <div class="card-container h-96">
+                <div class="card rounded-xl shadow-lg h-full">
+                    <div class="card-front bg-white rounded-xl p-6 flex flex-col h-full border-t-8 border-teal-500">
+                        <div class="flex-1">
+                            <div class="bg-teal-500 text-white w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 font-bold">G</div>
+                            <h3 class="tool-title text-center mb-4 text-teal-600">Gamma</h3>
+                            <p class="text-gray-700 text-center">AI 驅動的簡報與內容創作平台</p>
+                        </div>
+                        <button class="flip-btn mt-4 bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors w-full font-bold">了解更多</button>
+                    </div>
+                    <div class="card-back bg-white rounded-xl p-6 border-t-8 border-teal-500">
+                        <h3 class="tool-title mb-4 text-teal-600">Gamma｜AI 驅動的簡報與內容創作平台</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mr-2">•</span>
+                                <span>AI 一鍵生成簡報與網站，快速建立完整視覺內容</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mr-2">•</span>
+                                <span>卡片式模組化設計，內容拖拉調整彈性高</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mr-2">•</span>
+                                <span>支援嵌入影片、雲端文件與互動元件，教學更豐富</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mr-2">•</span>
+                                <span>多人即時協作，適合備課共編與專題簡報設計</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mr-2">•</span>
+                                <span>簡報可匯出為 PDF、PPT 或網站，彈性展示多場域</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mr-2">•</span>
+                                <span>支援繁體中文介面，教師快速上手無障礙</span>
+                            </li>
+                        </ul>
+                        <button class="flip-btn mt-4 bg-teal-500 text-white py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors w-full font-bold">返回</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工具配對遊戲 -->
+        <div id="matchingGame" class="hidden bg-white rounded-xl p-6 mb-8 shadow-lg">
+            <h3 class="text-2xl font-bold mb-6 text-purple-700">工具配對遊戲</h3>
+            <p class="mb-4 text-gray-700">將教學需求拖曳到對應的工具上，看看您對這些工具的了解程度！</p>
+            
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex-1">
+                    <h4 class="font-bold mb-3 text-gray-800">教學需求</h4>
+                    <div class="space-y-3">
+                        <div class="draggable bg-blue-50 p-3 rounded-lg border border-blue-200" draggable="true" data-need="need1" data-match="Padlet">
+                            需要即時收集學生回饋和討論
+                        </div>
+                        <div class="draggable bg-green-50 p-3 rounded-lg border border-green-200" draggable="true" data-need="need2" data-match="Wordwall">
+                            想要製作互動式課堂小遊戲
+                        </div>
+                        <div class="draggable bg-yellow-50 p-3 rounded-lg border border-yellow-200" draggable="true" data-need="need3" data-match="ChatGPT">
+                            需要快速生成教案和評語
+                        </div>
+                        <div class="draggable bg-red-50 p-3 rounded-lg border border-red-200" draggable="true" data-need="need4" data-match="Canva">
+                            想要設計精美的教學簡報
+                        </div>
+                        <div class="draggable bg-purple-50 p-3 rounded-lg border border-purple-200" draggable="true" data-need="need5" data-match="NotebookLM">
+                            需要將教材轉換為知識卡片
+                        </div>
+                        <div class="draggable bg-pink-50 p-3 rounded-lg border border-pink-200" draggable="true" data-need="need6" data-match="Gemini">
+                            需要整合Google文件內容
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex-1">
+                    <h4 class="font-bold mb-3 text-gray-800">數位工具</h4>
+                    <div class="space-y-3">
+                        <div class="drop-target p-3 rounded-lg bg-white" data-tool="Padlet">
+                            <div class="font-bold text-red-600">Padlet</div>
+                            <div class="text-sm text-gray-600">教師課堂互動即時牆</div>
+                        </div>
+                        <div class="drop-target p-3 rounded-lg bg-white" data-tool="Wordwall">
+                            <div class="font-bold text-yellow-600">Wordwall</div>
+                            <div class="text-sm text-gray-600">互動式出題 + 探索已有資源</div>
+                        </div>
+                        <div class="drop-target p-3 rounded-lg bg-white" data-tool="ChatGPT">
+                            <div class="font-bold text-blue-600">ChatGPT</div>
+                            <div class="text-sm text-gray-600">教師創意設計與語言應用萬能助手</div>
+                        </div>
+                        <div class="drop-target p-3 rounded-lg bg-white" data-tool="Canva">
+                            <div class="font-bold text-pink-600">Canva</div>
+                            <div class="text-sm text-gray-600">教學視覺化設計 + 小遊戲創作平台</div>
+                        </div>
+                        <div class="drop-target p-3 rounded-lg bg-white" data-tool="NotebookLM">
+                            <div class="font-bold text-green-600">NotebookLM</div>
+                            <div class="text-sm text-gray-600">AI 教師知識統整與Podcast製作幫手</div>
+                        </div>
+                        <div class="drop-target p-3 rounded-lg bg-white" data-tool="Gemini">
+                            <div class="font-bold text-purple-600">Gemini</div>
+                            <div class="text-sm text-gray-600">Google 教師整合輸出與創作神器</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700">配對進度：<span id="matchProgress">0/6</span></span>
+                    <span class="text-gray-700">得分：<span id="matchScore">0</span></span>
+                </div>
+                <button id="resetMatch" class="mt-4 bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors">重新開始</button>
+            </div>
+        </div>
+
+        <!-- 課程推薦測驗 -->
+        <div id="toolQuiz" class="hidden bg-white rounded-xl p-6 mb-8 shadow-lg">
+            <h3 class="text-2xl font-bold mb-6 text-purple-700">找到適合我的課程</h3>
+            <p class="mb-4 text-gray-700">回答以下問題，我們將推薦最適合您的數位課程！</p>
+            
+            <div id="quizContainer">
+                <div class="quiz-question" data-question="1">
+                    <h4 class="font-bold mb-3 text-gray-800">1. 您最常遇到的教學挑戰是？</h4>
+                    <div class="space-y-2">
+                        <label class="block p-3 bg-white border border-orange-200 rounded-lg hover:bg-orange-50 cursor-pointer">
+                            <input type="radio" name="q1" value="interaction"> 學生參與度不足，課堂互動有限
+                        </label>
+                        <label class="block p-3 bg-white border border-orange-200 rounded-lg hover:bg-orange-50 cursor-pointer">
+                            <input type="radio" name="q1" value="content"> 備課時間不足，教材準備耗時
+                        </label>
+                        <label class="block p-3 bg-white border border-orange-200 rounded-lg hover:bg-orange-50 cursor-pointer">
+                            <input type="radio" name="q1" value="assessment"> 評量方式單一，難以掌握學習成效
+                        </label>
+                        <label class="block p-3 bg-white border border-orange-200 rounded-lg hover:bg-orange-50 cursor-pointer">
+                            <input type="radio" name="q1" value="visual"> 教材視覺呈現不夠吸引人
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question hidden" data-question="2">
+                    <h4 class="font-bold mb-3 text-gray-800">2. 您希望數位課程能幫助您達成什麼目標？</h4>
+                    <div class="space-y-2">
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q2" value="engagement"> 提高學生參與度和互動性
+                        </label>
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q2" value="efficiency"> 提升備課效率，節省時間
+                        </label>
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q2" value="creativity"> 增加教學創意和多元性
+                        </label>
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q2" value="feedback"> 獲得即時學習回饋和評量數據
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="quiz-question hidden" data-question="3">
+                    <h4 class="font-bold mb-3 text-gray-800">3. 您對數位工具的技術熟悉度如何？</h4>
+                    <div class="space-y-2">
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q3" value="beginner"> 初學者，希望簡單易用的工具
+                        </label>
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q3" value="intermediate"> 中等，能夠學習適度複雜的工具
+                        </label>
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q3" value="advanced"> 進階，願意投入時間學習功能豐富的工具
+                        </label>
+                        <label class="block p-3 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 cursor-pointer">
+                            <input type="radio" name="q3" value="expert"> 專家，尋找能深度整合的專業工具
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-between">
+                    <button id="prevQuestion" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors hidden">上一題</button>
+                    <button id="nextQuestion" class="bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors">下一題</button>
+                    <button id="submitQuiz" class="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors hidden">查看結果</button>
+                </div>
+            </div>
+            
+            <div id="quizResult" class="hidden">
+                <h4 class="font-bold text-xl mb-4 text-purple-700">您的推薦課程</h4>
+                <div id="recommendedTools" class="space-y-4">
+                    <!-- 結果將在這裡動態生成 -->
+                </div>
+                <button id="retakeQuiz" class="mt-6 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors">重新測驗</button>
+            </div>
+        </div>
+
+        <!-- 慶祝畫面 -->
+        <div id="celebration" class="celebration">
+            <div class="celebration-content">
+                <h2 class="text-3xl font-bold mb-4">恭喜完成！</h2>
+                <p class="text-xl mb-6">您已成功完成所有配對！</p>
+                <div class="text-5xl mb-6">🎉 🏆 🎊</div>
+                <button id="closeCelebration" class="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors">繼續探索</button>
+            </div>
+        </div>
+
+        <!-- 製作者資訊 -->
+        <div class="bg-white rounded-xl p-6 mt-8 shadow-lg text-center">
+            <p class="text-gray-700">
+                遊戲設計與製作：呂舒婷｜
+                <a href="mailto:luuyobi@gmail.com" class="text-blue-600 hover:text-blue-800">📧 luuyobi@gmail.com</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 卡片翻轉功能
+            const flipButtons = document.querySelectorAll('.flip-btn');
+            flipButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.card');
+                    card.classList.toggle('flipped');
+                });
+            });
+
+            // 導航按鈕
+            const startExplore = document.getElementById('startExplore');
+            const startQuiz = document.getElementById('startQuiz');
+            const startGame = document.getElementById('startGame');
+            const toolCards = document.getElementById('toolCards');
+            const matchingGame = document.getElementById('matchingGame');
+            const toolQuiz = document.getElementById('toolQuiz');
+
+            startExplore.addEventListener('click', function() {
+                toolCards.scrollIntoView({ behavior: 'smooth' });
+                matchingGame.classList.add('hidden');
+                toolQuiz.classList.add('hidden');
+                toolCards.classList.remove('hidden');
+            });
+
+            startGame.addEventListener('click', function() {
+                matchingGame.classList.remove('hidden');
+                toolQuiz.classList.add('hidden');
+                matchingGame.scrollIntoView({ behavior: 'smooth' });
+                resetMatchingGame();
+            });
+
+            startQuiz.addEventListener('click', function() {
+                toolQuiz.classList.remove('hidden');
+                matchingGame.classList.add('hidden');
+                toolQuiz.scrollIntoView({ behavior: 'smooth' });
+                resetQuiz();
+            });
+
+            // 工具配對遊戲功能
+            const draggables = document.querySelectorAll('.draggable');
+            const dropTargets = document.querySelectorAll('.drop-target');
+            const matchProgress = document.getElementById('matchProgress');
+            const matchScore = document.getElementById('matchScore');
+            const resetMatch = document.getElementById('resetMatch');
+            const celebration = document.getElementById('celebration');
+            const closeCelebration = document.getElementById('closeCelebration');
+
+            let matchedCount = 0;
+            let score = 0;
+            let draggedElement = null;
+
+            function resetMatchingGame() {
+                dropTargets.forEach(target => {
+                    target.classList.remove('correct', 'incorrect', 'highlight');
+                    const existingNeed = target.querySelector('.draggable');
+                    if (existingNeed) {
+                        existingNeed.remove();
+                    }
+                });
+
+                draggables.forEach(drag => {
+                    drag.style.display = 'block';
+                    drag.style.opacity = '1';
+                });
+
+                matchedCount = 0;
+                score = 0;
+                updateMatchProgress();
+            }
+
+            function updateMatchProgress() {
+                matchProgress.textContent = `${matchedCount}/6`;
+                matchScore.textContent = score;
+
+                if (matchedCount === 6) {
+                    setTimeout(() => {
+                        celebration.classList.add('show');
+                        createConfetti();
+                    }, 500);
+                }
+            }
+
+            function createConfetti() {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 5000);
+                }
+            }
+
+            closeCelebration.addEventListener('click', function() {
+                celebration.classList.remove('show');
+            });
+
+            resetMatch.addEventListener('click', resetMatchingGame);
+
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', function(e) {
+                    draggedElement = this;
+                    setTimeout(() => {
+                        this.style.opacity = '0.4';
+                    }, 0);
+                });
+
+                draggable.addEventListener('dragend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+
+            dropTargets.forEach(target => {
+                target.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('highlight');
+                });
+
+                target.addEventListener('dragleave', function() {
+                    this.classList.remove('highlight');
+                });
+
+                target.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('highlight');
+                    
+                    if (draggedElement) {
+                        const needMatch = draggedElement.dataset.match;
+                        const targetTool = this.dataset.tool;
+                        
+                        // 檢查是否已有元素在此目標
+                        if (!this.querySelector('.draggable')) {
+                            const clone = draggedElement.cloneNode(true);
+                            clone.style.opacity = '1';
+                            clone.style.cursor = 'default';
+                            clone.setAttribute('draggable', 'false');
+                            
+                            this.appendChild(clone);
+                            draggedElement.style.display = 'none';
+                            
+                            matchedCount++;
+                            
+                            if (needMatch === targetTool) {
+                                this.classList.add('correct');
+                                score += 10;
+                            } else {
+                                this.classList.add('incorrect');
+                            }
+                            
+                            updateMatchProgress();
+                        }
+                    }
+                });
+            });
+
+            // 課程推薦測驗功能
+            const quizQuestions = document.querySelectorAll('.quiz-question');
+            const prevQuestion = document.getElementById('prevQuestion');
+            const nextQuestion = document.getElementById('nextQuestion');
+            const submitQuiz = document.getElementById('submitQuiz');
+            const quizResult = document.getElementById('quizResult');
+            const recommendedTools = document.getElementById('recommendedTools');
+            const retakeQuiz = document.getElementById('retakeQuiz');
+            
+            let currentQuestion = 1;
+            
+            function showQuestion(questionNumber) {
+                quizQuestions.forEach(question => {
+                    question.classList.add('hidden');
+                });
+                
+                document.querySelector(`.quiz-question[data-question="${questionNumber}"]`).classList.remove('hidden');
+                
+                if (questionNumber === 1) {
+                    prevQuestion.classList.add('hidden');
+                } else {
+                    prevQuestion.classList.remove('hidden');
+                }
+                
+                if (questionNumber === quizQuestions.length) {
+                    nextQuestion.classList.add('hidden');
+                    submitQuiz.classList.remove('hidden');
+                } else {
+                    nextQuestion.classList.remove('hidden');
+                    submitQuiz.classList.add('hidden');
+                }
+            }
+            
+            function resetQuiz() {
+                currentQuestion = 1;
+                showQuestion(currentQuestion);
+                
+                document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.checked = false;
+                });
+                
+                quizResult.classList.add('hidden');
+                document.getElementById('quizContainer').classList.remove('hidden');
+            }
+            
+            nextQuestion.addEventListener('click', function() {
+                const currentRadios = document.querySelectorAll(`input[name="q${currentQuestion}"]`);
+                let selected = false;
+                
+                currentRadios.forEach(radio => {
+                    if (radio.checked) selected = true;
+                });
+                
+                if (selected) {
+                    currentQuestion++;
+                    showQuestion(currentQuestion);
+                } else {
+                    alert('請選擇一個選項');
+                }
+            });
+            
+            prevQuestion.addEventListener('click', function() {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            });
+            
+            submitQuiz.addEventListener('click', function() {
+                const q3Radios = document.querySelectorAll('input[name="q3"]');
+                let selected = false;
+                
+                q3Radios.forEach(radio => {
+                    if (radio.checked) selected = true;
+                });
+                
+                if (!selected) {
+                    alert('請選擇一個選項');
+                    return;
+                }
+                
+                const answers = {
+                    q1: document.querySelector('input[name="q1"]:checked').value,
+                    q2: document.querySelector('input[name="q2"]:checked').value,
+                    q3: document.querySelector('input[name="q3"]:checked').value
+                };
+                
+                // 根據答案推薦課程
+                let recommendations = [];
+                
+                // 互動參與型課程
+                if ((answers.q1 === 'interaction' || answers.q2 === 'engagement') && answers.q3 === 'beginner') {
+                    recommendations.push({
+                        name: '互動教學入門：Padlet 課堂互動牆實戰',
+                        description: '適合初學者的互動工具入門課程，學習如何快速建立互動牆面收集學生回饋',
+                        color: 'red',
+                        level: '初階'
+                    });
+                }
+                
+                if ((answers.q1 === 'interaction' || answers.q2 === 'engagement') && 
+                    (answers.q3 === 'intermediate' || answers.q3 === 'advanced')) {
+                    recommendations.push({
+                        name: '進階互動教學設計：Wordwall 遊戲化課堂',
+                        description: '學習如何設計多種互動遊戲模板，提升學生參與度與學習動機',
+                        color: 'yellow',
+                        level: '中階'
+                    });
+                }
+                
+                // 備課效率型課程
+                if ((answers.q1 === 'content' || answers.q2 === 'efficiency') && answers.q3 === 'beginner') {
+                    recommendations.push({
+                        name: 'AI 備課助手：ChatGPT 教案速成班',
+                        description: '專為初學者設計的 AI 備課入門，學習如何用 ChatGPT 快速生成教案和教學資源',
+                        color: 'blue',
+                        level: '初階'
+                    });
+                }
+                
+                if ((answers.q1 === 'content' || answers.q2 === 'efficiency') && 
+                    (answers.q3 === 'intermediate' || answers.q3 === 'advanced' || answers.q3 === 'expert')) {
+                    recommendations.push({
+                        name: '教材智慧轉化：NotebookLM 知識統整工作坊',
+                        description: '學習如何將現有教材轉換為結構化知識卡片，提升備課效率與教學品質',
+                        color: 'green',
+                        level: '進階'
+                    });
+                }
+                
+                // 視覺創意型課程
+                if ((answers.q1 === 'visual' || answers.q2 === 'creativity') && 
+                    (answers.q3 === 'beginner' || answers.q3 === 'intermediate')) {
+                    recommendations.push({
+                        name: 'Canva 教學設計：視覺化教材製作實務',
+                        description: '學習如何使用 Canva 設計精美的教學簡報和學習單，無需設計背景也能做出專業作品',
+                        color: 'pink',
+                        level: '初階'
+                    });
+                }
+                
+                if ((answers.q1 === 'visual' || answers.q2 === 'creativity') && 
+                    (answers.q3 === 'advanced' || answers.q3 === 'expert')) {
+                    recommendations.push({
+                        name: 'AI 視覺創作：Gamma 簡報與內容設計大師班',
+                        description: '進階課程，學習如何運用 AI 技術快速生成專業級簡報與視覺內容',
+                        color: 'teal',
+                        level: '高階'
+                    });
+                }
+                
+                // 評量回饋型課程
+                if ((answers.q1 === 'assessment' || answers.q2 === 'feedback') && 
+                    (answers.q3 === 'beginner' || answers.q3 === 'intermediate')) {
+                    recommendations.push({
+                        name: '互動式評量設計：Wordwall 即時回饋系統',
+                        description: '學習如何設計互動式評量活動，獲取即時學習數據並提供個別化回饋',
+                        color: 'yellow',
+                        level: '中階'
+                    });
+                }
+                
+                if ((answers.q1 === 'assessment' || answers.q2 === 'feedback') && 
+                    (answers.q3 === 'advanced' || answers.q3 === 'expert')) {
+                    recommendations.push({
+                        name: 'AI 輔助評量：Padlet TA 智慧出題與分析',
+                        description: '進階課程，學習如何運用 AI 技術設計多元評量並分析學習成效',
+                        color: 'orange',
+                        level: '高階'
+                    });
+                }
+                
+                // Google 整合型課程
+                if (answers.q3 === 'intermediate' || answers.q3 === 'advanced' || answers.q3 === 'expert') {
+                    recommendations.push({
+                        name: 'Google 教學生態系：Gemini 整合應用工作坊',
+                        description: '學習如何運用 Gemini 整合 Google 文件、簡報等工具，打造完整教學流程',
+                        color: 'purple',
+                        level: '進階'
+                    });
+                }
+                
+                // 確保每種組合都有推薦課程
+                // 特別處理備課時間不足 + 提升效率 + 初學者的組合
+                if (answers.q1 === 'content' && answers.q2 === 'efficiency' && answers.q3 === 'beginner') {
+                    // 確保至少有這個推薦
+                    let hasEfficiencyCourse = false;
+                    for (let rec of recommendations) {
+                        if (rec.name === 'AI 備課助手：ChatGPT 教案速成班') {
+                            hasEfficiencyCourse = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasEfficiencyCourse) {
+                        recommendations.push({
+                            name: 'AI 備課助手：ChatGPT 教案速成班',
+                            description: '專為初學者設計的 AI 備課入門，學習如何用 ChatGPT 快速生成教案和教學資源',
+                            color: 'blue',
+                            level: '初階'
+                        });
+                    }
+                    
+                    // 再加一個特別適合這個組合的課程
+                    recommendations.push({
+                        name: '教師時間管理：高效備課技巧實戰班',
+                        description: '專為忙碌教師設計的時間管理課程，學習如何運用簡單工具大幅提升備課效率',
+                        color: 'green',
+                        level: '初階'
+                    });
+                }
+                
+                // 確保每種組合至少有2個推薦
+                if (recommendations.length < 2) {
+                    recommendations.push({
+                        name: '數位教學工具入門：教師必備技能',
+                        description: '綜合性入門課程，學習多種簡單易用的數位工具，適合所有教師',
+                        color: 'blue',
+                        level: '初階'
+                    });
+                }
+                
+                // 限制推薦數量
+                if (recommendations.length > 3) {
+                    recommendations = recommendations.slice(0, 3);
+                }
+                
+                // 顯示推薦結果
+                recommendedTools.innerHTML = '';
+                
+                recommendations.forEach(course => {
+                    const courseElement = document.createElement('div');
+                    courseElement.className = `bg-white p-4 rounded-lg shadow border-l-4 border-${course.color}-500`;
+                    courseElement.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <h5 class="font-bold text-${course.color}-600">${course.name}</h5>
+                            <span class="bg-${course.color}-100 text-${course.color}-800 text-xs px-2 py-1 rounded">${course.level}</span>
+                        </div>
+                        <p class="text-gray-700">${course.description}</p>
+                    `;
+                    recommendedTools.appendChild(courseElement);
+                });
+                
+                document.getElementById('quizContainer').classList.add('hidden');
+                quizResult.classList.remove('hidden');
+            });
+            
+            retakeQuiz.addEventListener('click', resetQuiz);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae09d48119f244',t:'MTc1MTc5Mzc1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
