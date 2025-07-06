@@ -1,0 +1,1343 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-黑白大廚烹飪遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', 'Nunito', sans-serif;
+            background-color: #f5f0e8;
+            min-height: 100vh;
+        }
+        
+        .pot {
+            width: 220px;
+            height: 160px;
+            background-color: #555;
+            border-radius: 50% 50% 10% 10% / 30% 30% 70% 70%;
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .pot:before {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 45px;
+            background-color: #444;
+            border-radius: 50%;
+            top: -20px;
+            left: -10px;
+        }
+        
+        .pot-handle-left, .pot-handle-right {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            border: 10px solid #444;
+            border-top: none;
+            border-bottom: none;
+            border-radius: 0 0 50% 50%;
+            top: 20px;
+        }
+        
+        .pot-handle-left {
+            left: -30px;
+            border-left: none;
+        }
+        
+        .pot-handle-right {
+            right: -30px;
+            border-right: none;
+        }
+        
+        .pot-content {
+            position: absolute;
+            width: 190px;
+            height: 90px;
+            background-color: #e2c9a0;
+            border-radius: 50%;
+            bottom: 15px;
+            left: 15px;
+            transition: background-color 0.5s;
+            overflow: hidden;
+        }
+        
+        .badge {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        .badge:hover {
+            transform: scale(1.1);
+        }
+        
+        .badge-empty {
+            background-color: #e5e5e5;
+            border: 2px dashed #aaa;
+            color: #aaa;
+        }
+        
+        .badge-tooltip {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        
+        .badge:hover .badge-tooltip {
+            opacity: 1;
+        }
+        
+        .language-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+        
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .ingredient-bubble {
+            position: absolute;
+            font-size: 32px; /* Increased from 24px */
+            animation: float 3s infinite ease-in-out;
+            z-index: 5; /* Ensure ingredients are above any text */
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .cooking-animation {
+            animation: cook 1.5s;
+        }
+        
+        @keyframes cook {
+            0% { background-color: #e2c9a0; }
+            50% { background-color: #b38b6d; }
+            100% { background-color: #e2c9a0; }
+        }
+        
+        .steam {
+            position: absolute;
+            width: 8px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            top: -30px;
+            animation: steam 2s infinite ease-out;
+            opacity: 0;
+        }
+        
+        @keyframes steam {
+            0% { transform: translateY(0) scale(1); opacity: 0.7; }
+            100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+        }
+        
+        .badge-collection {
+            background-image: linear-gradient(to bottom right, #fff8e1, #fffde7);
+            border: 2px solid #ffd54f;
+        }
+        
+        .badge-glow {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255, 213, 79, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(255, 213, 79, 0.8); }
+        }
+        
+        .ingredient-btn {
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ingredient-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .chef-hat {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border-radius: 50% 50% 10% 10%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .chef-hat:before {
+            content: "";
+            position: absolute;
+            width: 50px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50% 50% 0 0;
+            top: -15px;
+            left: 5px;
+        }
+        
+        .recipe-card {
+            background-color: #fffbf0;
+            border-left: 4px solid #ffd54f;
+            transition: all 0.3s;
+        }
+        
+        .recipe-card.active {
+            border-left: 4px solid #f59e0b;
+            background-color: #fff8e1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .cooking-process {
+            height: 180px; /* Increased from 120px to 180px */
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        
+        .cooking-process::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .cooking-process::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .cooking-process::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        
+        .process-message {
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .ingredient-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .food-emoji {
+            font-size: 2rem; /* Increased emoji size */
+            margin-bottom: 0.5rem; /* Space between emoji and text */
+            display: block; /* Make it a block element */
+        }
+        
+        .recipe-emoji {
+            font-size: 1.5rem; /* Increased recipe emoji size */
+            margin-right: 0.25rem;
+        }
+        
+        .game-instruction {
+            margin-bottom: 4rem; /* Increased from 2.5rem to 4rem to provide much more space */
+            margin-top: 1rem;
+            font-weight: 600;
+            color: #4b5563;
+        }
+        
+        .pot-container {
+            margin-top: 80px; /* Increased from 40px to 80px to move pot down significantly */
+            position: relative;
+            z-index: 1; /* Ensure pot is below the instruction text */
+        }
+        
+        /* Add space between instruction and pot */
+        .instruction-space {
+            height: 30px; /* Additional space between instruction and pot */
+        }
+        
+        /* Celebration overlay styles */
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .celebration-content {
+            background-color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s;
+        }
+        
+        .celebration-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .celebration-overlay.active .celebration-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .celebration-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #f59e0b;
+        }
+        
+        .celebration-badge {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 1.5rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: celebrationBadgeGlow 2s infinite alternate;
+        }
+        
+        @keyframes celebrationBadgeGlow {
+            0% { box-shadow: 0 0 10px rgba(255, 213, 79, 0.7); }
+            100% { box-shadow: 0 0 30px rgba(255, 213, 79, 1); }
+        }
+        
+        .celebration-message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #4b5563;
+        }
+        
+        .celebration-button {
+            background-color: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .celebration-button:hover {
+            background-color: #d97706;
+            transform: translateY(-2px);
+        }
+        
+        /* Confetti animation */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f59e0b;
+            opacity: 0.8;
+            animation: confetti-fall 5s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        /* Badge notification */
+        .badge-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(251, 191, 36, 0.95);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        .badge-notification.active {
+            opacity: 1;
+        }
+        
+        .badge-notification-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+        
+        .badge-notification-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-gray-800 text-white p-4 relative">
+            <h1 class="text-2xl font-bold text-center" id="title">LST遊戲室-黑白大廚烹飪遊戲</h1>
+            <div class="language-switch">
+                <button id="langToggle" class="bg-white text-gray-800 px-3 py-1 rounded-full font-medium hover:bg-gray-200 transition">English</button>
+            </div>
+        </header>
+        
+        <main class="flex-grow p-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="game-instruction text-center" id="gameInstruction">在鍋子中加入食材</div>
+                
+                <!-- Added extra space between instruction and pot -->
+                <div class="instruction-space"></div>
+                
+                <!-- 主要遊戲區域 -->
+                <div class="flex flex-col md:flex-row gap-4 mt-4">
+                    <!-- 左側食材選擇區 -->
+                    <div class="w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="font-bold text-gray-800 mb-4 text-center" id="ingredientsTitle">食材</h3>
+                        <div class="grid grid-cols-2 gap-3" id="ingredientsArea">
+                            <div class="bg-yellow-200 p-3 rounded-lg cursor-pointer hover:bg-yellow-300 transition ingredient-btn relative" onclick="addIngredient('🥔')">
+                                <span class="ingredient-count hidden" id="count-🥔">0</span>
+                                <span class="food-emoji">🥔</span> 
+                                <span id="potato">馬鈴薯</span>
+                            </div>
+                            <div class="bg-orange-200 p-3 rounded-lg cursor-pointer hover:bg-orange-300 transition ingredient-btn relative" onclick="addIngredient('🥕')">
+                                <span class="ingredient-count hidden" id="count-🥕">0</span>
+                                <span class="food-emoji">🥕</span> 
+                                <span id="carrot">胡蘿蔔</span>
+                            </div>
+                            <div class="bg-red-200 p-3 rounded-lg cursor-pointer hover:bg-red-300 transition ingredient-btn relative" onclick="addIngredient('🍅')">
+                                <span class="ingredient-count hidden" id="count-🍅">0</span>
+                                <span class="food-emoji">🍅</span> 
+                                <span id="tomato">番茄</span>
+                            </div>
+                            <div class="bg-purple-200 p-3 rounded-lg cursor-pointer hover:bg-purple-300 transition ingredient-btn relative" onclick="addIngredient('🧅')">
+                                <span class="ingredient-count hidden" id="count-🧅">0</span>
+                                <span class="food-emoji">🧅</span> 
+                                <span id="onion">洋蔥</span>
+                            </div>
+                            <div class="bg-green-200 p-3 rounded-lg cursor-pointer hover:bg-green-300 transition ingredient-btn relative" onclick="addIngredient('🥦')">
+                                <span class="ingredient-count hidden" id="count-🥦">0</span>
+                                <span class="food-emoji">🥦</span> 
+                                <span id="broccoli">花椰菜</span>
+                            </div>
+                            <div class="bg-blue-200 p-3 rounded-lg cursor-pointer hover:bg-blue-300 transition ingredient-btn relative" onclick="addIngredient('🐟')">
+                                <span class="ingredient-count hidden" id="count-🐟">0</span>
+                                <span class="food-emoji">🐟</span> 
+                                <span id="fish">魚</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <button id="clearButton" class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 transition shadow-md">
+                                <span id="clearText">清空鍋子</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 中間鍋子區域 -->
+                    <div class="w-full md:w-2/4">
+                        <div class="relative mb-4 pot-container">
+                            <div class="chef-hat"></div>
+                            <div class="pot">
+                                <div class="pot-handle-left"></div>
+                                <div class="pot-handle-right"></div>
+                                <div class="pot-content" id="potContent"></div>
+                                <div id="steamContainer" class="absolute w-full"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 烹飪按鈕 - 移到烹飪過程上方 -->
+                        <div class="mb-4">
+                            <button id="cookButton" class="w-full bg-gray-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-700 transition shadow-md">
+                                <span id="cookText">開始烹飪</span>
+                            </button>
+                        </div>
+                        
+                        <!-- 烹飪過程顯示區 -->
+                        <div class="bg-white rounded-lg p-4 shadow-md">
+                            <h3 class="font-bold text-gray-800 mb-2" id="cookingProcessTitle">烹飪過程</h3>
+                            <div id="cookingProcess" class="cooking-process border border-gray-200 rounded p-3 bg-gray-50">
+                                <p class="text-gray-500 text-center italic" id="processPlaceholder">烹飪過程將顯示在這裡...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右側食譜參考區 -->
+                    <div class="w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="font-bold text-gray-800 mb-4 text-center" id="recipeReferenceTitle">食譜參考</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="recipe-card p-3 rounded" id="recipe1">
+                                <div class="flex items-center mb-1">
+                                    <div class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-white text-sm mr-2">
+                                        <span class="recipe-emoji">🥔</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm" id="recipe1Title">馬鈴薯湯</h4>
+                                </div>
+                                <p class="text-gray-700 text-sm" id="recipe1Ingredients">
+                                    <span class="recipe-emoji">🥔</span> + 
+                                    <span class="recipe-emoji">🥕</span> + 
+                                    <span class="recipe-emoji">🧅</span>
+                                </p>
+                            </div>
+                            
+                            <div class="recipe-card p-3 rounded" id="recipe2">
+                                <div class="flex items-center mb-1">
+                                    <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white text-sm mr-2">
+                                        <span class="recipe-emoji">🍅</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm" id="recipe2Title">番茄湯</h4>
+                                </div>
+                                <p class="text-gray-700 text-sm" id="recipe2Ingredients">
+                                    <span class="recipe-emoji">🍅</span> + 
+                                    <span class="recipe-emoji">🧅</span>
+                                </p>
+                            </div>
+                            
+                            <div class="recipe-card p-3 rounded" id="recipe3">
+                                <div class="flex items-center mb-1">
+                                    <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm mr-2">
+                                        <span class="recipe-emoji">🐟</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm" id="recipe3Title">魚湯</h4>
+                                </div>
+                                <p class="text-gray-700 text-sm" id="recipe3Ingredients">
+                                    <span class="recipe-emoji">🐟</span> + 
+                                    <span class="recipe-emoji">🥦</span>
+                                </p>
+                            </div>
+                            
+                            <div class="recipe-card p-3 rounded" id="recipe4">
+                                <div class="flex items-center mb-1">
+                                    <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm mr-2">
+                                        <span class="recipe-emoji">🥔</span><span class="recipe-emoji" style="font-size:1.2rem;margin-left:-8px;">🐟</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm" id="recipe4Title">馬鈴薯魚湯</h4>
+                                </div>
+                                <p class="text-gray-700 text-sm" id="recipe4Ingredients">
+                                    <span class="recipe-emoji">🥔</span> + 
+                                    <span class="recipe-emoji">🐟</span>
+                                </p>
+                            </div>
+                            
+                            <div class="recipe-card p-3 rounded" id="recipe5">
+                                <div class="flex items-center mb-1">
+                                    <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white text-sm mr-2">
+                                        <span class="recipe-emoji">🥕</span><span class="recipe-emoji" style="font-size:1.2rem;margin-left:-8px;">🥦</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm" id="recipe5Title">蔬菜湯</h4>
+                                </div>
+                                <p class="text-gray-700 text-sm" id="recipe5Ingredients">
+                                    <span class="recipe-emoji">🥕</span> + 
+                                    <span class="recipe-emoji">🥦</span>
+                                </p>
+                            </div>
+                            
+                            <div class="recipe-card p-3 rounded" id="recipe6">
+                                <div class="flex items-center mb-1">
+                                    <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm mr-2">
+                                        <span class="recipe-emoji">🍲</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm" id="recipe6Title">大雜燴</h4>
+                                </div>
+                                <p class="text-gray-700 text-sm" id="recipe6Ingredients">任意四種或更多食材</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 徽章集點區 -->
+                <div class="mt-8 bg-white rounded-lg p-6 shadow-md badge-collection">
+                    <h2 class="text-xl font-bold mb-6 text-center text-amber-800" id="badgeTitle">徽章集點區</h2>
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-6 justify-items-center" id="badgeCollection">
+                        <div class="badge badge-empty" id="badge1">
+                            ?
+                            <div class="badge-tooltip" id="badgeTooltip1">馬鈴薯湯徽章</div>
+                        </div>
+                        <div class="badge badge-empty" id="badge2">
+                            ?
+                            <div class="badge-tooltip" id="badgeTooltip2">番茄湯徽章</div>
+                        </div>
+                        <div class="badge badge-empty" id="badge3">
+                            ?
+                            <div class="badge-tooltip" id="badgeTooltip3">魚湯徽章</div>
+                        </div>
+                        <div class="badge badge-empty" id="badge4">
+                            ?
+                            <div class="badge-tooltip" id="badgeTooltip4">馬鈴薯魚湯徽章</div>
+                        </div>
+                        <div class="badge badge-empty" id="badge5">
+                            ?
+                            <div class="badge-tooltip" id="badgeTooltip5">蔬菜湯徽章</div>
+                        </div>
+                        <div class="badge badge-empty" id="badge6">
+                            ?
+                            <div class="badge-tooltip" id="badgeTooltip6">大雜燴徽章</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <p id="badgeCounter" class="text-amber-700 font-medium">已收集: 0/6</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer bg-gray-100 border-t border-gray-200 mt-8">
+            <p id="footerText">
+                遊戲設計與製作：呂舒婷｜📧 luuyobi@gmail.com
+            </p>
+        </footer>
+    </div>
+    
+    <!-- 慶祝畫面 -->
+    <div class="celebration-overlay" id="celebrationOverlay">
+        <div class="celebration-content">
+            <h2 class="celebration-title" id="celebrationTitle">烹飪成功！</h2>
+            <div class="celebration-badge" id="celebrationBadge">🏆</div>
+            <p class="celebration-message" id="celebrationMessage">恭喜你獲得了新徽章！</p>
+            <button class="celebration-button" id="celebrationButton">繼續</button>
+        </div>
+    </div>
+    
+    <!-- 徽章通知 -->
+    <div class="badge-notification" id="badgeNotification">
+        <div class="badge-notification-icon">🏆</div>
+        <div class="badge-notification-text" id="badgeNotificationText">恭喜！獲得了新徽章！</div>
+    </div>
+
+    <script>
+        // 語言設定
+        const translations = {
+            'zh': {
+                'title': 'LST遊戲室-黑白大廚烹飪遊戲',
+                'gameInstruction': '在鍋子中加入食材',
+                'ingredientsTitle': '食材',
+                'potato': '馬鈴薯',
+                'carrot': '胡蘿蔔',
+                'tomato': '番茄',
+                'onion': '洋蔥',
+                'broccoli': '花椰菜',
+                'fish': '魚',
+                'cookText': '開始烹飪',
+                'clearText': '清空鍋子',
+                'badgeTitle': '徽章集點區',
+                'footerText': '遊戲設計與製作：呂舒婷｜📧 luuyobi@gmail.com',
+                'langToggle': 'English',
+                'recipeReferenceTitle': '食譜參考',
+                'cookingProcessTitle': '烹飪過程',
+                'processPlaceholder': '烹飪過程將顯示在這裡...',
+                'badgeCounter': '已收集: {0}/6',
+                'badgeTooltip1': '馬鈴薯湯徽章',
+                'badgeTooltip2': '番茄湯徽章',
+                'badgeTooltip3': '魚湯徽章',
+                'badgeTooltip4': '馬鈴薯魚湯徽章',
+                'badgeTooltip5': '蔬菜湯徽章',
+                'badgeTooltip6': '大雜燴徽章',
+                'potFull': '鍋子已滿！',
+                'addIngredients': '請先添加食材！',
+                'badgeCollected': '恭喜！獲得了{0}！',
+                'allBadgesCollected': '恭喜！你已收集所有徽章！',
+                'recipe1Title': '馬鈴薯湯',
+                'recipe1Ingredients': '🥔 + 🥕 + 🧅',
+                'recipe2Title': '番茄湯',
+                'recipe2Ingredients': '🍅 + 🧅',
+                'recipe3Title': '魚湯',
+                'recipe3Ingredients': '🐟 + 🥦',
+                'recipe4Title': '馬鈴薯魚湯',
+                'recipe4Ingredients': '🥔 + 🐟',
+                'recipe5Title': '蔬菜湯',
+                'recipe5Ingredients': '🥕 + 🥦',
+                'recipe6Title': '大雜燴',
+                'recipe6Ingredients': '任意四種或更多食材',
+                'cookingProcess1': '正在準備食材...',
+                'cookingProcess2': '開始加熱鍋子...',
+                'cookingProcess3': '食材開始煮沸...',
+                'cookingProcess4': '香氣四溢...',
+                'cookingProcess5': '湯汁逐漸濃稠...',
+                'cookingProcess6': '烹飪完成！',
+                'cookingProcessPotato': '馬鈴薯開始變軟...',
+                'cookingProcessCarrot': '胡蘿蔔釋放出甜味...',
+                'cookingProcessTomato': '番茄融化成湯汁...',
+                'cookingProcessOnion': '洋蔥散發出香氣...',
+                'cookingProcessBroccoli': '花椰菜變得翠綠...',
+                'cookingProcessFish': '魚肉變得鮮嫩...',
+                'recipeIdentified': '識別出食譜：{0}',
+                'noRecipe': '沒有找到匹配的食譜，但湯還是很美味！',
+                'celebrationTitle': '烹飪成功！',
+                'celebrationMessage': '恭喜你獲得了新徽章！',
+                'celebrationButton': '繼續',
+                'celebrationNoRecipe': '烹飪成功！湯很美味！',
+                'celebrationAllBadges': '恭喜！你已收集所有徽章！'
+            },
+            'en': {
+                'title': 'LST Game Room - Black & White Chef Cooking Game',
+                'gameInstruction': 'Add ingredients to the pot',
+                'ingredientsTitle': 'Ingredients',
+                'potato': 'Potato',
+                'carrot': 'Carrot',
+                'tomato': 'Tomato',
+                'onion': 'Onion',
+                'broccoli': 'Broccoli',
+                'fish': 'Fish',
+                'cookText': 'Start Cooking',
+                'clearText': 'Clear Pot',
+                'badgeTitle': 'Badge Collection',
+                'footerText': 'Game Design & Development: Lu Shuting｜📧 luuyobi@gmail.com',
+                'langToggle': '中文',
+                'recipeReferenceTitle': 'Recipe Reference',
+                'cookingProcessTitle': 'Cooking Process',
+                'processPlaceholder': 'Cooking process will be displayed here...',
+                'badgeCounter': 'Collected: {0}/6',
+                'badgeTooltip1': 'Potato Soup Badge',
+                'badgeTooltip2': 'Tomato Soup Badge',
+                'badgeTooltip3': 'Fish Soup Badge',
+                'badgeTooltip4': 'Potato Fish Soup Badge',
+                'badgeTooltip5': 'Vegetable Soup Badge',
+                'badgeTooltip6': 'Mixed Stew Badge',
+                'potFull': 'The pot is full!',
+                'addIngredients': 'Please add ingredients first!',
+                'badgeCollected': 'Congratulations! You earned the {0}!',
+                'allBadgesCollected': 'Congratulations! You have collected all badges!',
+                'recipe1Title': 'Potato Soup',
+                'recipe1Ingredients': '🥔 + 🥕 + 🧅',
+                'recipe2Title': 'Tomato Soup',
+                'recipe2Ingredients': '🍅 + 🧅',
+                'recipe3Title': 'Fish Soup',
+                'recipe3Ingredients': '🐟 + 🥦',
+                'recipe4Title': 'Potato Fish Soup',
+                'recipe4Ingredients': '🥔 + 🐟',
+                'recipe5Title': 'Vegetable Soup',
+                'recipe5Ingredients': '🥕 + 🥦',
+                'recipe6Title': 'Mixed Stew',
+                'recipe6Ingredients': 'Any four or more ingredients',
+                'cookingProcess1': 'Preparing ingredients...',
+                'cookingProcess2': 'Heating the pot...',
+                'cookingProcess3': 'Ingredients start to boil...',
+                'cookingProcess4': 'Aroma fills the air...',
+                'cookingProcess5': 'Soup is thickening...',
+                'cookingProcess6': 'Cooking complete!',
+                'cookingProcessPotato': 'Potatoes are softening...',
+                'cookingProcessCarrot': 'Carrots release sweetness...',
+                'cookingProcessTomato': 'Tomatoes melt into the broth...',
+                'cookingProcessOnion': 'Onions release their aroma...',
+                'cookingProcessBroccoli': 'Broccoli turns bright green...',
+                'cookingProcessFish': 'Fish becomes tender...',
+                'recipeIdentified': 'Recipe identified: {0}',
+                'noRecipe': 'No matching recipe found, but the soup is still delicious!',
+                'celebrationTitle': 'Cooking Success!',
+                'celebrationMessage': 'Congratulations! You earned a new badge!',
+                'celebrationButton': 'Continue',
+                'celebrationNoRecipe': 'Cooking Success! The soup is delicious!',
+                'celebrationAllBadges': 'Congratulations! You have collected all badges!'
+            }
+        };
+        
+        let currentLang = 'zh';
+        let ingredients = [];
+        let ingredientCounts = {
+            '🥔': 0,
+            '🥕': 0,
+            '🍅': 0,
+            '🧅': 0,
+            '🥦': 0,
+            '🐟': 0
+        };
+        let collectedBadges = [];
+        let isCooking = false;
+        
+        // 初始化
+        function init() {
+            updateLanguage();
+            updateBadgeCounter();
+            createSteamElements();
+            setupCelebrationEvents();
+        }
+        
+        // 設置慶祝畫面事件
+        function setupCelebrationEvents() {
+            document.getElementById('celebrationButton').addEventListener('click', function() {
+                document.getElementById('celebrationOverlay').classList.remove('active');
+            });
+        }
+        
+        // 切換語言
+        document.getElementById('langToggle').addEventListener('click', function() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            updateLanguage();
+        });
+        
+        function updateLanguage() {
+            const lang = translations[currentLang];
+            
+            document.getElementById('title').textContent = lang.title;
+            document.getElementById('gameInstruction').textContent = lang.gameInstruction;
+            document.getElementById('ingredientsTitle').textContent = lang.ingredientsTitle;
+            document.getElementById('potato').textContent = lang.potato;
+            document.getElementById('carrot').textContent = lang.carrot;
+            document.getElementById('tomato').textContent = lang.tomato;
+            document.getElementById('onion').textContent = lang.onion;
+            document.getElementById('broccoli').textContent = lang.broccoli;
+            document.getElementById('fish').textContent = lang.fish;
+            document.getElementById('cookText').textContent = lang.cookText;
+            document.getElementById('clearText').textContent = lang.clearText;
+            document.getElementById('badgeTitle').textContent = lang.badgeTitle;
+            document.getElementById('footerText').textContent = lang.footerText;
+            document.getElementById('langToggle').textContent = lang.langToggle;
+            document.getElementById('recipeReferenceTitle').textContent = lang.recipeReferenceTitle;
+            document.getElementById('cookingProcessTitle').textContent = lang.cookingProcessTitle;
+            document.getElementById('processPlaceholder').textContent = lang.processPlaceholder;
+            
+            document.getElementById('badgeCounter').textContent = lang.badgeCounter.replace('{0}', collectedBadges.length);
+            
+            document.getElementById('badgeTooltip1').textContent = lang.badgeTooltip1;
+            document.getElementById('badgeTooltip2').textContent = lang.badgeTooltip2;
+            document.getElementById('badgeTooltip3').textContent = lang.badgeTooltip3;
+            document.getElementById('badgeTooltip4').textContent = lang.badgeTooltip4;
+            document.getElementById('badgeTooltip5').textContent = lang.badgeTooltip5;
+            document.getElementById('badgeTooltip6').textContent = lang.badgeTooltip6;
+            
+            // 食譜參考翻譯
+            document.getElementById('recipe1Title').textContent = lang.recipe1Title;
+            document.getElementById('recipe2Title').textContent = lang.recipe2Title;
+            document.getElementById('recipe3Title').textContent = lang.recipe3Title;
+            document.getElementById('recipe4Title').textContent = lang.recipe4Title;
+            document.getElementById('recipe5Title').textContent = lang.recipe5Title;
+            document.getElementById('recipe6Title').textContent = lang.recipe6Title;
+            document.getElementById('recipe6Ingredients').textContent = lang.recipe6Ingredients;
+            
+            // 慶祝畫面翻譯
+            document.getElementById('celebrationTitle').textContent = lang.celebrationTitle;
+            document.getElementById('celebrationMessage').textContent = lang.celebrationMessage;
+            document.getElementById('celebrationButton').textContent = lang.celebrationButton;
+        }
+        
+        // 添加食材到鍋子
+        function addIngredient(ingredient) {
+            if (isCooking) return;
+            
+            if (ingredients.length < 5) {
+                ingredients.push(ingredient);
+                ingredientCounts[ingredient]++;
+                updateIngredientCount(ingredient);
+                updatePotContent();
+                
+                // 添加食材動畫
+                const potContent = document.getElementById('potContent');
+                const ingredientEl = document.createElement('div');
+                ingredientEl.textContent = ingredient;
+                ingredientEl.classList.add('ingredient-bubble');
+                
+                // 隨機位置 - 確保不會擋住文字
+                const left = 20 + Math.random() * 120;
+                const top = 10 + Math.random() * 40;
+                ingredientEl.style.left = `${left}px`;
+                ingredientEl.style.top = `${top}px`;
+                
+                potContent.appendChild(ingredientEl);
+                
+                // 高亮匹配的食譜
+                highlightMatchingRecipes();
+            } else {
+                alert(translations[currentLang].potFull);
+            }
+        }
+        
+        // 更新食材計數
+        function updateIngredientCount(ingredient) {
+            const countElement = document.getElementById(`count-${ingredient}`);
+            if (ingredientCounts[ingredient] > 0) {
+                countElement.textContent = ingredientCounts[ingredient];
+                countElement.classList.remove('hidden');
+            } else {
+                countElement.classList.add('hidden');
+            }
+        }
+        
+        // 高亮匹配的食譜
+        function highlightMatchingRecipes() {
+            // 重置所有食譜卡片
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`recipe${i}`).classList.remove('active');
+            }
+            
+            // 檢查馬鈴薯湯食譜
+            if (ingredients.includes('🥔') && ingredients.includes('🥕') && ingredients.includes('🧅')) {
+                document.getElementById('recipe1').classList.add('active');
+            }
+            
+            // 檢查番茄湯食譜
+            if (ingredients.includes('🍅') && ingredients.includes('🧅')) {
+                document.getElementById('recipe2').classList.add('active');
+            }
+            
+            // 檢查魚湯食譜
+            if (ingredients.includes('🐟') && ingredients.includes('🥦')) {
+                document.getElementById('recipe3').classList.add('active');
+            }
+            
+            // 檢查馬鈴薯魚湯食譜
+            if (ingredients.includes('🥔') && ingredients.includes('🐟')) {
+                document.getElementById('recipe4').classList.add('active');
+            }
+            
+            // 檢查蔬菜湯食譜
+            if (ingredients.includes('🥕') && ingredients.includes('🥦')) {
+                document.getElementById('recipe5').classList.add('active');
+            }
+            
+            // 檢查大雜燴食譜
+            if (ingredients.length >= 4) {
+                document.getElementById('recipe6').classList.add('active');
+            }
+        }
+        
+        // 更新鍋子內容
+        function updatePotContent() {
+            const potContent = document.getElementById('potContent');
+            potContent.innerHTML = '';
+            
+            ingredients.forEach((ingredient, index) => {
+                const ingredientEl = document.createElement('div');
+                ingredientEl.textContent = ingredient;
+                ingredientEl.classList.add('ingredient-bubble');
+                
+                // 隨機位置 - 確保不會擋住文字
+                const left = 20 + Math.random() * 120;
+                const top = 10 + Math.random() * 40;
+                ingredientEl.style.left = `${left}px`;
+                ingredientEl.style.top = `${top}px`;
+                
+                // 隨機浮動動畫延遲
+                ingredientEl.style.animationDelay = `${index * 0.2}s`;
+                
+                potContent.appendChild(ingredientEl);
+            });
+        }
+        
+        // 創建蒸汽元素
+        function createSteamElements() {
+            const steamContainer = document.getElementById('steamContainer');
+            
+            for (let i = 0; i < 5; i++) {
+                const steam = document.createElement('div');
+                steam.classList.add('steam');
+                steam.style.left = `${30 + i * 40}px`;
+                steam.style.animationDelay = `${i * 0.4}s`;
+                steamContainer.appendChild(steam);
+            }
+        }
+        
+        // 顯示蒸汽
+        function showSteam() {
+            const steamElements = document.querySelectorAll('.steam');
+            steamElements.forEach(steam => {
+                steam.style.opacity = '0.7';
+            });
+            
+            setTimeout(() => {
+                steamElements.forEach(steam => {
+                    steam.style.opacity = '0';
+                });
+            }, 2000);
+        }
+        
+        // 添加烹飪過程消息
+        function addProcessMessage(message) {
+            const processContainer = document.getElementById('cookingProcess');
+            const placeholder = document.getElementById('processPlaceholder');
+            
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            const messageEl = document.createElement('p');
+            messageEl.textContent = message;
+            messageEl.classList.add('process-message', 'mb-2', 'text-gray-700', 'py-1');
+            processContainer.appendChild(messageEl);
+            
+            // 自動滾動到底部
+            processContainer.scrollTop = processContainer.scrollHeight;
+        }
+        
+        // 清空烹飪過程
+        function clearProcessMessages() {
+            const processContainer = document.getElementById('cookingProcess');
+            processContainer.innerHTML = `<p id="processPlaceholder" class="text-gray-500 text-center italic">${translations[currentLang].processPlaceholder}</p>`;
+        }
+        
+        // 創建慶祝畫面的彩色紙屑
+        function createConfetti() {
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
+            const confettiContainer = document.createElement('div');
+            confettiContainer.style.position = 'fixed';
+            confettiContainer.style.top = '0';
+            confettiContainer.style.left = '0';
+            confettiContainer.style.width = '100%';
+            confettiContainer.style.height = '100%';
+            confettiContainer.style.pointerEvents = 'none';
+            confettiContainer.style.zIndex = '90';
+            document.body.appendChild(confettiContainer);
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.width = `${5 + Math.random() * 10}px`;
+                confetti.style.height = `${5 + Math.random() * 10}px`;
+                confetti.style.opacity = `${0.6 + Math.random() * 0.4}`;
+                confetti.style.animationDuration = `${3 + Math.random() * 4}s`;
+                
+                // 隨機形狀
+                const shapes = ['circle', 'square', 'triangle'];
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                if (shape === 'circle') {
+                    confetti.style.borderRadius = '50%';
+                } else if (shape === 'triangle') {
+                    confetti.style.width = '0';
+                    confetti.style.height = '0';
+                    confetti.style.borderLeft = `${5 + Math.random() * 10}px solid transparent`;
+                    confetti.style.borderRight = `${5 + Math.random() * 10}px solid transparent`;
+                    confetti.style.borderBottom = `${10 + Math.random() * 15}px solid ${colors[Math.floor(Math.random() * colors.length)]}`;
+                    confetti.style.backgroundColor = 'transparent';
+                }
+                
+                confettiContainer.appendChild(confetti);
+            }
+            
+            // 5秒後移除彩色紙屑
+            setTimeout(() => {
+                document.body.removeChild(confettiContainer);
+            }, 5000);
+        }
+        
+        // 顯示慶祝畫面
+        function showCelebration(badgeIndex, recipeName) {
+            const lang = translations[currentLang];
+            const celebrationOverlay = document.getElementById('celebrationOverlay');
+            const celebrationTitle = document.getElementById('celebrationTitle');
+            const celebrationBadge = document.getElementById('celebrationBadge');
+            const celebrationMessage = document.getElementById('celebrationMessage');
+            
+            // 設置慶祝畫面內容
+            if (badgeIndex >= 0) {
+                const badgeColors = [
+                    'bg-yellow-500', // 馬鈴薯湯徽章
+                    'bg-red-500',    // 番茄湯徽章
+                    'bg-blue-500',   // 魚湯徽章
+                    'bg-purple-500', // 馬鈴薯魚湯徽章
+                    'bg-green-500',  // 蔬菜湯徽章
+                    'bg-amber-500'   // 大雜燴徽章
+                ];
+                
+                const badgeIcons = ['🥔', '🍅', '🐟', '🥔🐟', '🥕🥦', '🍲'];
+                
+                celebrationTitle.textContent = lang.celebrationTitle;
+                celebrationBadge.textContent = badgeIcons[badgeIndex];
+                celebrationBadge.className = 'celebration-badge ' + badgeColors[badgeIndex];
+                
+                // 檢查是否是新獲得的徽章
+                if (!collectedBadges.includes(badgeIndex)) {
+                    celebrationMessage.textContent = lang.celebrationMessage;
+                } else {
+                    celebrationMessage.textContent = `${recipeName} ${lang.celebrationNoRecipe}`;
+                }
+                
+                // 檢查是否收集了所有徽章
+                if (collectedBadges.length === 6) {
+                    celebrationMessage.textContent = lang.celebrationAllBadges;
+                }
+            } else {
+                // 沒有匹配的食譜
+                celebrationTitle.textContent = lang.celebrationTitle;
+                celebrationBadge.textContent = '🍲';
+                celebrationBadge.className = 'celebration-badge bg-gray-500';
+                celebrationMessage.textContent = lang.celebrationNoRecipe;
+            }
+            
+            // 顯示慶祝畫面
+            celebrationOverlay.classList.add('active');
+            
+            // 創建彩色紙屑
+            createConfetti();
+        }
+        
+        // 顯示徽章通知
+        function showBadgeNotification(badgeName) {
+            const notification = document.getElementById('badgeNotification');
+            const notificationText = document.getElementById('badgeNotificationText');
+            
+            notificationText.textContent = translations[currentLang].badgeCollected.replace('{0}', badgeName);
+            notification.classList.add('active');
+            
+            // 5秒後隱藏通知
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 5000);
+        }
+        
+        // 烹飪功能
+        document.getElementById('cookButton').addEventListener('click', function() {
+            if (isCooking) return;
+            
+            if (ingredients.length === 0) {
+                alert(translations[currentLang].addIngredients);
+                return;
+            }
+            
+            isCooking = true;
+            clearProcessMessages();
+            
+            // 烹飪動畫
+            const potContent = document.getElementById('potContent');
+            potContent.classList.add('cooking-animation');
+            showSteam();
+            
+            // 烹飪過程顯示
+            const cookingMessages = [
+                translations[currentLang].cookingProcess1,
+                translations[currentLang].cookingProcess2,
+                translations[currentLang].cookingProcess3
+            ];
+            
+            // 添加食材特定的烹飪消息
+            const ingredientMessages = [];
+            if (ingredients.includes('🥔')) ingredientMessages.push(translations[currentLang].cookingProcessPotato);
+            if (ingredients.includes('🥕')) ingredientMessages.push(translations[currentLang].cookingProcessCarrot);
+            if (ingredients.includes('🍅')) ingredientMessages.push(translations[currentLang].cookingProcessTomato);
+            if (ingredients.includes('🧅')) ingredientMessages.push(translations[currentLang].cookingProcessOnion);
+            if (ingredients.includes('🥦')) ingredientMessages.push(translations[currentLang].cookingProcessBroccoli);
+            if (ingredients.includes('🐟')) ingredientMessages.push(translations[currentLang].cookingProcessFish);
+            
+            // 隨機選擇2個食材消息
+            if (ingredientMessages.length > 2) {
+                ingredientMessages.sort(() => 0.5 - Math.random());
+                ingredientMessages.splice(2);
+            }
+            
+            // 添加最終烹飪消息
+            cookingMessages.push(...ingredientMessages);
+            cookingMessages.push(translations[currentLang].cookingProcess4);
+            cookingMessages.push(translations[currentLang].cookingProcess5);
+            cookingMessages.push(translations[currentLang].cookingProcess6);
+            
+            // 顯示烹飪過程
+            let messageIndex = 0;
+            const messageInterval = setInterval(() => {
+                if (messageIndex < cookingMessages.length) {
+                    addProcessMessage(cookingMessages[messageIndex]);
+                    messageIndex++;
+                } else {
+                    clearInterval(messageInterval);
+                    
+                    // 根據食材組合獲得徽章
+                    let badgeIndex = -1;
+                    let badgeName = '';
+                    let recipeName = '';
+                    
+                    if (ingredients.includes('🥔') && ingredients.includes('🥕') && ingredients.includes('🧅')) {
+                        badgeIndex = 0; // 馬鈴薯湯徽章
+                        badgeName = translations[currentLang].badgeTooltip1;
+                        recipeName = translations[currentLang].recipe1Title;
+                    } else if (ingredients.includes('🍅') && ingredients.includes('🧅')) {
+                        badgeIndex = 1; // 番茄湯徽章
+                        badgeName = translations[currentLang].badgeTooltip2;
+                        recipeName = translations[currentLang].recipe2Title;
+                    } else if (ingredients.includes('🐟') && ingredients.includes('🥦')) {
+                        badgeIndex = 2; // 魚湯徽章
+                        badgeName = translations[currentLang].badgeTooltip3;
+                        recipeName = translations[currentLang].recipe3Title;
+                    } else if (ingredients.includes('🥔') && ingredients.includes('🐟')) {
+                        badgeIndex = 3; // 馬鈴薯魚湯徽章
+                        badgeName = translations[currentLang].badgeTooltip4;
+                        recipeName = translations[currentLang].recipe4Title;
+                    } else if (ingredients.includes('🥕') && ingredients.includes('🥦')) {
+                        badgeIndex = 4; // 蔬菜湯徽章
+                        badgeName = translations[currentLang].badgeTooltip5;
+                        recipeName = translations[currentLang].recipe5Title;
+                    } else if (ingredients.length >= 4) {
+                        badgeIndex = 5; // 大雜燴徽章
+                        badgeName = translations[currentLang].badgeTooltip6;
+                        recipeName = translations[currentLang].recipe6Title;
+                    }
+                    
+                    if (badgeIndex >= 0) {
+                        // 顯示識別出的食譜
+                        addProcessMessage(translations[currentLang].recipeIdentified.replace('{0}', recipeName));
+                        
+                        // 檢查是否是新獲得的徽章
+                        const isNewBadge = !collectedBadges.includes(badgeIndex);
+                        
+                        // 收集徽章
+                        if (isNewBadge) {
+                            collectBadge(badgeIndex);
+                            
+                            // 顯示獲得徽章通知
+                            showBadgeNotification(badgeName);
+                        }
+                        
+                        // 顯示慶祝畫面
+                        setTimeout(() => {
+                            showCelebration(badgeIndex, recipeName);
+                        }, 1000);
+                    } else {
+                        // 沒有匹配的食譜
+                        addProcessMessage(translations[currentLang].noRecipe);
+                        
+                        // 顯示慶祝畫面（無徽章）
+                        setTimeout(() => {
+                            showCelebration(-1);
+                        }, 1000);
+                    }
+                    
+                    // 清空鍋子
+                    setTimeout(() => {
+                        clearIngredients();
+                        isCooking = false;
+                    }, 500);
+                }
+            }, 800);
+        });
+        
+        // 清空鍋子按鈕
+        document.getElementById('clearButton').addEventListener('click', function() {
+            if (isCooking) return;
+            clearIngredients();
+        });
+        
+        // 清空鍋子和食材計數
+        function clearIngredients() {
+            ingredients = [];
+            
+            // 重置食材計數
+            for (let ingredient in ingredientCounts) {
+                ingredientCounts[ingredient] = 0;
+                updateIngredientCount(ingredient);
+            }
+            
+            updatePotContent();
+            highlightMatchingRecipes();
+        }
+        
+        // 收集徽章
+        function collectBadge(index) {
+            if (collectedBadges.includes(index)) return;
+            
+            collectedBadges.push(index);
+            
+            const badgeColors = [
+                'bg-yellow-500', // 馬鈴薯湯徽章
+                'bg-red-500',    // 番茄湯徽章
+                'bg-blue-500',   // 魚湯徽章
+                'bg-purple-500', // 馬鈴薯魚湯徽章
+                'bg-green-500',  // 蔬菜湯徽章
+                'bg-amber-500'   // 大雜燴徽章
+            ];
+            
+            const badgeIcons = ['🥔', '🍅', '🐟', '🥔🐟', '🥕🥦', '🍲'];
+            
+            const badge = document.getElementById(`badge${index+1}`);
+            badge.classList.remove('badge-empty');
+            badge.classList.add(badgeColors[index]);
+            badge.classList.add('badge-glow');
+            badge.textContent = badgeIcons[index];
+            
+            // 徽章收集動畫
+            badge.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                badge.style.transform = 'scale(1)';
+                setTimeout(() => {
+                    badge.classList.remove('badge-glow');
+                }, 3000);
+            }, 500);
+            
+            updateBadgeCounter();
+        }
+        
+        // 更新徽章計數器
+        function updateBadgeCounter() {
+            const counterText = translations[currentLang].badgeCounter.replace('{0}', collectedBadges.length);
+            document.getElementById('badgeCounter').textContent = counterText;
+        }
+        
+        // 初始化
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ac52b2b5b3f24c',t:'MTc1MTc3NTc2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
