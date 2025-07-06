@@ -1,0 +1,841 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>114年度雲林縣國中小因材網競賽計畫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#0369a1',
+                        'secondary-blue': '#0ea5e9',
+                        'light-blue': '#e0f2fe',
+                        'primary-orange': '#ea580c',
+                        'secondary-orange': '#fb923c',
+                        'light-orange': '#ffedd5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f9ff;
+            background-image: linear-gradient(120deg, #dbeafe 0%, #fff7ed 100%);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .timeline-item {
+            position: relative;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: #0ea5e9;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -5px;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #0ea5e9;
+        }
+        
+        .award-card {
+            transition: all 0.3s ease;
+        }
+        
+        .award-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .accordion-content.open {
+            max-height: 500px;
+        }
+        
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .pulse-button {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(234, 88, 12, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+        }
+        
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230ea5e9' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .bg-pattern-orange {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fb923c' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .shine {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            animation: shine 6s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            20%, 100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        .bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        /* Improved mobile-friendly tabs */
+        .tabs-container {
+            display: flex;
+            justify-content: space-between;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+            width: 100%;
+            padding: 0;
+        }
+        
+        .tabs-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
+        }
+        
+        .tab-btn {
+            flex: 1;
+            min-width: auto;
+            font-size: 0.9rem;
+            padding: 0.75rem 0.25rem;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        @media (min-width: 640px) {
+            .tab-btn {
+                font-size: 1rem;
+                padding: 0.75rem 0.5rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .tab-btn {
+                font-size: 1.1rem;
+                padding: 1rem 0.75rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .tab-btn {
+                font-size: 1.25rem;
+                padding: 1rem 1.5rem;
+            }
+        }
+        
+        /* Fix accordion content to be completely hidden */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .accordion-content.open {
+            max-height: 500px;
+            padding: 1rem;
+            padding-left: 3.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-primary-blue to-secondary-blue text-white py-8 px-4 shadow-lg relative overflow-hidden bg-pattern">
+            <div class="container mx-auto relative z-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-center shine">114年度雲林縣國中小因材網競賽計畫</h1>
+                <p class="text-xl text-center mt-2">時勢造因雄第二屆</p>
+                <p class="text-lg text-center mt-2">辦理單位：雲林縣數位學習推動辦公室</p>
+                
+                <div class="mt-6 text-center">
+                    <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-primary-orange hover:bg-secondary-orange text-white font-bold py-3 px-6 rounded-full transition-all duration-300 pulse-button">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        前往因材網參賽平台
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div class="absolute top-5 left-5 text-4xl text-blue-200 opacity-50 floating-icon">
+                <i class="fas fa-laptop-code"></i>
+            </div>
+            <div class="absolute bottom-5 right-5 text-4xl text-blue-200 opacity-50 floating-icon" style="animation-delay: 1s;">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="absolute top-1/2 left-1/4 text-5xl text-blue-200 opacity-30 floating-icon" style="animation-delay: 1.5s;">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="absolute bottom-1/3 right-1/4 text-4xl text-blue-200 opacity-30 floating-icon" style="animation-delay: 0.8s;">
+                <i class="fas fa-book-reader"></i>
+            </div>
+            <div class="absolute top-1/4 right-1/3 text-3xl text-blue-200 opacity-20 floating-icon" style="animation-delay: 2s;">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs - Optimized for mobile -->
+        <div class="bg-white shadow-md sticky top-0 z-20">
+            <div class="container mx-auto">
+                <div class="tabs-container" id="tabs">
+                    <button class="tab-btn border-b-4 border-primary-orange text-primary-orange" data-tab="overview">
+                        競賽概覽
+                    </button>
+                    <button class="tab-btn border-b-4 border-transparent hover:text-primary-orange" data-tab="elementary">
+                        國小獎項
+                    </button>
+                    <button class="tab-btn border-b-4 border-transparent hover:text-primary-orange" data-tab="junior">
+                        國中獎項
+                    </button>
+                    <button class="tab-btn border-b-4 border-transparent hover:text-primary-orange" data-tab="group">
+                        團體賽
+                    </button>
+                    <button class="tab-btn border-b-4 border-transparent hover:text-primary-orange" data-tab="faq">
+                        常見問題
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="container mx-auto py-8 px-4">
+            <!-- Overview Tab -->
+            <div id="overview-content" class="tab-content active">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-primary-blue bg-pattern">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-primary-blue flex items-center justify-center text-white mr-3">
+                            <i class="fas fa-info-circle text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-blue">競賽資訊</h2>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-light-blue p-5 rounded-lg border-l-4 border-secondary-blue transform transition-transform hover:scale-105">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 rounded-full bg-secondary-blue flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-secondary-blue">參加對象</h3>
+                            </div>
+                            <p class="text-gray-700">本縣各國中小教師、學生及家長</p>
+                        </div>
+                        
+                        <div class="bg-light-orange p-5 rounded-lg border-l-4 border-secondary-orange transform transition-transform hover:scale-105">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 rounded-full bg-secondary-orange flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-secondary-orange">活動期間</h3>
+                            </div>
+                            <p class="text-gray-700">114年06月16日至114年06月27日</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-primary-orange bg-pattern-orange">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-primary-orange flex items-center justify-center text-white mr-3">
+                            <i class="fas fa-clipboard-list text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-orange">競賽說明</h2>
+                    </div>
+                    
+                    <div class="pl-8 relative">
+                        <div class="timeline-item pl-6 pb-6">
+                            <div class="timeline-dot"></div>
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-secondary-blue flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-secondary-blue">競賽方式</h3>
+                            </div>
+                            <p class="text-gray-700">活動期間同學登入因材網平台進行自學或完成教師所派作業，採使用總時數（非登入停留時間）全縣進行排名，給予獎勵。</p>
+                        </div>
+                        
+                        <div class="timeline-item pl-6 pb-6">
+                            <div class="timeline-dot"></div>
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-secondary-blue flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-secondary-blue">分組方式</h3>
+                            </div>
+                            <p class="text-gray-700">分為國中組及國小組進行個人競賽，另設團體賽以校為單位。</p>
+                        </div>
+                        
+                        <div class="timeline-item pl-6 pb-6">
+                            <div class="timeline-dot"></div>
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-secondary-blue flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-secondary-blue">團體賽計算方式</h3>
+                            </div>
+                            <p class="text-gray-700">以校為單位取該校使用總時數（非登入停留時數）除以全校總載具數（以納入Jamf及教育部MDM載具管理系統之數量）後，全縣進行排名。</p>
+                        </div>
+                        
+                        <div class="timeline-item pl-6">
+                            <div class="timeline-dot"></div>
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-secondary-blue flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-laptop"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-secondary-blue">參賽準備</h3>
+                            </div>
+                            <p class="text-gray-700">參加者需自備電腦、平板、筆電等、穩定網路、音響喇叭或耳機等視聽設備。</p>
+                            <p class="text-gray-700 mt-2">本活動須有因材網帳號，將請各校因材網校管人員協助開通全校學生帳號。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-light-blue to-light-orange rounded-lg shadow-md p-6 mb-8 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-pattern opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-center items-center mb-4">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary-blue to-primary-orange flex items-center justify-center text-white mr-3 bounce">
+                                <i class="fas fa-lightbulb text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-primary-blue">立即參與</h2>
+                        </div>
+                        <p class="text-gray-700 mb-4">透過因材網平台，展現你的學習熱情，贏取豐富獎勵！</p>
+                        <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-primary-blue hover:bg-secondary-blue text-white font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg">
+                            <i class="fas fa-rocket mr-2"></i>
+                            開始學習之旅
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Elementary School Tab -->
+            <div id="elementary-content" class="tab-content">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-primary-blue bg-pattern">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-primary-blue flex items-center justify-center text-white mr-3">
+                            <i class="fas fa-child text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-blue">國小個人獎項</h2>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="award-card bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border-l-4 border-yellow-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-yellow-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">特優</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-yellow-500 text-3xl mr-3">🏆</span>
+                                <h3 class="text-xl font-bold text-yellow-800">特優</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-yellow-500 mr-2"></i><span class="font-medium">名額：</span>共3名</li>
+                                <li><i class="fas fa-sort-amount-up text-yellow-500 mr-2"></i><span class="font-medium">條件：</span>全縣使用總時數前3名</li>
+                                <li><i class="fas fa-clock text-yellow-500 mr-2"></i><span class="font-medium">時數要求：</span>不得低於20小時</li>
+                                <li><i class="fas fa-gift text-yellow-500 mr-2"></i><span class="font-medium">獎勵：</span>獎狀一張、獎金壹仟元禮券</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="award-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-l-4 border-blue-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-blue-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">優選</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-blue-500 text-3xl mr-3">🥈</span>
+                                <h3 class="text-xl font-bold text-blue-800">優選</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-blue-500 mr-2"></i><span class="font-medium">名額：</span>共8名</li>
+                                <li><i class="fas fa-sort-amount-up text-blue-500 mr-2"></i><span class="font-medium">條件：</span>全縣使用總時數前4至11名</li>
+                                <li><i class="fas fa-clock text-blue-500 mr-2"></i><span class="font-medium">時數要求：</span>不得低於10小時</li>
+                                <li><i class="fas fa-gift text-blue-500 mr-2"></i><span class="font-medium">獎勵：</span>獎狀一張、獎金伍佰元禮券</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="award-card bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 border-l-4 border-green-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-green-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">佳作</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-green-500 text-3xl mr-3">🥉</span>
+                                <h3 class="text-xl font-bold text-green-800">佳作</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-green-500 mr-2"></i><span class="font-medium">名額：</span>共20名</li>
+                                <li><i class="fas fa-sort-amount-up text-green-500 mr-2"></i><span class="font-medium">條件：</span>全縣使用總時數前12至31名</li>
+                                <li><i class="fas fa-clock text-green-500 mr-2"></i><span class="font-medium">時數要求：</span>不得低於8小時</li>
+                                <li><i class="fas fa-gift text-green-500 mr-2"></i><span class="font-medium">獎勵：</span>獎狀一張、獎金貳佰元禮券</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-light-blue to-light-orange rounded-lg shadow-md p-6 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-pattern-orange opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-center items-center mb-4">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary-orange to-primary-blue flex items-center justify-center text-white mr-3 bounce">
+                                <i class="fas fa-star text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-primary-blue">挑戰自我，成就未來！</h2>
+                        </div>
+                        <p class="text-gray-700 mb-4">國小學生們，快來展現你的學習熱情！</p>
+                        <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-primary-orange hover:bg-secondary-orange text-white font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            前往因材網參賽平台
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Junior High School Tab -->
+            <div id="junior-content" class="tab-content">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-primary-orange bg-pattern-orange">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-primary-orange flex items-center justify-center text-white mr-3">
+                            <i class="fas fa-user-graduate text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-orange">國中個人獎項</h2>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="award-card bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border-l-4 border-yellow-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-yellow-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">特優</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-yellow-500 text-3xl mr-3">🏆</span>
+                                <h3 class="text-xl font-bold text-yellow-800">特優</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-yellow-500 mr-2"></i><span class="font-medium">名額：</span>共3名</li>
+                                <li><i class="fas fa-sort-amount-up text-yellow-500 mr-2"></i><span class="font-medium">條件：</span>全縣使用總時數前3名</li>
+                                <li><i class="fas fa-clock text-yellow-500 mr-2"></i><span class="font-medium">時數要求：</span>不得低於8小時</li>
+                                <li><i class="fas fa-gift text-yellow-500 mr-2"></i><span class="font-medium">獎勵：</span>獎狀一張、獎金壹仟元禮券</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="award-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-l-4 border-blue-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-blue-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">優選</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-blue-500 text-3xl mr-3">🥈</span>
+                                <h3 class="text-xl font-bold text-blue-800">優選</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-blue-500 mr-2"></i><span class="font-medium">名額：</span>共5名</li>
+                                <li><i class="fas fa-sort-amount-up text-blue-500 mr-2"></i><span class="font-medium">條件：</span>全縣使用總時數前4至8名</li>
+                                <li><i class="fas fa-clock text-blue-500 mr-2"></i><span class="font-medium">時數要求：</span>不得低於5小時</li>
+                                <li><i class="fas fa-gift text-blue-500 mr-2"></i><span class="font-medium">獎勵：</span>獎狀一張、獎金伍佰元禮券</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="award-card bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 border-l-4 border-green-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-green-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">佳作</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-green-500 text-3xl mr-3">🥉</span>
+                                <h3 class="text-xl font-bold text-green-800">佳作</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-green-500 mr-2"></i><span class="font-medium">名額：</span>共15名</li>
+                                <li><i class="fas fa-sort-amount-up text-green-500 mr-2"></i><span class="font-medium">條件：</span>全縣使用總時數前9至23名</li>
+                                <li><i class="fas fa-clock text-green-500 mr-2"></i><span class="font-medium">時數要求：</span>不得低於3小時</li>
+                                <li><i class="fas fa-gift text-green-500 mr-2"></i><span class="font-medium">獎勵：</span>獎狀一張、獎金貳佰元禮券</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-light-orange to-light-blue rounded-lg shadow-md p-6 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-pattern opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-center items-center mb-4">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary-blue to-primary-orange flex items-center justify-center text-white mr-3 bounce">
+                                <i class="fas fa-award text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-primary-orange">知識就是力量！</h2>
+                        </div>
+                        <p class="text-gray-700 mb-4">國中學生們，透過因材網展現你的學習實力！</p>
+                        <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-primary-blue hover:bg-secondary-blue text-white font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            前往因材網參賽平台
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Competition Tab -->
+            <div id="group-content" class="tab-content">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-primary-blue bg-pattern">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-primary-blue flex items-center justify-center text-white mr-3">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-blue">團體賽獎項</h2>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="award-card bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border-l-4 border-yellow-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-yellow-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">特優</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-yellow-500 text-3xl mr-3">🏆</span>
+                                <h3 class="text-xl font-bold text-yellow-800">特優</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-yellow-500 mr-2"></i><span class="font-medium">名額：</span>共1名</li>
+                                <li><i class="fas fa-sort-amount-up text-yellow-500 mr-2"></i><span class="font-medium">條件：</span>全縣最高之學校</li>
+                                <li><i class="fas fa-calculator text-yellow-500 mr-2"></i><span class="font-medium">計算方式：</span>該校使用總時數除以全校總載具數</li>
+                                <li><i class="fas fa-gift text-yellow-500 mr-2"></i><span class="font-medium">獎勵：</span>獎牌一面、獎金捌仟元禮券</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="award-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-l-4 border-blue-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-blue-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">優選</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-blue-500 text-3xl mr-3">🥈</span>
+                                <h3 class="text-xl font-bold text-blue-800">優選</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-blue-500 mr-2"></i><span class="font-medium">名額：</span>共1名</li>
+                                <li><i class="fas fa-sort-amount-up text-blue-500 mr-2"></i><span class="font-medium">條件：</span>全縣次高之學校</li>
+                                <li><i class="fas fa-calculator text-blue-500 mr-2"></i><span class="font-medium">計算方式：</span>該校使用總時數除以全校總載具數</li>
+                                <li><i class="fas fa-gift text-blue-500 mr-2"></i><span class="font-medium">獎勵：</span>獎牌一面、獎金伍仟元禮券</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="award-card bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 border-l-4 border-green-500 shadow-md relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16">
+                                <div class="absolute transform rotate-45 bg-green-500 text-white font-bold text-xs text-center py-1 right-[-35px] top-[15px] w-[120px]">佳作</div>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-green-500 text-3xl mr-3">🥉</span>
+                                <h3 class="text-xl font-bold text-green-800">佳作</h3>
+                            </div>
+                            <ul class="text-gray-700 space-y-2">
+                                <li><i class="fas fa-medal text-green-500 mr-2"></i><span class="font-medium">名額：</span>共1名</li>
+                                <li><i class="fas fa-sort-amount-up text-green-500 mr-2"></i><span class="font-medium">條件：</span>全縣第三高之學校</li>
+                                <li><i class="fas fa-calculator text-green-500 mr-2"></i><span class="font-medium">計算方式：</span>該校使用總時數除以全校總載具數</li>
+                                <li><i class="fas fa-gift text-green-500 mr-2"></i><span class="font-medium">獎勵：</span>獎牌一面、獎金參仟元禮券</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-light-blue to-light-orange rounded-lg shadow-md p-6 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-pattern-orange opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-center items-center mb-4">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary-orange to-primary-blue flex items-center justify-center text-white mr-3 bounce">
+                                <i class="fas fa-school text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-primary-blue">團結力量大！</h2>
+                        </div>
+                        <p class="text-gray-700 mb-4">號召全校師生一起參與，為學校爭取榮譽！</p>
+                        <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-primary-orange hover:bg-secondary-orange text-white font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            前往因材網參賽平台
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Tab -->
+            <div id="faq-content" class="tab-content">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-primary-orange bg-pattern-orange">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-primary-orange flex items-center justify-center text-white mr-3">
+                            <i class="fas fa-question-circle text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-orange">常見問題</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden">
+                            <button class="accordion-btn flex justify-between items-center w-full text-left font-medium text-primary-blue p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-secondary-orange flex items-center justify-center text-white mr-2">
+                                        <i class="fas fa-award"></i>
+                                    </div>
+                                    <span>如何領取獎項？</span>
+                                </div>
+                                <svg class="w-5 h-5 transform transition-transform text-secondary-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-content bg-white text-gray-700 border-t border-gray-200">
+                                <p>得獎名單公布後 30 個工作日內，請得獎者至土庫越港國小三樓，雲林數位學習推動辦公室領取。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden">
+                            <button class="accordion-btn flex justify-between items-center w-full text-left font-medium text-primary-blue p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-secondary-orange flex items-center justify-center text-white mr-2">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
+                                    <span>獎項可以更換或折換現金嗎？</span>
+                                </div>
+                                <svg class="w-5 h-5 transform transition-transform text-secondary-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-content bg-white text-gray-700 border-t border-gray-200">
+                                <p>獎項規格、外觀以實物為準，恕不提供樣式與顏色挑選。除活動另有規定外，本活動中獎人不得以任何理由要求補發、轉讓、折換現金或更換其他獎項，亦不得將得獎權利轉讓第三人。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden">
+                            <button class="accordion-btn flex justify-between items-center w-full text-left font-medium text-primary-blue p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-secondary-orange flex items-center justify-center text-white mr-2">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <span>獎項遺失或被竊怎麼辦？</span>
+                                </div>
+                                <svg class="w-5 h-5 transform transition-transform text-secondary-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-content bg-white text-gray-700 border-t border-gray-200">
+                                <p>得獎者簽收獎項後，若有遺失或被竊等情形，主辦及承辦單位不補發獎項。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden">
+                            <button class="accordion-btn flex justify-between items-center w-full text-left font-medium text-primary-blue p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-secondary-orange flex items-center justify-center text-white mr-2">
+                                        <i class="fas fa-times-circle"></i>
+                                    </div>
+                                    <span>如果參賽者未達得獎標準怎麼辦？</span>
+                                </div>
+                                <svg class="w-5 h-5 transform transition-transform text-secondary-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-content bg-white text-gray-700 border-t border-gray-200">
+                                <p>若參賽者未達得獎標準該獎項將以從缺方式處理。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden">
+                            <button class="accordion-btn flex justify-between items-center w-full text-left font-medium text-primary-blue p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-secondary-orange flex items-center justify-center text-white mr-2">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <span>獎項頒發地區有限制嗎？</span>
+                                </div>
+                                <svg class="w-5 h-5 transform transition-transform text-secondary-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-content bg-white text-gray-700 border-t border-gray-200">
+                                <p>本活動獎項頒發地區僅限雲林縣。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-light-orange to-light-blue rounded-lg shadow-md p-6 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-pattern opacity-10"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-center items-center mb-4">
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-primary-blue to-primary-orange flex items-center justify-center text-white mr-3 bounce">
+                                <i class="fas fa-external-link-alt text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-primary-orange">立即參與競賽</h2>
+                        </div>
+                        <p class="text-gray-700 mb-4">前往因材網平台，開始你的學習之旅！</p>
+                        <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-primary-orange hover:bg-secondary-orange text-white font-bold py-3 px-6 rounded-full transition-all duration-300 shadow-lg">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            前往因材網參賽平台
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gradient-to-r from-primary-blue to-primary-orange text-white py-8 px-4 relative overflow-hidden">
+            <div class="absolute inset-0 bg-pattern opacity-10"></div>
+            <div class="container mx-auto relative z-10">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-6 md:mb-0">
+                        <h3 class="text-xl font-bold mb-2 flex items-center">
+                            <i class="fas fa-building mr-2"></i>
+                            雲林縣數位學習推動辦公室
+                        </h3>
+                        <div class="flex items-center mb-1">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            <p>地址：633雲林縣土庫鎮林森路120號</p>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-phone-alt mr-2"></i>
+                            <p>電話：05-6341014#816</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center md:text-right">
+                        <p class="mb-2 font-bold">114年度雲林縣國中小因材網競賽計畫</p>
+                        <p class="text-sm text-blue-100">活動期間：114年06月16日至114年06月27日</p>
+                        <div class="mt-4">
+                            <a href="https://adl.edu.tw/HomePage/home/" target="_blank" class="inline-flex items-center bg-white text-primary-blue hover:bg-blue-100 font-bold py-2 px-4 rounded-full transition-all duration-300 text-sm shadow-md">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                前往因材網參賽平台
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('border-primary-orange', 'text-primary-orange'));
+                tabs.forEach(t => t.classList.add('border-transparent'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('border-primary-orange', 'text-primary-orange');
+                tab.classList.remove('border-transparent');
+                document.getElementById(`${target}-content`).classList.add('active');
+            });
+        });
+        
+        // Accordion functionality
+        const accordionBtns = document.querySelectorAll('.accordion-btn');
+        
+        accordionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const content = btn.nextElementSibling;
+                const icon = btn.querySelector('svg');
+                
+                // Toggle content visibility
+                content.classList.toggle('open');
+                
+                // Rotate icon
+                if (content.classList.contains('open')) {
+                    icon.classList.add('rotate-180');
+                } else {
+                    icon.classList.remove('rotate-180');
+                }
+            });
+        });
+        
+        // Add some animation to elements when they come into view
+        const animateOnScroll = () => {
+            const cards = document.querySelectorAll('.award-card');
+            
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (cardTop < windowHeight - 100) {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }
+            });
+        };
+        
+        // Set initial state for cards
+        document.querySelectorAll('.award-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        });
+        
+        // Listen for scroll events
+        window.addEventListener('scroll', animateOnScroll);
+        window.addEventListener('load', animateOnScroll);
+        
+        // Initialize accordion to be closed on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionContents = document.querySelectorAll('.accordion-content');
+            accordionContents.forEach(content => {
+                content.classList.remove('open');
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae2c6dd007f244',t:'MTc1MTc5NTE3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
