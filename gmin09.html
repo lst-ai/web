@@ -1,0 +1,980 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激活腦力的數獨遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 640px) {
+            .cell {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+        
+        .cell:hover:not(.initial) {
+            background-color: #e2f0ff !important;
+        }
+        
+        .cell.selected {
+            background-color: #bbdefb !important;
+            box-shadow: 0 0 0 2px #2196f3;
+            animation: pulse-border 1.5s infinite;
+        }
+        
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.8); }
+            50% { box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.4); }
+            100% { box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.8); }
+        }
+        
+        .cell.initial {
+            color: #0d47a1; /* 深藍色 */
+            font-weight: 700;
+            background-color: #e3f2fd; /* 淺藍色背景 */
+        }
+        
+        .cell.empty {
+            background-color: #f8f3e6; /* 淺米黃色背景 */
+        }
+        
+        .cell.user-input {
+            color: #006400; /* 深綠色 */
+            font-weight: 600;
+            background-color: #ffffff; /* 白色背景 */
+        }
+        
+        .cell.error {
+            color: #d32f2f;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+        
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        /* Number fade in/out animations */
+        .fade-in {
+            animation: fadeIn 0.3s forwards;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.3s forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.8); }
+        }
+        
+        .number-pad button {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 640px) {
+            .number-pad button {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            
+            /* 手機版數字鍵盤排列 - 縮小間距 */
+            .number-pad-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .number-row {
+                display: flex;
+                justify-content: center;
+                /* 縮小間距，讓數字更緊湊 */
+                gap: 4px;
+                /* 添加水平內邊距，避免1和9太靠近邊緣 */
+                padding: 0 10px;
+                /* 確保整個行居中 */
+                width: 100%;
+                max-width: 320px;
+                margin: 0 auto;
+            }
+            
+            .clear-btn-container {
+                display: flex;
+                justify-content: center;
+            }
+            
+            .clear-btn {
+                width: auto !important;
+                min-width: 80px;
+                padding: 0 16px !important;
+            }
+        }
+        
+        /* 電腦版清除按鈕樣式 */
+        .clear-btn {
+            width: auto !important;
+            min-width: 60px;
+            padding: 0 12px !important;
+        }
+        
+        .number-pad button:hover {
+            transform: scale(1.1);
+        }
+        
+        .number-pad button:active {
+            transform: scale(0.95);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .border-bold-right {
+            border-right: 3px solid #333;
+        }
+        
+        .border-bold-bottom {
+            border-bottom: 3px solid #333;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .celebrate {
+            animation: celebrate 0.5s ease-in-out;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+        
+        .rules {
+            background-color: #e8f4ff;
+            border-left: 4px solid #2196f3;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spin {
+            animation: spin 1s ease-in-out;
+        }
+        
+        .success-emoji {
+            display: inline-block;
+            font-size: 2rem;
+            margin: 0 0.5rem;
+            animation: celebrate 1s infinite;
+            animation-delay: calc(var(--delay) * 0.2s);
+        }
+        
+        .copy-tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            transform: translateY(-100%);
+            margin-top: -5px;
+        }
+        
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+        
+        .footer {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* Copy button animation */
+        @keyframes success-bg {
+            0% { background-color: #ffffff; }
+            30% { background-color: #d4edda; }
+            100% { background-color: #ffffff; }
+        }
+        
+        .copy-success {
+            animation: success-bg 2s ease;
+            color: #28a745 !important;
+            border-color: #28a745 !important;
+        }
+        
+        /* 難度選擇器樣式 */
+        .difficulty-container {
+            background-color: #e8f4ff;
+            border-radius: 8px;
+            padding: 6px 12px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .difficulty-label {
+            font-weight: 600;
+            color: #2196f3;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl my-4">
+        <div class="p-4">
+            <!-- 標題區域 - 在手機上完整顯示 -->
+            <div class="flex flex-col mb-4">
+                <h1 class="text-2xl sm:text-3xl font-bold text-indigo-800 text-center mb-2">🧩 激活腦力的數獨遊戲 🧠</h1>
+                <div class="flex justify-center gap-2">
+                    <button id="new-game" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 sm:py-2 px-3 sm:px-4 rounded-lg transition-all text-sm sm:text-base">
+                        新遊戲
+                    </button>
+                    <button id="check-solution" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 sm:py-2 px-3 sm:px-4 rounded-lg transition-all text-sm sm:text-base">
+                        檢查
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 規則說明 - 手機上每項一行 -->
+            <div class="rules p-2 sm:p-3 rounded-lg mb-4 text-sm">
+                <h2 class="font-bold text-base sm:text-lg text-indigo-800 mb-1">數獨規則：</h2>
+                <ul class="list-disc pl-4 text-xs sm:text-sm text-gray-700">
+                    <li class="mb-1">在每一行中，數字 1-9 只能出現一次</li>
+                    <li class="mb-1">在每一列中，數字 1-9 只能出現一次</li>
+                    <li class="mb-1">在每個 3x3 宮格中，數字 1-9 只能出現一次</li>
+                    <li class="mb-1">點擊空格後，使用下方數字鍵盤填入數字</li>
+                    <li class="mb-1">藍色數字是初始數字，綠色數字是您填入的數字</li>
+                    <li>紅色數字表示有衝突，需要修改</li>
+                </ul>
+            </div>
+            
+            <div class="flex justify-center mb-4">
+                <div id="timer" class="text-xl font-semibold text-gray-700">00:00</div>
+            </div>
+            
+            <div class="flex justify-center mb-4">
+                <div id="board" class="grid grid-cols-9 gap-0 border-2 border-gray-800 bg-gray-100">
+                    <!-- Sudoku board will be generated here -->
+                </div>
+            </div>
+            
+            <!-- 數字鍵盤 - 手機版單獨一行，清除按鈕居中 -->
+            <div class="number-pad mb-4">
+                <!-- 手機版數字鍵盤 - 縮小間距 -->
+                <div class="number-pad-container sm:hidden">
+                    <div class="number-row">
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="1">1</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="2">2</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="3">3</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="4">4</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="5">5</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="6">6</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="7">7</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="8">8</button>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="9">9</button>
+                    </div>
+                    <div class="clear-btn-container mt-2">
+                        <button class="bg-red-500 hover:bg-red-600 text-white rounded-lg clear-btn" data-number="0">清除</button>
+                    </div>
+                </div>
+                
+                <!-- 電腦版數字鍵盤 -->
+                <div class="hidden sm:flex justify-center flex-wrap gap-2">
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="1">1</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="2">2</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="3">3</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="4">4</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="5">5</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="6">6</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="7">7</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="8">8</button>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg" data-number="9">9</button>
+                    <button class="bg-red-500 hover:bg-red-600 text-white rounded-lg clear-btn" data-number="0">清除</button>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <div class="difficulty-container">
+                    <span class="difficulty-label">難度：</span>
+                    <select id="difficulty" class="border rounded px-2 py-1">
+                        <option value="easy">簡單</option>
+                        <option value="medium">中等</option>
+                        <option value="hard">困難</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部資訊 - 垂直排列 -->
+        <div class="footer p-3 text-center text-sm text-gray-600">
+            <p class="mb-2">遊戲設計與製作：呂舒婷</p>
+            
+            <!-- Facebook連結區塊 - 垂直排列 -->
+            <div class="flex flex-col items-center mb-2">
+                <div class="mb-1">了解更多🔍 Fb：</div>
+                <div class="flex items-center">
+                    <span id="fb-link" class="text-blue-600 text-xs sm:text-sm mr-2 truncate max-w-[200px]">https://www.facebook.com/yobi.lu</span>
+                    <button id="copy-fb" class="text-blue-600 border border-blue-300 rounded px-2 py-1 hover:bg-blue-50 transition-all text-xs sm:text-sm">複製</button>
+                </div>
+            </div>
+            
+            <p>📧 luuyobi@gmail.com</p>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <div class="bg-white rounded-lg p-4 sm:p-8 z-10 max-w-md w-full mx-4 shadow-2xl">
+            <div class="text-center">
+                <div class="text-4xl sm:text-5xl mb-4">🏆</div>
+                <div class="flex justify-center mb-2">
+                    <span class="success-emoji" style="--delay: 0">⭐</span>
+                    <span class="success-emoji" style="--delay: 1">🎉</span>
+                    <span class="success-emoji" style="--delay: 2">🎊</span>
+                    <span class="success-emoji" style="--delay: 3">⭐</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-green-600 mb-4 spin">恭喜！太棒了！</h2>
+                <p class="text-base sm:text-lg mb-6">你成功完成了數獨遊戲！你的腦力真是驚人！</p>
+                <div id="completion-time" class="text-lg sm:text-xl font-bold mb-6 bg-indigo-100 py-2 px-4 rounded-lg inline-block">完成時間：00:00</div>
+                <button id="close-modal" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-all">
+                    再來一局
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let selectedCell = null;
+            let timer = null;
+            let seconds = 0;
+            let initialBoard = [];
+            let solution = [];
+            let currentBoard = [];
+            let difficulty = 'easy';
+            
+            // Initialize the game
+            initializeGame();
+            
+            // Event listeners
+            document.getElementById('new-game').addEventListener('click', initializeGame);
+            document.getElementById('check-solution').addEventListener('click', checkSolution);
+            document.getElementById('difficulty').addEventListener('change', function() {
+                difficulty = this.value;
+                initializeGame();
+            });
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('success-modal').classList.add('hidden');
+                initializeGame();
+            });
+            
+            // Copy button functionality - 直接使用原生方法
+            document.getElementById('copy-fb').addEventListener('click', function() {
+                const fbLink = document.getElementById('fb-link').textContent;
+                const copyBtn = this;
+                
+                // 創建一個臨時的textarea元素來複製文本
+                const textarea = document.createElement('textarea');
+                textarea.value = fbLink;
+                textarea.style.position = 'fixed';  // 避免滾動到底部
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    // 執行複製命令
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        // 更改按鈕文字
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '已複製';
+                        copyBtn.style.color = '#28a745';
+                        copyBtn.style.borderColor = '#28a745';
+                        
+                        // 2秒後恢復原狀
+                        setTimeout(function() {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.color = '';
+                            copyBtn.style.borderColor = '';
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error('複製失敗:', err);
+                }
+                
+                // 移除臨時元素
+                document.body.removeChild(textarea);
+                
+                // 添加漣漪效果
+                createRipple(this);
+            });
+            
+            // 備用方法 - 如果上面的方法不起作用，可以嘗試使用Clipboard API
+            function setupClipboardAPI() {
+                document.getElementById('copy-fb').addEventListener('click', function() {
+                    const fbLink = document.getElementById('fb-link').textContent;
+                    const copyBtn = this;
+                    
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(fbLink)
+                            .then(function() {
+                                // 更改按鈕文字
+                                const originalText = copyBtn.textContent;
+                                copyBtn.textContent = '已複製';
+                                copyBtn.style.color = '#28a745';
+                                copyBtn.style.borderColor = '#28a745';
+                                
+                                // 2秒後恢復原狀
+                                setTimeout(function() {
+                                    copyBtn.textContent = originalText;
+                                    copyBtn.style.color = '';
+                                    copyBtn.style.borderColor = '';
+                                }, 2000);
+                            })
+                            .catch(function(err) {
+                                console.error('複製失敗:', err);
+                                // 如果Clipboard API失敗，嘗試使用execCommand
+                                fallbackCopyTextToClipboard(fbLink, copyBtn);
+                            });
+                    } else {
+                        // 如果不支持Clipboard API，使用execCommand
+                        fallbackCopyTextToClipboard(fbLink, copyBtn);
+                    }
+                    
+                    // 添加漣漪效果
+                    createRipple(this);
+                });
+            }
+            
+            // 嘗試使用兩種方法
+            try {
+                setupClipboardAPI();
+            } catch (e) {
+                console.log("使用備用複製方法");
+            }
+            
+            function fallbackCopyTextToClipboard(text, button) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        // 更改按鈕文字
+                        const originalText = button.textContent;
+                        button.textContent = '已複製';
+                        button.style.color = '#28a745';
+                        button.style.borderColor = '#28a745';
+                        
+                        // 2秒後恢復原狀
+                        setTimeout(function() {
+                            button.textContent = originalText;
+                            button.style.color = '';
+                            button.style.borderColor = '';
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error('複製失敗:', err);
+                }
+                
+                document.body.removeChild(textarea);
+            }
+            
+            // Add ripple effect to all buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    createRipple(this);
+                });
+            });
+            
+            // Number pad buttons
+            document.querySelectorAll('.number-pad button').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (selectedCell) {
+                        const number = this.getAttribute('data-number');
+                        const row = parseInt(selectedCell.getAttribute('data-row'));
+                        const col = parseInt(selectedCell.getAttribute('data-col'));
+                        
+                        if (number === '0') {
+                            // Add fade-out animation before clearing
+                            if (selectedCell.textContent) {
+                                const currentContent = selectedCell.textContent;
+                                selectedCell.classList.add('fade-out');
+                                
+                                setTimeout(() => {
+                                    selectedCell.textContent = '';
+                                    currentBoard[row][col] = 0;
+                                    selectedCell.classList.remove('error');
+                                    selectedCell.classList.remove('user-input');
+                                    selectedCell.classList.add('empty');
+                                    selectedCell.classList.remove('fade-out');
+                                }, 200);
+                            }
+                        } else {
+                            // Add fade-in animation when adding a number
+                            const oldContent = selectedCell.textContent;
+                            selectedCell.textContent = number;
+                            currentBoard[row][col] = parseInt(number);
+                            selectedCell.classList.add('user-input');
+                            selectedCell.classList.remove('empty');
+                            
+                            // Apply fade-in animation only if the cell was empty or had a different number
+                            if (!oldContent || oldContent !== number) {
+                                selectedCell.classList.add('fade-in');
+                                setTimeout(() => {
+                                    selectedCell.classList.remove('fade-in');
+                                }, 300);
+                            }
+                            
+                            // Check if the number is valid
+                            if (!isValid(row, col, parseInt(number))) {
+                                selectedCell.classList.add('error');
+                            } else {
+                                selectedCell.classList.remove('error');
+                                
+                                // Check if the board is complete
+                                if (isBoardComplete()) {
+                                    stopTimer();
+                                    showSuccessModal();
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            function initializeGame() {
+                // Reset variables
+                stopTimer();
+                seconds = 0;
+                updateTimerDisplay();
+                
+                // Generate a new Sudoku puzzle
+                const { puzzle, solvedPuzzle } = generateSudoku(difficulty);
+                initialBoard = JSON.parse(JSON.stringify(puzzle));
+                solution = solvedPuzzle;
+                currentBoard = JSON.parse(JSON.stringify(puzzle));
+                
+                // Create the board UI
+                createBoard();
+                
+                // Start the timer
+                startTimer();
+            }
+            
+            function createBoard() {
+                const board = document.getElementById('board');
+                board.innerHTML = '';
+                
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell', 'border', 'border-gray-400');
+                        
+                        // Add bold borders for 3x3 grids
+                        if (col === 2 || col === 5) {
+                            cell.classList.add('border-bold-right');
+                        }
+                        if (row === 2 || row === 5) {
+                            cell.classList.add('border-bold-bottom');
+                        }
+                        
+                        cell.setAttribute('data-row', row);
+                        cell.setAttribute('data-col', col);
+                        
+                        if (initialBoard[row][col] !== 0) {
+                            cell.textContent = initialBoard[row][col];
+                            cell.classList.add('initial');
+                        } else {
+                            cell.classList.add('empty');
+                            cell.addEventListener('click', selectCell);
+                        }
+                        
+                        board.appendChild(cell);
+                    }
+                }
+            }
+            
+            function selectCell(e) {
+                // Create ripple effect
+                createRipple(this);
+                
+                // Remove selection from previous cell
+                if (selectedCell) {
+                    selectedCell.classList.remove('selected');
+                }
+                
+                // Select new cell
+                this.classList.add('selected');
+                selectedCell = this;
+            }
+            
+            // Function to create ripple effect
+            function createRipple(element) {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                
+                const rect = element.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                
+                ripple.style.width = ripple.style.height = `${size}px`;
+                
+                element.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }
+            
+            function startTimer() {
+                timer = setInterval(function() {
+                    seconds++;
+                    updateTimerDisplay();
+                }, 1000);
+            }
+            
+            function stopTimer() {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+            }
+            
+            function updateTimerDisplay() {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                const display = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                document.getElementById('timer').textContent = display;
+            }
+            
+            function isValid(row, col, num) {
+                // Check row
+                for (let i = 0; i < 9; i++) {
+                    if (i !== col && currentBoard[row][i] === num) {
+                        return false;
+                    }
+                }
+                
+                // Check column
+                for (let i = 0; i < 9; i++) {
+                    if (i !== row && currentBoard[i][col] === num) {
+                        return false;
+                    }
+                }
+                
+                // Check 3x3 box
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        const r = boxRow + i;
+                        const c = boxCol + j;
+                        if ((r !== row || c !== col) && currentBoard[r][c] === num) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            }
+            
+            function isBoardComplete() {
+                // Check if all cells are filled
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (currentBoard[row][col] === 0) {
+                            return false;
+                        }
+                        
+                        // Check if the current value is valid
+                        const temp = currentBoard[row][col];
+                        currentBoard[row][col] = 0;
+                        const valid = isValid(row, col, temp);
+                        currentBoard[row][col] = temp;
+                        
+                        if (!valid) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            }
+            
+            function checkSolution() {
+                let isCorrect = true;
+                
+                // Check each cell
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        
+                        if (currentBoard[row][col] === 0) {
+                            // Empty cell
+                            isCorrect = false;
+                        } else if (currentBoard[row][col] !== solution[row][col]) {
+                            // Incorrect value
+                            cell.classList.add('error');
+                            isCorrect = false;
+                        } else {
+                            cell.classList.remove('error');
+                        }
+                    }
+                }
+                
+                if (isCorrect) {
+                    stopTimer();
+                    showSuccessModal();
+                }
+            }
+            
+            function showSuccessModal() {
+                document.getElementById('completion-time').textContent = `完成時間：${document.getElementById('timer').textContent}`;
+                document.getElementById('success-modal').classList.remove('hidden');
+                createConfetti();
+                
+                // Add celebration animation to the board
+                const board = document.getElementById('board');
+                board.classList.add('celebrate');
+                setTimeout(() => {
+                    board.classList.remove('celebrate');
+                }, 500);
+            }
+            
+            function createConfetti() {
+                const colors = [
+                    '#ff0000', '#00ff00', '#0000ff', '#ffff00', 
+                    '#ff00ff', '#00ffff', '#ff8800', '#8800ff',
+                    '#ff0088', '#00ff88', '#ffcc00', '#00ccff'
+                ];
+                
+                for (let i = 0; i < 150; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('confetti');
+                    
+                    // Random shape (circle or square)
+                    if (Math.random() > 0.5) {
+                        confetti.style.borderRadius = '50%';
+                    }
+                    
+                    // Random size
+                    const size = 5 + Math.random() * 10;
+                    confetti.style.width = `${size}px`;
+                    confetti.style.height = `${size}px`;
+                    
+                    // Random color
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // Random position
+                    confetti.style.left = `${Math.random() * 100}%`;
+                    confetti.style.top = `-10px`;
+                    
+                    // Random rotation
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    // Animate confetti
+                    const animation = confetti.animate([
+                        { top: '-10px', opacity: 1, transform: `rotate(0deg)` },
+                        { top: '100vh', opacity: 0, transform: `rotate(${720 + Math.random() * 720}deg)` }
+                    ], {
+                        duration: 1500 + Math.random() * 3000,
+                        easing: 'cubic-bezier(0,0.9,0.57,1)',
+                        delay: Math.random() * 1500
+                    });
+                    
+                    animation.onfinish = function() {
+                        confetti.remove();
+                    };
+                }
+            }
+            
+            // Sudoku generator functions
+            function generateSudoku(difficulty) {
+                // Create a solved Sudoku board
+                const solvedBoard = createSolvedBoard();
+                
+                // Create a puzzle by removing numbers from the solved board
+                let numToRemove;
+                switch (difficulty) {
+                    case 'easy':
+                        numToRemove = 40; // 41 clues (81-40)
+                        break;
+                    case 'medium':
+                        numToRemove = 50; // 31 clues
+                        break;
+                    case 'hard':
+                        numToRemove = 60; // 21 clues
+                        break;
+                    default:
+                        numToRemove = 40;
+                }
+                
+                const puzzle = JSON.parse(JSON.stringify(solvedBoard));
+                removeNumbers(puzzle, numToRemove);
+                
+                return {
+                    puzzle: puzzle,
+                    solvedPuzzle: solvedBoard
+                };
+            }
+            
+            function createSolvedBoard() {
+                // Create an empty 9x9 board
+                const board = Array(9).fill().map(() => Array(9).fill(0));
+                
+                // Fill the board using backtracking
+                solveSudoku(board);
+                
+                return board;
+            }
+            
+            function solveSudoku(board) {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (board[row][col] === 0) {
+                            // Try numbers 1-9
+                            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                            shuffleArray(numbers); // Randomize for different puzzles
+                            
+                            for (let num of numbers) {
+                                if (isValidPlacement(board, row, col, num)) {
+                                    board[row][col] = num;
+                                    
+                                    if (solveSudoku(board)) {
+                                        return true;
+                                    }
+                                    
+                                    board[row][col] = 0; // Backtrack
+                                }
+                            }
+                            
+                            return false; // No valid number found
+                        }
+                    }
+                }
+                
+                return true; // Board is filled
+            }
+            
+            function isValidPlacement(board, row, col, num) {
+                // Check row
+                for (let i = 0; i < 9; i++) {
+                    if (board[row][i] === num) {
+                        return false;
+                    }
+                }
+                
+                // Check column
+                for (let i = 0; i < 9; i++) {
+                    if (board[i][col] === num) {
+                        return false;
+                    }
+                }
+                
+                // Check 3x3 box
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        if (board[boxRow + i][boxCol + j] === num) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            }
+            
+            function removeNumbers(board, count) {
+                let removed = 0;
+                
+                while (removed < count) {
+                    const row = Math.floor(Math.random() * 9);
+                    const col = Math.floor(Math.random() * 9);
+                    
+                    if (board[row][col] !== 0) {
+                        board[row][col] = 0;
+                        removed++;
+                    }
+                }
+            }
+            
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ac4da6f37df1cc',t:'MTc1MTc3NTU2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
