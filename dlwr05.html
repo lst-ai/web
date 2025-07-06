@@ -1,0 +1,873 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-巧克力六感修辭冒險</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            color: #4a3520;
+            font-size: 1.1rem;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255, 236, 179, 0.4) 0%, rgba(255, 236, 179, 0) 50%),
+                radial-gradient(circle at 80% 80%, rgba(210, 180, 140, 0.4) 0%, rgba(210, 180, 140, 0) 50%),
+                linear-gradient(135deg, #f8f3e9 0%, #ede0d4 100%);
+            background-attachment: fixed;
+            background-size: cover;
+        }
+        
+        .pattern-bg {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a67c52' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(74, 53, 32, 0.15);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(74, 53, 32, 0.25);
+        }
+        
+        .option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: 1.2rem;
+            border-width: 3px;
+        }
+        
+        .option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 53, 32, 0.15);
+        }
+        
+        .option.selected {
+            border-color: #7b5d3f;
+            background-color: #f0e6d2;
+        }
+        
+        .option.correct {
+            border-color: #4ade80;
+            background-color: #dcfce7;
+        }
+        
+        .option.incorrect {
+            border-color: #f87171;
+            background-color: #fee2e2;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            transition: width 0.5s ease;
+            border-radius: 6px;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .emoji-icon {
+            display: inline-block;
+            font-size: 3rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        
+        .sense-icon {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .sense-icon:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(210, 105, 30, 0.6));
+        }
+        
+        .sense-icon.visited {
+            background-image: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            border: 2px solid #d97706;
+        }
+        
+        .sense-icon.visited .font-medium {
+            color: #92400e;
+            font-weight: 700;
+        }
+        
+        .knowledge-card {
+            background-color: #ffffff;
+            border-left: 8px solid #7b5d3f;
+            background-image: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,248,240,1) 100%);
+        }
+        
+        .challenge-card {
+            background-color: #f5efe6;
+            border-left: 8px solid #d4a373;
+            background-image: linear-gradient(135deg, rgba(245,239,230,1) 0%, rgba(255,248,240,1) 100%);
+        }
+        
+        .btn {
+            transition: all 0.2s ease;
+            font-size: 1.2rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 53, 32, 0.15);
+        }
+        
+        .chocolate-bg {
+            background: linear-gradient(135deg, #7b5d3f 0%, #4a3520 100%);
+        }
+        
+        .title-text {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .example-card {
+            border-left: 4px solid #d4a373;
+            background-color: #fffbf6;
+        }
+        
+        .rhetoric-tag {
+            background-color: #f3e8d8;
+            color: #92400e;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            display: inline-block;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="pattern-bg">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="chocolate-bg text-white py-8 px-4 md:px-8">
+            <div class="container mx-auto">
+                <h1 class="text-3xl md:text-5xl font-bold flex items-center title-text">
+                    <span class="mr-3">🍫</span> LST遊戲室-巧克力六感修辭冒險
+                </h1>
+                <p class="mt-3 text-xl text-amber-100">創新的數位互動遊戲式學習 | 適合中高年級語文創作課</p>
+                <p class="mt-2 text-amber-200">設計：劉宏龍｜製作：呂舒婷</p>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 md:px-8 py-6 flex-grow">
+            <!-- Introduction Section -->
+            <section id="intro" class="section active">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-br from-white to-amber-50 rounded-xl shadow-lg p-8 md:p-10 card">
+                        <h2 class="text-3xl font-bold mb-6 flex items-center">
+                            <span class="emoji-icon">🍫</span>歡迎來到巧克力六感修辭冒險！
+                        </h2>
+                        <p class="mb-8 text-xl">在這趟創意之旅中，你將學習如何運用六種感官來描述巧克力，讓你的寫作更加生動有趣！</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+                            <div id="goto-visual" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="visual">
+                                <div class="text-5xl mb-3">👁️</div>
+                                <div class="font-medium text-xl">視覺</div>
+                            </div>
+                            <div id="goto-smell" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="smell">
+                                <div class="text-5xl mb-3">👃</div>
+                                <div class="font-medium text-xl">嗅覺</div>
+                            </div>
+                            <div id="goto-sound" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="sound">
+                                <div class="text-5xl mb-3">👂</div>
+                                <div class="font-medium text-xl">聽覺</div>
+                            </div>
+                            <div id="goto-touch" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="touch">
+                                <div class="text-5xl mb-3">✋</div>
+                                <div class="font-medium text-xl">觸覺</div>
+                            </div>
+                            <div id="goto-taste" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="taste">
+                                <div class="text-5xl mb-3">👄</div>
+                                <div class="font-medium text-xl">味覺</div>
+                            </div>
+                            <div id="goto-heart" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="heart">
+                                <div class="text-5xl mb-3">❤️</div>
+                                <div class="font-medium text-xl">心覺</div>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-8 text-xl">每個感官都有一張知識卡和一個闖關任務，完成後即可回到主頁面選擇下一個感官！</p>
+                        
+                        <button id="start-btn" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            開始冒險！
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Visual Section -->
+            <section id="visual" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👁️</span>
+                            <h2 class="text-3xl font-bold">視覺：用眼睛看見比喻</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">觀察巧克力的外表，運用譬喻或排比讓畫面更生動。</p>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「巧克力的顏色深棕如木頭，閃耀著像絲絨般柔和的光澤。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用 <span class="rhetoric-tag">譬喻法</span>，把巧克力比喻為「木頭」與「絲絨」，讓顏色與光澤更具畫面感。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「一顆顆巧克力整齊地排成一列，就像士兵在操場上等待檢閱。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>結合 <span class="rhetoric-tag">排比法</span>（一顆顆…）與 <span class="rhetoric-tag">譬喻法</span>（像士兵），讓讀者看見整齊隊形的畫面。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="40" y="60" width="120" height="80" rx="5" fill="#5D4037"/>
+                                <rect x="50" y="70" width="100" height="60" rx="3" fill="#795548"/>
+                                <line x1="75" y1="70" x2="75" y2="130" stroke="#6D4C41" stroke-width="2"/>
+                                <line x1="100" y1="70" x2="100" y2="130" stroke="#6D4C41" stroke-width="2"/>
+                                <line x1="125" y1="70" x2="125" y2="130" stroke="#6D4C41" stroke-width="2"/>
+                                <line x1="50" y1="95" x2="150" y2="95" stroke="#6D4C41" stroke-width="2"/>
+                                <circle cx="160" cy="70" r="15" fill="#FFECB3" opacity="0.7"/>
+                                <path d="M155 65 L165 75 M165 65 L155 75" stroke="#FFC107" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關一：哪一句是視覺比喻？</h3>
+                        <p class="mb-8 text-xl">選出用「眼睛看到的畫面」來寫的句子。</p>
+                        
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它像夜裡的小磚塊，閃著光滑的亮澤。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「入口即化，像在嘴巴跳舞。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「包裝紙唦唦響，像小提琴聲。」</p>
+                            </div>
+                        </div>
+                        
+                        <div id="visual-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+                        
+                        <button id="visual-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto hidden">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Smell Section -->
+            <section id="smell" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👃</span>
+                            <h2 class="text-3xl font-bold">嗅覺：用鼻子聞出香氣</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">描述香氣時可加入想像或擬人化，增加趣味性。</p>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「巧克力的香氣悄悄飄了過來，像是一雙溫暖的手，輕輕安撫了我的心。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">譬喻法</span>（香氣像一雙溫暖的手）與<span class="rhetoric-tag">擬人法</span>（安撫了我的心），將巧克力的香氣描寫得溫柔又充滿情感，讓人感受到香氣不只是味道，更像是會陪伴、會安慰的朋友。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「那香味聞起來像剛出爐的餅乾，還藏著一點午後陽光的溫暖氣息。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（將香味比作剛出爐的餅乾）與<span class="rhetoric-tag">象徵法</span>（午後陽光象徵溫暖與放鬆），讓嗅覺描寫充滿溫度與情感，讓讀者彷彿感受到香氣帶來的安定與美好。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="70" y="80" width="60" height="40" rx="5" fill="#5D4037"/>
+                                <path d="M100,80 C100,60 120,70 120,60 C120,50 100,55 100,40" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M110,80 C110,65 130,75 130,65 C130,55 110,60 110,45" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M90,80 C90,65 70,75 70,65 C70,55 90,60 90,45" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M80,80 C80,60 60,70 60,60 C60,50 80,55 80,40" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <circle cx="100" cy="100" r="5" fill="#6D4C41"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關二：哪句有用嗅覺＋想像？</h3>
+                        <p class="mb-8 text-xl">選出正確的答案。</p>
+                        
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它的香氣像媽媽在廚房煮熱可可一樣溫暖。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「包裝紙裂開的聲音像火柴劃過。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「咬下去會有酥脆的聲音。」</p>
+                            </div>
+                        </div>
+                        
+                        <div id="smell-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+                        
+                        <button id="smell-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto hidden">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Sound Section -->
+            <section id="sound" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👂</span>
+                            <h2 class="text-3xl font-bold">聽覺：用耳朵聽見聲音</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">寫出聲音的方式包括摹聲詞與擬人描述。</p>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「喀啦！一聲，巧克力斷成兩半，就像在對我說：『準備開動吧！』」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">擬聲法</span>（喀啦）與<span class="rhetoric-tag">擬人法</span>（巧克力說話），讓聲音變得有生命力。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「唦唦唦，包裝紙在手中輕響，好像秋天裡被風吹起的落葉。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">擬聲法</span>（唦唦唦）與<span class="rhetoric-tag">譬喻法</span>（像落葉聲），營造輕柔而詩意的聲響。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="70" y="80" width="60" height="40" rx="5" fill="#5D4037"/>
+                                <path d="M140,100 C160,80 160,120 140,100" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M150,100 C170,70 170,130 150,100" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M160,100 C180,60 180,140 160,100" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <text x="70" y="70" font-family="Arial" font-size="14" fill="#6D4C41">喀啦!</text>
+                                <text x="120" y="60" font-family="Arial" font-size="12" fill="#6D4C41">唦唦唦</text>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關三：這句話屬於哪種感官描寫？</h3>
+                        <p class="mb-8 text-xl">「喀啦一聲，像咬破一個脆殼。」</p>
+                        
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👁 視覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>👂 聽覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👄 味覺</p>
+                            </div>
+                        </div>
+                        
+                        <div id="sound-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+                        
+                        <button id="sound-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto hidden">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Touch Section -->
+            <section id="touch" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">✋</span>
+                            <h2 class="text-3xl font-bold">觸覺：用手摸起來的感覺</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">觸感常用譬喻或擬人來傳達溫度、質地。</p>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「巧克力在我手中慢慢變軟，像奶油一樣輕輕滑過手心，好像在說：『我準備好了，快把我吃掉吧！』」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（像奶油）與<span class="rhetoric-tag">擬人法</span>（巧克力「說話」），讓巧克力的觸感變得溫柔又有趣。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「冷凍拿出來的巧克力像一塊不說話的小石頭，躺在我手心裡，一動也不動，好像還沒睡醒一樣。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（把巧克力比作小石頭），讓觸覺變得具體；加上<span class="rhetoric-tag">擬人法</span>（巧克力「不說話」、「還沒睡醒」），讓冷冰冰的巧克力也有了可愛的個性。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M60,120 C60,90 140,90 140,120 C140,150 60,150 60,120" fill="#FFECB3"/>
+                                <rect x="85" y="100" width="30" height="20" rx="3" fill="#5D4037"/>
+                                <path d="M85,110 C75,105 75,115 85,110" fill="#6D4C41"/>
+                                <path d="M115,110 C125,105 125,115 115,110" fill="#6D4C41"/>
+                                <path d="M90,120 C90,125 110,125 110,120" stroke="#6D4C41" stroke-width="1" fill="none"/>
+                                <circle cx="95" cy="105" r="2" fill="#3E2723"/>
+                                <circle cx="105" cy="105" r="2" fill="#3E2723"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關四：哪句是觸覺＋擬人？</h3>
+                        <p class="mb-8 text-xl">選出正確的答案。</p>
+                        
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它躲在我手心裡，靜靜不說話，只融化著陪我。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「香味像雲霧般飄進鼻子。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「像絲絨般的光滑在舌尖融開。」</p>
+                            </div>
+                        </div>
+                        
+                        <div id="touch-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+                        
+                        <button id="touch-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto hidden">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Taste Section -->
+            <section id="taste" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👄</span>
+                            <h2 class="text-3xl font-bold">味覺：用嘴巴品嘗滋味</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">形容味道時可使用排比、譬喻、誇飾等方式。</p>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「咬下一口巧克力，香氣、甜味全都一起跳出來，像一場小型煙火在嘴裡噴發，幸福得快要融化了！」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（像一場小型煙火在嘴裡噴發）與<span class="rhetoric-tag">誇飾法</span>（幸福得快要融化了），把咬下巧克力時的味道描寫得豐富又熱鬧，讓讀者彷彿能感受到那種甜美、驚喜又幸福的滋味。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「在舌尖爆開的濃郁香氣，像黑夜中閃爍的星星，令人驚喜。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">譬喻法</span>（香氣像星星），讓味道具象化為亮麗畫面。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M70,100 C70,80 130,80 130,100 C130,140 70,140 70,100" fill="#FFCDD2"/>
+                                <rect x="85" y="90" width="30" height="20" rx="3" fill="#5D4037"/>
+                                <path d="M85,100 C85,110 115,110 115,100" stroke="#6D4C41" stroke-width="1" fill="none"/>
+                                <text x="70" y="70" font-family="Arial" font-size="12" fill="#6D4C41">甜</text>
+                                <text x="90" y="70" font-family="Arial" font-size="12" fill="#6D4C41">苦</text>
+                                <text x="110" y="70" font-family="Arial" font-size="12" fill="#6D4C41">濃</text>
+                                <text x="130" y="70" font-family="Arial" font-size="12" fill="#6D4C41">滑</text>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關五：這句話用了哪種修辭？</h3>
+                        <p class="mb-8 text-xl">「甜、苦、滑、濃，一起在嘴裡開舞會！」</p>
+                        
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>譬喻</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>擬人</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>排比</p>
+                            </div>
+                        </div>
+                        
+                        <div id="taste-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+                        
+                        <button id="taste-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto hidden">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Heart Section -->
+            <section id="heart" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">❤️</span>
+                            <h2 class="text-3xl font-bold">心覺：用心感覺回憶與情感</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">食物能喚起情緒或回憶，可用象徵或情感抒發。</p>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「那熟悉的味道像一把鑰匙，輕輕打開我心裡的回憶門，把好多以前的笑聲都找回來了。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">象徵法</span>（味道象徵鑰匙），表達味道引出記憶的感覺。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「那一口融化在嘴裡的不只是甜味，還有我珍藏在心底的童年回憶。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">象徵法</span>（融化代表記憶）與<span class="rhetoric-tag">情感抒發</span>，傳達深刻的內心情感。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M100,140 C130,110 170,90 150,60 C130,30 100,60 100,60 C100,60 70,30 50,60 C30,90 70,110 100,140" fill="#F8BBD0"/>
+                                <rect x="85" y="90" width="30" height="20" rx="3" fill="#5D4037"/>
+                                <path d="M60,40 C60,30 80,30 80,40" stroke="#FFCDD2" stroke-width="2" fill="none"/>
+                                <path d="M120,40 C120,30 140,30 140,40" stroke="#FFCDD2" stroke-width="2" fill="none"/>
+                                <circle cx="70" cy="30" r="10" fill="#FFECB3"/>
+                                <circle cx="130" cy="30" r="10" fill="#FFECB3"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關六：這句話屬於哪一種感官描寫？</h3>
+                        <p class="mb-8 text-xl">「每次吃到這種巧克力，我的心就熱起來，彷彿爺爺還在身邊輕聲對我說：『加油，你可以的。』」</p>
+                        
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👁 視覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👃 嗅覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👄 味覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>❤️ 心覺</p>
+                            </div>
+                        </div>
+                        
+                        <div id="heart-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+                        
+                        <button id="heart-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto hidden">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Final Section -->
+            <section id="final" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-br from-white to-amber-50 rounded-xl shadow-lg p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">🏆</span>
+                            <h2 class="text-3xl font-bold">恭喜完成巧克力六感修辭冒險！</h2>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-8 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-6">你已經學會了六種感官修辭：</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
+                                <div class="bg-white p-5 rounded-xl text-center shadow-md">
+                                    <div class="text-4xl mb-2">👁️</div>
+                                    <div class="font-medium text-xl">視覺</div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl text-center shadow-md">
+                                    <div class="text-4xl mb-2">👃</div>
+                                    <div class="font-medium text-xl">嗅覺</div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl text-center shadow-md">
+                                    <div class="text-4xl mb-2">👂</div>
+                                    <div class="font-medium text-xl">聽覺</div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl text-center shadow-md">
+                                    <div class="text-4xl mb-2">✋</div>
+                                    <div class="font-medium text-xl">觸覺</div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl text-center shadow-md">
+                                    <div class="text-4xl mb-2">👄</div>
+                                    <div class="font-medium text-xl">味覺</div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl text-center shadow-md">
+                                    <div class="text-4xl mb-2">❤️</div>
+                                    <div class="font-medium text-xl">心覺</div>
+                                </div>
+                            </div>
+                            
+                            <p class="font-medium text-xl">現在，你可以嘗試綜合運用這六種感官，創作一段關於巧克力的精彩描寫！</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-100 to-amber-200 p-8 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">🖋️ 創作練習</h3>
+                            <p class="mb-6 text-xl">試著寫一段關於巧克力的描寫，運用至少三種感官修辭：</p>
+                            <textarea class="w-full p-6 border-3 border-amber-300 rounded-xl h-40 text-xl" placeholder="在這裡開始你的創作..."></textarea>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-amber-200 to-amber-300 p-8 rounded-xl">
+                            <h3 class="font-bold text-2xl mb-4">🌟 創作提示</h3>
+                            <ul class="list-disc pl-6 space-y-3 text-xl">
+                                <li>可以想像自己正在品嚐一塊巧克力的過程</li>
+                                <li>先用眼睛看，再用鼻子聞，然後用耳朵聽、手指觸摸、嘴巴品嚐</li>
+                                <li>最後，寫下這塊巧克力帶給你的感受或回憶</li>
+                                <li>記得運用譬喻、擬人、排比等修辭手法</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button id="restart-btn" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl">
+                            回到主頁面
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-gradient-to-r from-amber-800 to-amber-900 text-amber-100 py-6 px-4 md:px-8 mt-8">
+            <div class="container mx-auto text-center">
+                <p class="text-xl">🍫 LST遊戲室-巧克力六感修辭冒險</p>
+                <p class="mt-2">設計：劉宏龍｜製作：呂舒婷</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sections
+            const sections = ['intro', 'visual', 'smell', 'sound', 'touch', 'taste', 'heart', 'final'];
+            
+            // Track visited sections
+            const visitedSections = new Set();
+            
+            // Load visited sections from localStorage if available
+            try {
+                const savedVisited = localStorage.getItem('visitedSections');
+                if (savedVisited) {
+                    const parsed = JSON.parse(savedVisited);
+                    parsed.forEach(section => visitedSections.add(section));
+                    updateVisitedUI();
+                }
+            } catch (e) {
+                console.error("Error loading visited sections:", e);
+            }
+            
+            // Update UI to show visited sections
+            function updateVisitedUI() {
+                document.querySelectorAll('.sense-icon').forEach(icon => {
+                    const section = icon.getAttribute('data-section');
+                    if (visitedSections.has(section)) {
+                        icon.classList.add('visited');
+                    } else {
+                        icon.classList.remove('visited');
+                    }
+                });
+            }
+            
+            // Save visited sections to localStorage
+            function saveVisitedSections() {
+                try {
+                    localStorage.setItem('visitedSections', JSON.stringify([...visitedSections]));
+                } catch (e) {
+                    console.error("Error saving visited sections:", e);
+                }
+            }
+            
+            // Show section
+            function showSection(sectionId) {
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(sectionId).classList.add('active');
+                window.scrollTo(0, 0);
+                
+                // Mark section as visited if it's one of the sense sections
+                if (['visual', 'smell', 'sound', 'touch', 'taste', 'heart'].includes(sectionId)) {
+                    visitedSections.add(sectionId);
+                    updateVisitedUI();
+                    saveVisitedSections();
+                }
+            }
+            
+            // Start button
+            document.getElementById('start-btn').addEventListener('click', function() {
+                showSection('visual');
+            });
+            
+            // Restart button
+            document.getElementById('restart-btn').addEventListener('click', function() {
+                showSection('intro');
+            });
+            
+            // Direct navigation from intro icons
+            document.querySelectorAll('.sense-icon').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    showSection(section);
+                });
+            });
+            
+            // Setup challenge
+            function setupChallenge(sectionId) {
+                const section = document.getElementById(sectionId);
+                const options = section.querySelectorAll('.option');
+                const feedback = document.getElementById(`${sectionId}-feedback`);
+                const nextButton = document.getElementById(`${sectionId}-next`);
+                
+                options.forEach(option => {
+                    option.addEventListener('click', function() {
+                        // Remove previous selections
+                        options.forEach(opt => {
+                            opt.classList.remove('selected', 'correct', 'incorrect');
+                        });
+                        
+                        // Select current option
+                        this.classList.add('selected');
+                        
+                        // Check answer
+                        const isCorrect = this.getAttribute('data-correct') === 'true';
+                        
+                        if (isCorrect) {
+                            this.classList.add('correct');
+                            feedback.classList.remove('hidden', 'bg-red-100');
+                            feedback.classList.add('bg-green-100');
+                            
+                            // Special explanation for heart section
+                            if (sectionId === 'heart') {
+                                feedback.innerHTML = `
+                                    <p class="text-green-800 font-medium mb-3">✅ 正解解析：</p>
+                                    <p>這句話描寫的是巧克力引發的情感記憶與心中對爺爺的思念，屬於「心覺」的情感描寫，而非單純的味覺或嗅覺。</p>
+                                `;
+                            } else {
+                                feedback.innerHTML = '<p class="text-green-800 font-medium">✅ 答對了！你選擇了正確的答案。</p>';
+                            }
+                        } else {
+                            this.classList.add('incorrect');
+                            feedback.classList.remove('hidden', 'bg-green-100');
+                            feedback.classList.add('bg-red-100');
+                            feedback.innerHTML = '<p class="text-red-800 font-medium">❌ 再試一次！這不是正確的答案。</p>';
+                        }
+                        
+                        // Show next button if correct
+                        if (isCorrect) {
+                            nextButton.classList.remove('hidden');
+                        } else {
+                            nextButton.classList.add('hidden');
+                        }
+                    });
+                });
+                
+                // Next button - all return to home page
+                nextButton.addEventListener('click', function() {
+                    showSection('intro');
+                });
+            }
+            
+            // Setup all challenges
+            setupChallenge('visual');
+            setupChallenge('smell');
+            setupChallenge('sound');
+            setupChallenge('touch');
+            setupChallenge('taste');
+            setupChallenge('heart');
+            
+            // Initialize UI based on visited sections
+            updateVisitedUI();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae28fca0b8f244',t:'MTc1MTc5NTAzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
