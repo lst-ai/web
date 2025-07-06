@@ -1,0 +1,919 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-題目偵探社</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f7ff;
+            background-image: radial-gradient(#d0e3ff 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .badge {
+            transition: all 0.5s ease;
+        }
+        
+        .badge.earned {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 8px gold);
+        }
+        
+        .option {
+            transition: all 0.2s ease;
+        }
+        
+        .option:hover {
+            transform: translateY(-2px);
+        }
+        
+        .option.correct {
+            background-color: #4ade80 !important;
+            color: white !important;
+        }
+        
+        .option.incorrect {
+            background-color: #f87171 !important;
+            color: white !important;
+        }
+        
+        .knowledge-card {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            animation: fall 3s ease-in infinite;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+            }
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+            }
+        }
+        
+        .knowledge-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .knowledge-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .knowledge-modal-content {
+            background-color: white;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 20px;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+        
+        .knowledge-modal.active .knowledge-modal-content {
+            transform: translateY(0);
+        }
+        
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-800 mb-2">LST遊戲室-題目偵探社</h1>
+            <p class="text-lg text-gray-600">成為「題目偵探社」的一員，破解寫作題目密碼！</p>
+            <div class="flex justify-center mt-4 space-x-3">
+                <div id="badge1" class="badge w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl">🔍</div>
+                <div id="badge2" class="badge w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl">📏</div>
+                <div id="badge3" class="badge w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl">🪄</div>
+                <div id="badge4" class="badge w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl">✍</div>
+                <div id="badge5" class="badge w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl">🧙‍♂️</div>
+            </div>
+            <div class="mt-3">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">進度：<span id="progress-text">0/5</span></p>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- Knowledge Cards Section -->
+            <section id="knowledge-section" class="mb-10">
+                <h2 class="text-2xl font-bold text-center mb-6 text-indigo-700">寫作知識卡</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Knowledge Card 1 -->
+                    <div class="card bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-orange-600">🟠 知識卡 1：《什麼是題眼？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「題眼」是題目中最關鍵的詞語，就像作文的「靈魂」，幫助你聚焦寫作重點。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🧠 小技巧：</p>
+                                <p>問自己：「這題最想我寫的是什麼？」</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「一次讓我成長的經驗」</p>
+                                <p>👉 題眼是：「成長」與「經驗」</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>別只寫經驗，要寫出你怎麼成長，成長在哪裡最重要！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Knowledge Card 2 -->
+                    <div class="card bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-blue-600">🔵 知識卡 2：《什麼是範圍？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「範圍」是題目可以發揮的空間大小，會影響你要寫多少內容、用什麼角度說。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🎯 重點：</p>
+                                <p>範圍大＝內容多選擇，範圍小＝更聚焦、更明確</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「我的學習故事」（範圍大）</p>
+                                <p>題目：「一次學英文時發生的趣事」（範圍小）</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>先看清楚範圍，選對材料才不會寫太多或偏題！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Knowledge Card 3 -->
+                    <div class="card bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-yellow-600">🟡 知識卡 3：《什麼是寬題？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「寬題」是題目比較開放、寬廣，你可以從很多方向來寫，發揮空間大。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌈 特徵：</p>
+                                <ul class="list-disc pl-5">
+                                    <li>沒有限定時間、地點、人物</li>
+                                    <li>比較抽象或感受類詞語多</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「我學到的一件事」</p>
+                                <p>👉 可以寫運動、合作、失敗、閱讀…都可以！</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>寬題好發揮，但要學會縮小範圍、找具體事例，寫起來才有重點。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Knowledge Card 4 -->
+                    <div class="card bg-gradient-to-br from-green-100 to-green-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-green-600">🟢 知識卡 4：《什麼是窄題？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「窄題」是題目比較明確、聚焦，通常有時間、事件或人物的限制。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🎯 特徵：</p>
+                                <ul class="list-disc pl-5">
+                                    <li>有「一次」、「某天」、「某件事」等字眼</li>
+                                    <li>通常只能寫一件具體的事情</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「一次幫助別人的經驗」</p>
+                                <p>👉 就只能寫一件事、一次幫助的過程和感受</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>窄題容易聚焦，但要記得把過程與感受寫清楚、寫完整！</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8">
+                    <button id="start-game" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+                        開始闖關挑戰！
+                    </button>
+                </div>
+            </section>
+
+            <!-- Game Levels Section -->
+            <section id="game-section" class="hidden">
+                <!-- Level 1 -->
+                <div id="level-1" class="level-container">
+                    <div class="card bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-indigo-700">🚪 關卡一：題眼放大鏡🔍</h3>
+                        <div class="mb-6">
+                            <p class="text-lg mb-2">🧩 題目：請找出這句題目的「題眼」。</p>
+                            <p class="text-xl font-medium p-3 bg-gray-100 rounded-lg">題目：「一次讓我變勇敢的經驗」</p>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="font-medium">👉 請選擇：</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button class="option bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-medium py-3 px-4 rounded-lg" data-correct="false">一次</button>
+                                <button class="option bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-medium py-3 px-4 rounded-lg" data-correct="true">勇敢</button>
+                                <button class="option bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-medium py-3 px-4 rounded-lg" data-correct="false">經驗</button>
+                                <button class="option bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-medium py-3 px-4 rounded-lg" data-correct="false">我</button>
+                            </div>
+                        </div>
+                        <div id="level-1-feedback" class="mt-4 p-3 rounded-lg hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Level 2 -->
+                <div id="level-2" class="level-container hidden">
+                    <div class="card bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-blue-700">🚪 關卡二：寬題還是窄題？📏</h3>
+                        <div class="mb-6">
+                            <p class="text-lg mb-2">🧩 題目：判斷這句題目是「寬題」還是「窄題」？</p>
+                            <p class="text-xl font-medium p-3 bg-gray-100 rounded-lg">題目：「我學到的一課」</p>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="font-medium">👉 請選擇：</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button class="option bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-3 px-4 rounded-lg" data-correct="true">寬題</button>
+                                <button class="option bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-3 px-4 rounded-lg" data-correct="false">窄題</button>
+                            </div>
+                        </div>
+                        <div id="level-2-feedback" class="mt-4 p-3 rounded-lg hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Level 3 -->
+                <div id="level-3" class="level-container hidden">
+                    <div class="card bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-yellow-700">🚪 關卡三：幫題目變變變🪄</h3>
+                        <div class="mb-6">
+                            <p class="text-lg mb-2">🧩 題目：請幫下面的題目變成「窄題」！</p>
+                            <p class="text-xl font-medium p-3 bg-gray-100 rounded-lg">原題：「生活中的美好」</p>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="font-medium">👉 請選擇：</p>
+                            <div class="grid grid-cols-1 gap-3">
+                                <button class="option bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium py-3 px-4 rounded-lg" data-correct="false">描述一個你喜歡的食物</button>
+                                <button class="option bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium py-3 px-4 rounded-lg" data-correct="true">我在校園裡看到的晨光</button>
+                                <button class="option bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium py-3 px-4 rounded-lg" data-correct="false">我的家庭介紹</button>
+                            </div>
+                        </div>
+                        <div id="level-3-feedback" class="mt-4 p-3 rounded-lg hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Level 4 -->
+                <div id="level-4" class="level-container hidden">
+                    <div class="card bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-green-700">🚪 關卡四：偵探筆記分類✍</h3>
+                        <div class="mb-6">
+                            <p class="text-lg mb-2">🧩 題目：請幫這個題目做出分類！</p>
+                            <p class="text-xl font-medium p-3 bg-gray-100 rounded-lg">題目：「一次失敗讓我成長」</p>
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <p class="font-medium mb-2">題眼是？（多選）</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="option-multi bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="true">成長</button>
+                                    <button class="option-multi bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="true">失敗</button>
+                                    <button class="option-multi bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="false">一次</button>
+                                    <button class="option-multi bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="false">我</button>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="font-medium mb-2">題型是？（單選）</p>
+                                <div class="flex gap-2">
+                                    <button class="option-single bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="true">窄題</button>
+                                    <button class="option-single bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="false">寬題</button>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="font-medium mb-2">有什麼限制？（單選）</p>
+                                <div class="flex gap-2">
+                                    <button class="option-single2 bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="true">一次具體事件</button>
+                                    <button class="option-single2 bg-green-100 hover:bg-green-200 text-green-800 font-medium py-2 px-4 rounded-lg" data-correct="false">沒有限制</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="level-4-feedback" class="mt-4 p-3 rounded-lg hidden"></div>
+                        <button id="check-level-4" class="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-all">檢查答案</button>
+                    </div>
+                </div>
+
+                <!-- Level 5 -->
+                <div id="level-5" class="level-container hidden">
+                    <div class="card bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-4 text-purple-700">🚪 關卡五：選題魔法陣🧙‍♂️</h3>
+                        <div class="mb-6">
+                            <p class="text-lg mb-2">🧩 題目：幫主角選對寫作素材！</p>
+                            <p class="text-xl font-medium p-3 bg-gray-100 rounded-lg">題目：「我學到的一課」（寬題）</p>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="font-medium">👉 哪一個寫作主題最貼切？</p>
+                            <div class="grid grid-cols-1 gap-3">
+                                <button class="option bg-purple-100 hover:bg-purple-200 text-purple-800 font-medium py-3 px-4 rounded-lg" data-correct="false">我家的旅遊回憶錄</button>
+                                <button class="option bg-purple-100 hover:bg-purple-200 text-purple-800 font-medium py-3 px-4 rounded-lg" data-correct="false">我最喜歡的電視節目</button>
+                                <button class="option bg-purple-100 hover:bg-purple-200 text-purple-800 font-medium py-3 px-4 rounded-lg" data-correct="true">我和朋友吵架又和好的故事</button>
+                            </div>
+                        </div>
+                        <div id="level-5-feedback" class="mt-4 p-3 rounded-lg hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Completion Screen -->
+                <div id="completion-screen" class="hidden">
+                    <div class="card bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-8 shadow-lg text-white text-center">
+                        <h3 class="text-3xl font-bold mb-6">🎉 恭喜你通關！</h3>
+                        <p class="text-xl mb-6">你已成為合格的題目偵探！</p>
+                        <div class="flex justify-center space-x-4 mb-8">
+                            <div class="badge earned w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">🔍</div>
+                            <div class="badge earned w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">📏</div>
+                            <div class="badge earned w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">🪄</div>
+                            <div class="badge earned w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">✍</div>
+                            <div class="badge earned w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">🧙‍♂️</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 rounded-lg p-5 mb-6">
+                            <h4 class="text-xl font-bold mb-3">你學到的寫作技巧：</h4>
+                            <ul class="text-left space-y-2">
+                                <li>✅ 找出題目中的關鍵「題眼」</li>
+                                <li>✅ 分辨「寬題」與「窄題」的差異</li>
+                                <li>✅ 將寬泛題目轉化為具體題目</li>
+                                <li>✅ 分析題目的限制與要求</li>
+                                <li>✅ 選擇適合題目的寫作素材</li>
+                            </ul>
+                        </div>
+                        <button id="restart-game" class="bg-white text-indigo-700 hover:bg-indigo-100 font-bold py-3 px-8 rounded-full text-lg transition-all transform hover:scale-105 focus:outline-none">
+                            再玩一次
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Help Button -->
+        <button id="help-button" class="help-button bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded-full shadow-lg transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </button>
+        
+        <!-- Knowledge Modal -->
+        <div id="knowledge-modal" class="knowledge-modal">
+            <div class="knowledge-modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-indigo-700">寫作知識複習</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="flex border-b mb-4">
+                    <button class="tab-button active px-4 py-2 rounded-t-lg" data-tab="tab-1">題眼</button>
+                    <button class="tab-button px-4 py-2 rounded-t-lg" data-tab="tab-2">範圍</button>
+                    <button class="tab-button px-4 py-2 rounded-t-lg" data-tab="tab-3">寬題</button>
+                    <button class="tab-button px-4 py-2 rounded-t-lg" data-tab="tab-4">窄題</button>
+                </div>
+                
+                <!-- Tab Contents -->
+                <div class="tab-content active" id="tab-1">
+                    <div class="bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-orange-600">🟠 知識卡 1：《什麼是題眼？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「題眼」是題目中最關鍵的詞語，就像作文的「靈魂」，幫助你聚焦寫作重點。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🧠 小技巧：</p>
+                                <p>問自己：「這題最想我寫的是什麼？」</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「一次讓我成長的經驗」</p>
+                                <p>👉 題眼是：「成長」與「經驗」</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>別只寫經驗，要寫出你怎麼成長，成長在哪裡最重要！</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-2">
+                    <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-blue-600">🔵 知識卡 2：《什麼是範圍？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「範圍」是題目可以發揮的空間大小，會影響你要寫多少內容、用什麼角度說。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🎯 重點：</p>
+                                <p>範圍大＝內容多選擇，範圍小＝更聚焦、更明確</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「我的學習故事」（範圍大）</p>
+                                <p>題目：「一次學英文時發生的趣事」（範圍小）</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>先看清楚範圍，選對材料才不會寫太多或偏題！</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-3">
+                    <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-yellow-600">🟡 知識卡 3：《什麼是寬題？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「寬題」是題目比較開放、寬廣，你可以從很多方向來寫，發揮空間大。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌈 特徵：</p>
+                                <ul class="list-disc pl-5">
+                                    <li>沒有限定時間、地點、人物</li>
+                                    <li>比較抽象或感受類詞語多</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「我學到的一件事」</p>
+                                <p>👉 可以寫運動、合作、失敗、閱讀…都可以！</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>寬題好發揮，但要學會縮小範圍、找具體事例，寫起來才有重點。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-4">
+                    <div class="bg-gradient-to-br from-green-100 to-green-200 rounded-xl p-5">
+                        <h3 class="text-xl font-bold mb-3 text-green-600">🟢 知識卡 4：《什麼是窄題？》</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-bold">🔍 定義：</p>
+                                <p>「窄題」是題目比較明確、聚焦，通常有時間、事件或人物的限制。</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">🎯 特徵：</p>
+                                <ul class="list-disc pl-5">
+                                    <li>有「一次」、「某天」、「某件事」等字眼</li>
+                                    <li>通常只能寫一件具體的事情</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-bold">🌟 例子：</p>
+                                <p>題目：「一次幫助別人的經驗」</p>
+                                <p>👉 就只能寫一件事、一次幫助的過程和感受</p>
+                            </div>
+                            <div>
+                                <p class="font-bold">✏️ 寫作提醒：</p>
+                                <p>窄題容易聚焦，但要記得把過程與感受寫清楚、寫完整！</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button id="continue-game" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-all">
+                        繼續闖關
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game state
+            let currentLevel = 1;
+            let badgesEarned = 0;
+            let level4Selections = {
+                multi: [],
+                single: null,
+                single2: null
+            };
+            
+            // DOM elements
+            const startGameBtn = document.getElementById('start-game');
+            const knowledgeSection = document.getElementById('knowledge-section');
+            const gameSection = document.getElementById('game-section');
+            const restartGameBtn = document.getElementById('restart-game');
+            const checkLevel4Btn = document.getElementById('check-level-4');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const helpButton = document.getElementById('help-button');
+            const knowledgeModal = document.getElementById('knowledge-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const continueGameBtn = document.getElementById('continue-game');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            
+            // Start game
+            startGameBtn.addEventListener('click', function() {
+                knowledgeSection.classList.add('hidden');
+                gameSection.classList.remove('hidden');
+                document.getElementById('level-1').classList.remove('hidden');
+            });
+            
+            // Restart game
+            restartGameBtn.addEventListener('click', function() {
+                resetGame();
+                knowledgeSection.classList.remove('hidden');
+                gameSection.classList.add('hidden');
+                document.getElementById('completion-screen').classList.add('hidden');
+            });
+            
+            // Handle option clicks for levels 1, 2, 3, 5
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const isCorrect = this.getAttribute('data-correct') === 'true';
+                    const levelContainer = this.closest('.level-container');
+                    const levelNum = parseInt(levelContainer.id.split('-')[1]);
+                    const feedbackEl = document.getElementById(`level-${levelNum}-feedback`);
+                    
+                    // Mark option as correct/incorrect
+                    this.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    
+                    // Show feedback
+                    feedbackEl.classList.remove('hidden');
+                    
+                    if (isCorrect) {
+                        feedbackEl.textContent = '✅ 答對了！';
+                        feedbackEl.classList.add('bg-green-100', 'text-green-800');
+                        
+                        // Award badge
+                        earnBadge(levelNum);
+                        
+                        // Move to next level after delay
+                        setTimeout(() => {
+                            levelContainer.classList.add('hidden');
+                            
+                            if (levelNum < 5) {
+                                document.getElementById(`level-${levelNum + 1}`).classList.remove('hidden');
+                            } else {
+                                document.getElementById('completion-screen').classList.remove('hidden');
+                                createConfetti();
+                            }
+                            
+                            updateProgress(levelNum);
+                        }, 1000);
+                    } else {
+                        feedbackEl.textContent = levelNum === 1 ? '❌ 再觀察一下，題目要你寫什麼呢？' : 
+                                               levelNum === 2 ? '❌ 這題有沒有時間或事件的限制呢？' :
+                                               levelNum === 3 ? '❌ 能不能寫出一次具體事件呢？' :
+                                               '❌ 哪一個事件有學習的成分？';
+                        feedbackEl.classList.add('bg-red-100', 'text-red-800');
+                        
+                        // Reset after delay
+                        setTimeout(() => {
+                            this.classList.remove('incorrect');
+                            feedbackEl.classList.add('hidden');
+                        }, 2000);
+                    }
+                });
+            });
+            
+            // Handle multi-select options for level 4
+            document.querySelectorAll('.option-multi').forEach(option => {
+                option.addEventListener('click', function() {
+                    const isSelected = this.classList.contains('selected');
+                    
+                    if (isSelected) {
+                        this.classList.remove('selected', 'bg-green-300');
+                        this.classList.add('bg-green-100');
+                        level4Selections.multi = level4Selections.multi.filter(item => item !== this.textContent);
+                    } else {
+                        this.classList.add('selected', 'bg-green-300');
+                        this.classList.remove('bg-green-100');
+                        level4Selections.multi.push(this.textContent);
+                    }
+                });
+            });
+            
+            // Handle single-select options for level 4
+            document.querySelectorAll('.option-single').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.option-single').forEach(opt => {
+                        opt.classList.remove('selected', 'bg-green-300');
+                        opt.classList.add('bg-green-100');
+                    });
+                    
+                    this.classList.add('selected', 'bg-green-300');
+                    this.classList.remove('bg-green-100');
+                    level4Selections.single = this.textContent;
+                });
+            });
+            
+            document.querySelectorAll('.option-single2').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.option-single2').forEach(opt => {
+                        opt.classList.remove('selected', 'bg-green-300');
+                        opt.classList.add('bg-green-100');
+                    });
+                    
+                    this.classList.add('selected', 'bg-green-300');
+                    this.classList.remove('bg-green-100');
+                    level4Selections.single2 = this.textContent;
+                });
+            });
+            
+            // Check level 4 answers
+            checkLevel4Btn.addEventListener('click', function() {
+                const feedbackEl = document.getElementById('level-4-feedback');
+                
+                // Check if all selections are made
+                if (level4Selections.multi.length === 0 || !level4Selections.single || !level4Selections.single2) {
+                    feedbackEl.textContent = '❌ 請完成所有選項';
+                    feedbackEl.classList.add('bg-red-100', 'text-red-800');
+                    feedbackEl.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        feedbackEl.classList.add('hidden');
+                    }, 2000);
+                    
+                    return;
+                }
+                
+                // Check if answers are correct
+                const correctMulti = level4Selections.multi.length === 2 && 
+                                    level4Selections.multi.includes('成長') && 
+                                    level4Selections.multi.includes('失敗');
+                const correctSingle = level4Selections.single === '窄題';
+                const correctSingle2 = level4Selections.single2 === '一次具體事件';
+                
+                const isAllCorrect = correctMulti && correctSingle && correctSingle2;
+                
+                feedbackEl.classList.remove('hidden');
+                
+                if (isAllCorrect) {
+                    feedbackEl.textContent = '✅ 答對了！';
+                    feedbackEl.classList.add('bg-green-100', 'text-green-800');
+                    feedbackEl.classList.remove('bg-red-100', 'text-red-800');
+                    
+                    // Award badge
+                    earnBadge(4);
+                    
+                    // Move to next level after delay
+                    setTimeout(() => {
+                        document.getElementById('level-4').classList.add('hidden');
+                        document.getElementById('level-5').classList.remove('hidden');
+                        updateProgress(4);
+                    }, 1000);
+                } else {
+                    feedbackEl.textContent = '❌ 請再檢查題目中的關鍵詞和字眼喔！';
+                    feedbackEl.classList.add('bg-red-100', 'text-red-800');
+                    feedbackEl.classList.remove('bg-green-100', 'text-green-800');
+                    
+                    setTimeout(() => {
+                        feedbackEl.classList.add('hidden');
+                    }, 2000);
+                }
+            });
+            
+            // Help button - show knowledge modal
+            helpButton.addEventListener('click', function() {
+                knowledgeModal.classList.add('active');
+            });
+            
+            // Close modal
+            closeModalBtn.addEventListener('click', function() {
+                knowledgeModal.classList.remove('active');
+            });
+            
+            // Continue game
+            continueGameBtn.addEventListener('click', function() {
+                knowledgeModal.classList.remove('active');
+            });
+            
+            // Tab switching
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Deactivate all tabs
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Activate selected tab
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Helper functions
+            function earnBadge(level) {
+                const badge = document.getElementById(`badge${level}`);
+                badge.classList.remove('bg-gray-200');
+                
+                switch(level) {
+                    case 1:
+                        badge.classList.add('bg-indigo-500', 'text-white', 'earned');
+                        break;
+                    case 2:
+                        badge.classList.add('bg-blue-500', 'text-white', 'earned');
+                        break;
+                    case 3:
+                        badge.classList.add('bg-yellow-500', 'text-white', 'earned');
+                        break;
+                    case 4:
+                        badge.classList.add('bg-green-500', 'text-white', 'earned');
+                        break;
+                    case 5:
+                        badge.classList.add('bg-purple-500', 'text-white', 'earned');
+                        break;
+                }
+                
+                badgesEarned++;
+            }
+            
+            function updateProgress(completedLevel) {
+                const progress = (completedLevel / 5) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${completedLevel}/5`;
+            }
+            
+            function resetGame() {
+                // Reset badges
+                for (let i = 1; i <= 5; i++) {
+                    const badge = document.getElementById(`badge${i}`);
+                    badge.className = 'badge w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl';
+                }
+                
+                // Reset progress
+                progressBar.style.width = '0%';
+                progressText.textContent = '0/5';
+                
+                // Reset level containers
+                document.querySelectorAll('.level-container').forEach(container => {
+                    container.classList.add('hidden');
+                });
+                
+                // Reset options
+                document.querySelectorAll('.option').forEach(option => {
+                    option.classList.remove('correct', 'incorrect');
+                });
+                
+                document.querySelectorAll('.option-multi, .option-single, .option-single2').forEach(option => {
+                    option.classList.remove('selected', 'bg-green-300');
+                    option.classList.add('bg-green-100');
+                });
+                
+                // Reset feedback
+                document.querySelectorAll('[id$="-feedback"]').forEach(el => {
+                    el.classList.add('hidden');
+                });
+                
+                // Reset level 4 selections
+                level4Selections = {
+                    multi: [],
+                    single: null,
+                    single2: null
+                };
+                
+                // Reset current level and badges
+                currentLevel = 1;
+                badgesEarned = 0;
+            }
+            
+            function createConfetti() {
+                const confettiContainer = document.createElement('div');
+                confettiContainer.style.position = 'fixed';
+                confettiContainer.style.top = '0';
+                confettiContainer.style.left = '0';
+                confettiContainer.style.width = '100%';
+                confettiContainer.style.height = '100%';
+                confettiContainer.style.pointerEvents = 'none';
+                confettiContainer.style.zIndex = '1000';
+                document.body.appendChild(confettiContainer);
+                
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                    confetti.style.animationDelay = Math.random() * 2 + 's';
+                    confettiContainer.appendChild(confetti);
+                }
+                
+                setTimeout(() => {
+                    confettiContainer.remove();
+                }, 5000);
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae1c81a1b4f244',t:'MTc1MTc5NDUxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
