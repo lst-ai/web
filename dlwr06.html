@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-巧克力六感修辭九宮格</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            color: #4a3520;
+            font-size: 1.1rem;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(255, 236, 179, 0.4) 0%, rgba(255, 236, 179, 0) 50%),
+                radial-gradient(circle at 80% 80%, rgba(210, 180, 140, 0.4) 0%, rgba(210, 180, 140, 0) 50%),
+                linear-gradient(135deg, #f8f3e9 0%, #ede0d4 100%);
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        .pattern-bg {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a67c52' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(74, 53, 32, 0.15);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(74, 53, 32, 0.25);
+        }
+
+        .option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: 1.2rem;
+            border-width: 3px;
+        }
+
+        .option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 53, 32, 0.15);
+        }
+
+        .option.selected {
+            border-color: #7b5d3f;
+            background-color: #f0e6d2;
+        }
+
+        .option.correct {
+            border-color: #4ade80;
+            background-color: #dcfce7;
+        }
+
+        .option.incorrect {
+            border-color: #f87171;
+            background-color: #fee2e2;
+        }
+
+        .progress-bar {
+            height: 12px;
+            transition: width 0.5s ease;
+            border-radius: 6px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .emoji-icon {
+            display: inline-block;
+            font-size: 3rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .sense-icon {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .sense-icon:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(210, 105, 30, 0.6));
+        }
+
+        .sense-icon.visited {
+            background-image: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            border: 2px solid #d97706;
+        }
+
+        .sense-icon.visited .font-medium {
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        .knowledge-card {
+            background-color: #ffffff;
+            border-left: 8px solid #7b5d3f;
+            background-image: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,248,240,1) 100%);
+        }
+
+        .challenge-card {
+            background-color: #f5efe6;
+            border-left: 8px solid #d4a373;
+            background-image: linear-gradient(135deg, rgba(245,239,230,1) 0%, rgba(255,248,240,1) 100%);
+        }
+
+        .btn {
+            transition: all 0.2s ease;
+            font-size: 1.2rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 53, 32, 0.15);
+        }
+
+        .chocolate-bg {
+            background: linear-gradient(135deg, #7b5d3f 0%, #4a3520 100%);
+        }
+
+        .title-text {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .example-card {
+            border-left: 4px solid #d4a373;
+            background-color: #fffbf6;
+        }
+
+        .rhetoric-tag {
+            background-color: #f3e8d8;
+            color: #92400e;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            display: inline-block;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Loading animation */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .loading-text {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="pattern-bg">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="chocolate-bg text-white py-8 px-4 md:px-8 text-center">
+            <div class="container mx-auto">
+                <h1 class="text-3xl md:text-5xl font-bold flex items-center justify-center title-text">
+                    <span class="mr-3">🍫</span> LST遊戲室-巧克力六感修辭九宮格
+                </h1>
+                <p class="mt-3 text-xl text-amber-100">創新的數位互動遊戲式學習 | 適合中高年級語文創作課</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 md:px-8 py-6 flex-grow">
+            <!-- Introduction Section -->
+            <section id="intro" class="section active">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-br from-white to-amber-50 rounded-xl shadow-lg p-8 md:p-10 card">
+                        <h2 class="text-3xl font-bold mb-6 flex items-center">
+                            <span class="emoji-icon">🍫</span>歡迎來到巧克力六感修辭九宮格！
+                        </h2>
+                        <p class="mb-8 text-xl">在這趟創意之旅中，你將學習如何運用六種感官來描述巧克力，讓你的寫作更加生動有趣！</p>
+
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+                            <div id="goto-visual" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="visual">
+                                <div class="text-5xl mb-3">👁️</div>
+                                <div class="font-medium text-xl">視覺</div>
+                            </div>
+                            <div id="goto-smell" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="smell">
+                                <div class="text-5xl mb-3">👃</div>
+                                <div class="font-medium text-xl">嗅覺</div>
+                            </div>
+                            <div id="goto-sound" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="sound">
+                                <div class="text-5xl mb-3">👂</div>
+                                <div class="font-medium text-xl">聽覺</div>
+                            </div>
+                            <div id="goto-touch" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="touch">
+                                <div class="text-5xl mb-3">✋</div>
+                                <div class="font-medium text-xl">觸覺</div>
+                            </div>
+                            <div id="goto-taste" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="taste">
+                                <div class="text-5xl mb-3">👄</div>
+                                <div class="font-medium text-xl">味覺</div>
+                            </div>
+                            <div id="goto-heart" class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl text-center shadow-md sense-icon" data-section="heart">
+                                <div class="text-5xl mb-3">❤️</div>
+                                <div class="font-medium text-xl">感覺</div>
+                            </div>
+                            <div id="goto-free-creation" class="bg-gradient-to-br from-white to-amber-50 p-6 rounded-xl text-center shadow-md sense-icon" data-section="free-creation">
+                                <div class="text-5xl mb-3">📝</div>
+                                <div class="font-medium text-xl">自由創作</div>
+                            </div>
+                            <div id="goto-vocabulary-expander" class="bg-gradient-to-br from-white to-amber-50 p-6 rounded-xl text-center shadow-md sense-icon" data-section="vocabulary-expander">
+                                <div class="text-5xl mb-3">📚</div>
+                                <div class="font-medium text-xl">詞彙擴充機</div>
+                            </div>
+                             <div id="goto-story-starter" class="bg-gradient-to-br from-white to-amber-50 p-6 rounded-xl text-center shadow-md sense-icon" data-section="story-starter">
+                                <div class="text-5xl mb-3">✍️</div>
+                                <div class="font-medium text-xl">故事接龍</div>
+                            </div>
+                        </div>
+
+                        <p class="mb-8 text-xl">每個感官都有一張知識卡和一個闖關任務，完成後即可回到主頁面選擇下一個感官！您也可以前往自由創作區塊練習寫作，或是使用詞彙擴充機來豐富你的詞彙，或者嘗試故事接龍來激發創意。</p>
+
+                        <button id="start-btn" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            開始冒險！
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Visual Section -->
+            <section id="visual" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👁️</span>
+                            <h2 class="text-3xl font-bold">視覺：用眼睛看見比喻</h2>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">觀察巧克力的外表，運用譬喻或排比讓畫面更生動。</p>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「巧克力的顏色深棕如木頭，閃耀著像絲絨般柔和的光澤。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用 <span class="rhetoric-tag">譬喻法</span>，把巧克力比喻為「木頭」與「絲絨」，讓顏色與光澤更具畫面感。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「一顆顆巧克力整齊地排成一列，就像士兵在操場上等待檢閱。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>結合 <span class="rhetoric-tag">排比法</span>（一顆顆…）與 <span class="rhetoric-tag">譬喻法</span>（像士兵），讓讀者看見整齊隊形的畫面。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="40" y="60" width="120" height="80" rx="5" fill="#5D4037"/>
+                                <rect x="50" y="70" width="100" height="60" rx="3" fill="#795548"/>
+                                <line x1="75" y1="70" x2="75" y2="130" stroke="#6D4C41" stroke-width="2"/>
+                                <line x1="100" y1="70" x2="100" y2="130" stroke="#6D4C41" stroke-width="2"/>
+                                <line x1="125" y1="70" x2="125" y2="130" stroke="#6D4C41" stroke-width="2"/>
+                                <line x1="50" y1="95" x2="150" y2="95" stroke="#6D4C41" stroke-width="2"/>
+                                <circle cx="160" cy="70" r="15" fill="#FFECB3" opacity="0.7"/>
+                                <path d="M155 65 L165 75 M165 65 L155 75" stroke="#FFC107" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關一：哪一句是視覺比喻？</h3>
+                        <p class="mb-8 text-xl">選出用「眼睛看到的畫面」來寫的句子。</p>
+
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它像夜裡的小磚塊，閃著光滑的亮澤。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「入口即化，像在嘴巴跳舞。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「包裝紙唦唦響，像小提琴聲。」</p>
+                            </div>
+                        </div>
+
+                        <div id="visual-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+
+                        <button id="visual-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            返回主選單
+                        </button>
+
+                        <div class="mt-8 pt-6 border-t-2 border-amber-200">
+                            <h4 class="text-xl font-bold mb-4">✨ 獲得更多靈感！</h4>
+                            <p class="mb-4 text-lg text-amber-700">點擊下方按鈕，讓 AI 為你生成新的視覺描述句：</p>
+                            <button id="visual-generate-inspiration" class="btn bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold py-3 px-6 rounded-xl w-full md:w-auto">
+                                ✨ 獲得視覺靈感
+                            </button>
+                            <div id="visual-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                                生成中，請稍候...
+                            </div>
+                            <textarea id="visual-inspiration-output" class="w-full h-24 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 resize-none mt-4" placeholder="AI 生成的靈感會顯示在這裡..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Smell Section -->
+            <section id="smell" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👃</span>
+                            <h2 class="text-3xl font-bold">嗅覺：用鼻子聞出香氣</h2>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">描述香氣時可加入想像或擬人化，增加趣味性。</p>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「巧克力的香氣悄悄飄了過來，像是一雙溫暖的手，輕輕安撫了我的心。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">譬喻法</span>（香氣像一雙溫暖的手）與<span class="rhetoric-tag">擬人法</span>（安撫了我的心），將巧克力的香氣描寫得溫柔又充滿情感，讓人感受到香氣不只是味道，更像是會陪伴、會安慰的朋友。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「那香味聞起來像剛出爐的餅乾，還藏著一點午後陽光的溫暖氣息。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（將香味比作剛出爐的餅乾）與<span class="rhetoric-tag">象徵法</span>（午後陽光象徵溫暖與放鬆），讓嗅覺描寫充滿溫度與情感，讓讀者彷彿感受到香氣帶來的安定與美好。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="70" y="80" width="60" height="40" rx="5" fill="#5D4037"/>
+                                <path d="M100,80 C100,60 120,70 120,60 C120,50 100,55 100,40" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M110,80 C110,65 130,75 130,65 C130,55 110,60 110,45" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M90,80 C90,65 70,75 70,65 C70,55 90,60 90,45" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M80,80 C80,60 60,70 60,60 C60,50 80,55 80,40" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <circle cx="100" cy="100" r="5" fill="#6D4C41"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關二：哪句有用嗅覺＋想像？</h3>
+                        <p class="mb-8 text-xl">選出正確的答案。</p>
+
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它的香氣像媽媽在廚房煮熱可可一樣溫暖。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「包裝紙裂開的聲音像火柴劃過。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「咬下去會有酥脆的聲音。」</p>
+                            </div>
+                        </div>
+
+                        <div id="smell-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+
+                        <button id="smell-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            返回主選單
+                        </button>
+
+                        <div class="mt-8 pt-6 border-t-2 border-amber-200">
+                            <h4 class="text-xl font-bold mb-4">✨ 獲得更多靈感！</h4>
+                            <p class="mb-4 text-lg text-amber-700">點擊下方按鈕，讓 AI 為你生成新的嗅覺描述句：</p>
+                            <button id="smell-generate-inspiration" class="btn bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold py-3 px-6 rounded-xl w-full md:w-auto">
+                                ✨ 獲得嗅覺靈感
+                            </button>
+                            <div id="smell-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                                生成中，請稍候...
+                            </div>
+                            <textarea id="smell-inspiration-output" class="w-full h-24 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 resize-none mt-4" placeholder="AI 生成的靈感會顯示在這裡..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sound Section -->
+            <section id="sound" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👂</span>
+                            <h2 class="text-3xl font-bold">聽覺：用耳朵聽見聲音</h2>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">寫出聲音的方式包括摹聲詞與擬人描述。</p>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「喀啦！一聲，巧克力斷成兩半，就像在對我說：『準備開動吧！』」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">擬聲法</span>（喀啦）與<span class="rhetoric-tag">擬人法</span>（巧克力說話），讓聲音變得有生命力。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「唦唦唦，包裝紙在手中輕響，好像秋天裡被風吹起的落葉。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">擬聲法</span>（唦唦唦）與<span class="rhetoric-tag">譬喻法</span>（像落葉聲），營造輕柔而詩意的聲響。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="70" y="80" width="60" height="40" rx="5" fill="#5D4037"/>
+                                <path d="M140,100 C160,80 160,120 140,100" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M150,100 C170,70 170,130 150,100" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <path d="M160,100 C180,60 180,140 160,100" stroke="#8D6E63" stroke-width="2" fill="none"/>
+                                <text x="70" y="70" font-family="Arial" font-size="14" fill="#6D4C41">喀啦!</text>
+                                <text x="120" y="60" font-family="Arial" font-size="12" fill="#6D4C41">唦唦唦</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關三：這句話屬於哪種感官描寫？</h3>
+                        <p class="mb-8 text-xl">「喀啦一聲，像咬破一個脆殼。」</p>
+
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👁 視覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>👂 聽覺</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>👄 味覺</p>
+                            </div>
+                        </div>
+
+                        <div id="sound-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+
+                        <button id="sound-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            返回主選單
+                        </button>
+
+                        <div class="mt-8 pt-6 border-t-2 border-amber-200">
+                            <h4 class="text-xl font-bold mb-4">✨ 獲得更多靈感！</h4>
+                            <p class="mb-4 text-lg text-amber-700">點擊下方按鈕，讓 AI 為你生成新的聽覺描述句：</p>
+                            <button id="sound-generate-inspiration" class="btn bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold py-3 px-6 rounded-xl w-full md:w-auto">
+                                ✨ 獲得聽覺靈感
+                            </button>
+                            <div id="sound-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                                生成中，請稍候...
+                            </div>
+                            <textarea id="sound-inspiration-output" class="w-full h-24 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 resize-none mt-4" placeholder="AI 生成的靈感會顯示在這裡..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Touch Section -->
+            <section id="touch" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">✋</span>
+                            <h2 class="text-3xl font-bold">觸覺：用手摸起來的感覺</h2>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">觸感常用譬喻或擬人來傳達溫度、質地。</p>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「巧克力在我手中慢慢變軟，像奶油一樣輕輕滑過手心，好像在說：『我準備好了，快把我吃掉吧！』」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（像奶油）與<span class="rhetoric-tag">擬人法</span>（巧克力「說話」），讓巧克力的觸感變得溫柔又有趣。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「冷凍拿出來的巧克力像一塊不說話的小石頭，躺在我手心裡，一動也不動，好像還沒睡醒一樣。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（把巧克力比作小石頭），讓觸覺變得具體；加上<span class="rhetoric-tag">擬人法</span>（巧克力「不說話」、「還沒睡醒」），讓冷冰冰的巧克力也有了可愛的個性。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M60,120 C60,90 140,90 140,120 C140,150 60,150 60,120" fill="#FFECB3"/>
+                                <rect x="85" y="100" width="30" height="20" rx="3" fill="#5D4037"/>
+                                <path d="M85,110 C75,105 75,115 85,110" fill="#6D4C41"/>
+                                <path d="M115,110 C125,105 125,115 115,110" fill="#6D4C41"/>
+                                <path d="M90,120 C90,125 110,125 110,120" stroke="#6D4C41" stroke-width="1" fill="none"/>
+                                <circle cx="95" cy="105" r="2" fill="#3E2723"/>
+                                <circle cx="105" cy="105" r="2" fill="#3E2723"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">� 闖關四：哪句是觸覺＋擬人？</h3>
+                        <p class="mb-8 text-xl">選出正確的答案。</p>
+
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它躲在我手心裡，靜靜不說話，只融化著陪我。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「香味像雲霧般飄進鼻子。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「像絲絨般的光滑在舌尖融開。」</p>
+                            </div>
+                        </div>
+
+                        <div id="touch-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+
+                        <button id="touch-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            返回主選單
+                        </button>
+
+                        <div class="mt-8 pt-6 border-t-2 border-amber-200">
+                            <h4 class="text-xl font-bold mb-4">✨ 獲得更多靈感！</h4>
+                            <p class="mb-4 text-lg text-amber-700">點擊下方按鈕，讓 AI 為你生成新的觸覺描述句：</p>
+                            <button id="touch-generate-inspiration" class="btn bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold py-3 px-6 rounded-xl w-full md:w-auto">
+                                ✨ 獲得觸覺靈感
+                            </button>
+                            <div id="touch-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                                生成中，請稍候...
+                            </div>
+                            <textarea id="touch-inspiration-output" class="w-full h-24 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 resize-none mt-4" placeholder="AI 生成的靈感會顯示在這裡..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Taste Section -->
+            <section id="taste" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">👄</span>
+                            <h2 class="text-3xl font-bold">味覺：用嘴巴品嘗滋味</h2>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">形容味道時可使用排比、譬喻、誇飾等方式。</p>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「咬下一口巧克力，香氣、甜味全都一起跳出來，像一場小型煙火在嘴裡噴發，幸福得快要融化了！」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（像一場小型煙火在嘴裡噴發）與<span class="rhetoric-tag">誇飾法</span>（幸福得快要融化了），把咬下巧克力時的味道描寫得豐富又熱鬧，讓讀者彷彿能感受到那種甜美、驚喜又幸福的滋味。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「在舌尖爆開的濃郁香氣，像黑夜中閃爍的星星，令人驚喜。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">譬喻法</span>（香氣像星星），讓味道具象化為亮麗畫面。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M70,100 C70,80 130,80 130,100 C130,140 70,140 70,100" fill="#FFCDD2"/>
+                                <rect x="85" y="90" width="30" height="20" rx="3" fill="#5D4037"/>
+                                <path d="M85,100 C85,110 115,110 115,100" stroke="#6D4C41" stroke-width="1" fill="none"/>
+                                <text x="70" y="70" font-family="Arial" font-size="12" fill="#6D4C41">甜</text>
+                                <text x="90" y="70" font-family="Arial" font-size="12" fill="#6D4C41">苦</text>
+                                <text x="110" y="70" font-family="Arial" font-size="12" fill="#6D4C41">濃</text>
+                                <text x="130" y="70" font-family="Arial" font-size="12" fill="#6D4C41">滑</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關五：這句話用了哪種修辭？</h3>
+                        <p class="mb-8 text-xl">「甜、苦、滑、濃，一起在嘴裡開舞會！」</p>
+
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>譬喻</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>擬人</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>排比</p>
+                            </div>
+                        </div>
+
+                        <div id="taste-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+
+                        <button id="taste-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            返回主選單
+                        </button>
+
+                        <div class="mt-8 pt-6 border-t-2 border-amber-200">
+                            <h4 class="text-xl font-bold mb-4">✨ 獲得更多靈感！</h4>
+                            <p class="mb-4 text-lg text-amber-700">點擊下方按鈕，讓 AI 為你生成新的味覺描述句：</p>
+                            <button id="taste-generate-inspiration" class="btn bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold py-3 px-6 rounded-xl w-full md:w-auto">
+                                ✨ 獲得味覺靈感
+                            </button>
+                            <div id="taste-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                                生成中，請稍候...
+                            </div>
+                            <textarea id="taste-inspiration-output" class="w-full h-24 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 resize-none mt-4" placeholder="AI 生成的靈感會顯示在這裡..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Heart Section -->
+            <section id="heart" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Knowledge Card -->
+                    <div class="knowledge-card rounded-xl shadow-md p-8 md:p-10 mb-8 card">
+                        <div class="flex items-center mb-6">
+                            <span class="emoji-icon">❤️</span>
+                            <h2 class="text-3xl font-bold">感覺：用心感受巧克力的魔力</h2>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-amber-50 to-amber-100 p-6 rounded-xl mb-8">
+                            <h3 class="font-bold text-2xl mb-4">📘 知識卡重點</h3>
+                            <p class="mb-6 text-xl">「感覺」是描述內心的感受、情緒或聯想，讓寫作更有深度與共鳴。</p>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200 mb-6">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句一：</p>
+                                <p class="text-xl mb-3">「當巧克力在舌尖融化，我的心也跟著融化了，彷彿回到童年，媽媽輕輕地給我一個溫暖的擁抱。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>運用<span class="rhetoric-tag">譬喻法</span>（心跟著融化）、<span class="rhetoric-tag">轉化法</span>（味覺與心靈的連結），以及<span class="rhetoric-tag">聯想</span>，將巧克力的滋味與溫暖的童年回憶連結，帶來深層的情感共鳴。</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border-2 border-amber-200">
+                                <p class="font-medium text-amber-800 text-xl mb-2">✏️ 優美例句二：</p>
+                                <p class="text-xl mb-3">「這塊巧克力像一位沉默的朋友，總是在我需要安慰時，靜靜地為我帶來甜美的力量，撫平心中的煩惱。」</p>
+                                <div class="mt-2">
+                                    <p class="font-medium text-amber-800 mb-2">🔎 修辭說明：</p>
+                                    <p>使用<span class="rhetoric-tag">擬人法</span>（巧克力像朋友、帶來力量、撫平煩惱），賦予巧克力情感與智慧，展現其對心靈的療癒作用。</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <svg class="w-64 h-64" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M100,50 C70,20 30,50 30,90 C30,130 100,180 100,180 C100,180 170,130 170,90 C170,50 130,20 100,50 Z" fill="#EF9A9A"/>
+                                <path d="M100,60 C80,40 50,60 50,90 C50,120 100,160 100,160 C100,160 150,120 150,90 C150,60 120,40 100,60 Z" fill="#E57373"/>
+                                <rect x="85" y="90" width="30" height="20" rx="3" fill="#5D4037"/>
+                                <path d="M85,100 C85,110 115,110 115,100" stroke="#6D4C41" stroke-width="1" fill="none"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Card -->
+                    <div class="challenge-card rounded-xl shadow-md p-8 md:p-10 card">
+                        <h3 class="text-2xl font-bold mb-6">🎮 闖關六：哪句最能展現「感覺」？</h3>
+                        <p class="mb-8 text-xl">選出能表達內心感受或情感的句子。</p>
+
+                        <div class="space-y-6 mb-8">
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「這塊巧克力像一顆黑色的鵝卵石。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="false">
+                                <p>「撕開包裝紙，發出清脆的響聲。」</p>
+                            </div>
+                            <div class="option border-3 border-amber-300 bg-white rounded-xl p-6" data-correct="true">
+                                <p>「它帶給我滿滿的幸福感，像是被溫暖的陽光擁抱。」</p>
+                            </div>
+                        </div>
+
+                        <div id="heart-feedback" class="mb-8 p-6 rounded-xl text-xl hidden"></div>
+
+                        <button id="heart-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            返回主選單
+                        </button>
+
+                        <div class="mt-8 pt-6 border-t-2 border-amber-200">
+                            <h4 class="text-xl font-bold mb-4">✨ 獲得更多靈感！</h4>
+                            <p class="mb-4 text-lg text-amber-700">點擊下方按鈕，讓 AI 為你生成新的感覺描述句：</p>
+                            <button id="heart-generate-inspiration" class="btn bg-gradient-to-r from-teal-500 to-teal-700 hover:from-teal-600 hover:to-teal-800 text-white font-bold py-3 px-6 rounded-xl w-full md:w-auto">
+                                ✨ 獲得感覺靈感
+                            </button>
+                            <div id="heart-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                                生成中，請稍候...
+                            </div>
+                            <textarea id="heart-inspiration-output" class="w-full h-24 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 resize-none mt-4" placeholder="AI 生成的靈感會顯示在這裡..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Free Creation Section -->
+            <section id="free-creation" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-br from-white to-amber-50 rounded-xl shadow-lg p-8 md:p-10 card">
+                        <h2 class="text-3xl font-bold mb-6 flex items-center">
+                            <span class="emoji-icon">📝</span>自由創作：讓 AI 助你一臂之力！
+                        </h2>
+                        <p class="mb-8 text-xl">在這裡，你可以輸入任何你寫的關於巧克力的句子，AI 會幫你分析其中使用的感官描寫和修辭手法，並給你寫作建議！</p>
+
+                        <div class="mb-6">
+                            <label for="user-sentence" class="block text-amber-800 text-xl font-medium mb-3">寫下你的句子：</label>
+                            <textarea id="user-sentence" class="w-full h-36 p-4 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-900 resize-y" placeholder="例如：這塊巧克力聞起來像清晨的花園，充滿生機。"></textarea>
+                        </div>
+
+                        <button id="get-ai-feedback" class="btn bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            ✨ 獲得 AI 寫作建議
+                        </button>
+
+                        <div id="free-creation-loading" class="text-center text-amber-700 mt-4 hidden loading-text">
+                            AI 正在分析你的寫作，請稍候...
+                        </div>
+
+                        <div id="ai-feedback-output" class="bg-gradient-to-br from-white to-amber-50 p-6 rounded-xl border-2 border-amber-200 mt-8 hidden">
+                            <h4 class="text-xl font-bold text-amber-900 mb-3">AI 評語與建議：</h4>
+                            <p class="text-lg text-amber-800" id="feedback-text"></p>
+                        </div>
+
+                        <button id="free-creation-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto mt-8">
+                            返回主選單
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Vocabulary Expander Section -->
+            <section id="vocabulary-expander" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-br from-white to-amber-50 rounded-xl shadow-lg p-8 md:p-10 card">
+                        <h2 class="text-3xl font-bold mb-6 flex items-center">
+                            <span class="emoji-icon">📚</span>巧克力詞彙擴充機
+                        </h2>
+                        <p class="mb-8 text-xl">輸入一個詞彙，讓 AI 為你提供更多描述巧克力的詞語和片語！</p>
+
+                        <div class="mb-6">
+                            <label for="vocabulary-input" class="block text-purple-800 text-xl font-medium mb-3">輸入詞彙：</label>
+                            <input type="text" id="vocabulary-input" class="w-full p-4 rounded-lg border-2 border-purple-300 bg-purple-50 text-purple-900" placeholder="例如：香濃、苦澀、滑順">
+                        </div>
+
+                        <button id="expand-vocabulary-btn" class="btn bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            ✨ 擴充詞彙
+                        </button>
+
+                        <div id="vocabulary-loading" class="text-center text-purple-700 mt-4 hidden loading-text">
+                            AI 正在生成詞彙，請稍候...
+                        </div>
+
+                        <div id="vocabulary-output-container" class="bg-gradient-to-br from-white to-amber-50 p-6 rounded-xl border-2 border-purple-200 mt-8 hidden">
+                            <h4 class="text-xl font-bold text-purple-900 mb-3">建議詞彙與片語：</h4>
+                            <p class="text-lg text-purple-800" id="vocabulary-output"></p>
+                        </div>
+
+                        <button id="vocabulary-expander-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto mt-8">
+                            返回主選單
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Story Starter Section -->
+            <section id="story-starter" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-br from-white to-amber-50 rounded-xl shadow-lg p-8 md:p-10 card">
+                        <h2 class="text-3xl font-bold mb-6 flex items-center">
+                            <span class="emoji-icon">✍️</span>巧克力故事接龍
+                        </h2>
+                        <p class="mb-8 text-xl">輸入一個關於巧克力的開頭，讓 AI 幫你接龍，創造一個有趣的短故事！</p>
+
+                        <div class="mb-6">
+                            <label for="story-input" class="block text-red-800 text-xl font-medium mb-3">故事開頭：</label>
+                            <textarea id="story-input" class="w-full h-36 p-4 rounded-lg border-2 border-red-300 bg-red-50 text-red-900 resize-y" placeholder="例如：在一個陽光普照的午後，我拆開了一塊神秘的巧克力..."></textarea>
+                        </div>
+
+                        <button id="generate-story-btn" class="btn bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto">
+                            ✨ 生成故事
+                        </button>
+
+                        <div id="story-loading" class="text-center text-red-700 mt-4 hidden loading-text">
+                            AI 正在生成故事，請稍候...
+                        </div>
+
+                        <div id="story-output-container" class="bg-gradient-to-br from-white to-amber-50 p-6 rounded-xl border-2 border-red-200 mt-8 hidden">
+                            <h4 class="text-xl font-bold text-red-900 mb-3">AI 接龍故事：</h4>
+                            <p class="text-lg text-red-800" id="story-output"></p>
+                        </div>
+
+                        <button id="story-starter-next" class="btn bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-4 px-8 rounded-xl w-full md:w-auto mt-8">
+                            返回主選單
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-4 px-4 md:px-8 text-center text-sm">
+            <p>&copy; 2025 LST遊戲室. All rights reserved.</p>
+            <p class="mt-2 text-amber-200">設計：劉宏龍｜製作：呂舒婷</p>
+        </footer>
+    </div>
+
+    <script>
+        const sections = document.querySelectorAll('.section');
+        const senseIcons = document.querySelectorAll('.sense-icon');
+        const startBtn = document.getElementById('start-btn');
+        let visitedSenses = JSON.parse(localStorage.getItem('visitedSenses')) || {};
+
+        // Initialize Tone.js synths
+        let clickSynth, correctSynth, incorrectSynth, generateStartSynth, generateEndSynth;
+        let audioContextStarted = false;
+
+        /**
+         * Starts the Tone.js audio context and initializes synths.
+         * This function is called on the first user interaction to comply with browser autoplay policies.
+         */
+        async function startAudioContext() {
+            if (!audioContextStarted) {
+                await Tone.start();
+                console.log('AudioContext started');
+
+                // Initialize synths after audio context is ready
+                clickSynth = new Tone.Synth({
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.005, decay: 0.05, sustain: 0.01, release: 0.1 }
+                }).toDestination();
+
+                correctSynth = new Tone.Synth({
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+                }).toDestination();
+                // Set a higher frequency for a brighter, more positive sound
+                correctSynth.set({ frequency: "G5" });
+
+                incorrectSynth = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.2 }
+                }).toDestination();
+                // Set a lower, slightly dissonant frequency for an error sound
+                incorrectSynth.set({ frequency: "C3" });
+
+                generateStartSynth = new Tone.Synth({
+                    oscillator: { type: "square" },
+                    envelope: { attack: 0.005, decay: 0.05, sustain: 0.01, release: 0.05 }
+                }).toDestination();
+                // Short, subtle ascending tone
+                generateStartSynth.set({ frequency: "C4" });
+
+                generateEndSynth = new Tone.Synth({
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+                }).toDestination();
+                // Short, positive descending tone
+                generateEndSynth.set({ frequency: "E5" });
+
+                audioContextStarted = true;
+            }
+        }
+
+        /**
+         * Hides all sections and activates the specified section.
+         * @param {string} sectionId The ID of the section to activate.
+         */
+        function showSection(sectionId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /**
+         * Updates the visual state of visited sense icons on the intro page.
+         */
+        function updateVisitedSenses() {
+            senseIcons.forEach(icon => {
+                const sectionName = icon.dataset.section;
+                if (visitedSenses[sectionName]) {
+                    icon.classList.add('visited');
+                } else {
+                    icon.classList.remove('visited');
+                }
+            });
+        }
+
+        /**
+         * Handles the selection of an option in a challenge.
+         * @param {HTMLElement} selectedOption The selected option element.
+         * @param {HTMLElement} feedbackElement The feedback message element.
+         * @param {HTMLElement} nextButton The button to show after the challenge.
+         * @param {string} senseName The name of the sense (e.g., 'visual').
+         */
+        function handleOptionSelection(selectedOption, feedbackElement, nextButton, senseName) {
+            const options = selectedOption.parentNode.querySelectorAll('.option');
+            let isCorrect = false;
+
+            // Disable all options and remove hover effects
+            options.forEach(option => {
+                option.style.pointerEvents = 'none'; // Disable clicking
+                option.classList.remove('hover:transform', 'hover:shadow-md');
+            });
+
+            // For Taste section, check if selected option is correct based on multiple correct answers
+            if (senseName === 'taste') {
+                const correctOptions = Array.from(options).filter(option => option.dataset.correct === 'true');
+                const selectedIsCorrect = selectedOption.dataset.correct === 'true';
+
+                if (selectedIsCorrect) {
+                    selectedOption.classList.add('correct');
+                    feedbackElement.classList.remove('hidden');
+                    feedbackElement.classList.add('bg-green-100', 'text-green-800');
+                    feedbackElement.innerHTML = '✨ 太棒了！這是正確的答案！你掌握了這個感官的寫作技巧！';
+                    isCorrect = true;
+                    if (correctSynth) correctSynth.triggerAttackRelease("G5", "8n"); // Play correct sound
+                } else {
+                    selectedOption.classList.add('incorrect');
+                    feedbackElement.classList.remove('hidden');
+                    feedbackElement.classList.add('bg-red-100', 'text-red-800');
+                    feedbackElement.innerHTML = '🤔 噢！再想想看。這個句子描寫的不是這個感官或修辭喔！';
+                    // Highlight all correct answers
+                    correctOptions.forEach(option => {
+                        option.classList.add('correct');
+                    });
+                    if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play incorrect sound
+                }
+            } else { // Original logic for other senses
+                if (selectedOption.dataset.correct === 'true') {
+                    selectedOption.classList.add('correct');
+                    feedbackElement.classList.remove('hidden');
+                    feedbackElement.classList.add('bg-green-100', 'text-green-800');
+                    feedbackElement.innerHTML = '✨ 太棒了！這是正確的答案！你掌握了這個感官的寫作技巧！';
+                    isCorrect = true;
+                    if (correctSynth) correctSynth.triggerAttackRelease("G5", "8n"); // Play correct sound
+                } else {
+                    selectedOption.classList.add('incorrect');
+                    feedbackElement.classList.remove('hidden');
+                    feedbackElement.classList.add('bg-red-100', 'text-red-800');
+                    feedbackElement.innerHTML = '🤔 噢！再想想看。這個句子描寫的不是這個感官或修辭喔！';
+                    // Find and highlight the correct answer
+                    options.forEach(option => {
+                        if (option.dataset.correct === 'true') {
+                            option.classList.add('correct');
+                        }
+                    });
+                    if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play incorrect sound
+                }
+            }
+
+            // Mark sense as visited if correct, then show next button
+            if (isCorrect) {
+                visitedSenses[senseName] = true;
+                localStorage.setItem('visitedSenses', JSON.stringify(visitedSenses));
+            }
+            // The next button is now always visible, no need to show it here.
+        }
+
+        /**
+         * Resets a challenge section to its initial state.
+         * @param {string} sectionId The ID of the section to reset.
+         */
+        function resetChallenge(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (!section) return; // Ensure section exists
+
+            const options = section.querySelectorAll('.option');
+            const feedbackElement = section.querySelector('.p-6.rounded-xl.text-xl:not([id$="-inspiration-output"])'); // Exclude inspiration output
+
+            options.forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+                option.style.pointerEvents = 'auto'; // Re-enable clicking
+                option.classList.add('hover:transform', 'hover:shadow-md'); // Re-add hover
+            });
+
+            if (feedbackElement) {
+                feedbackElement.classList.add('hidden');
+                feedbackElement.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+            }
+
+            // Also clear inspiration output and hide loading for the specific section
+            const inspirationOutput = section.querySelector('[id$="-inspiration-output"]');
+            const loadingIndicator = section.querySelector('[id$="-loading"]');
+            if (inspirationOutput) {
+                inspirationOutput.value = '';
+            }
+            if (loadingIndicator) {
+                loadingIndicator.classList.add('hidden');
+            }
+
+            // Reset free creation section specifically
+            if (sectionId === 'free-creation') {
+                document.getElementById('user-sentence').value = '';
+                document.getElementById('ai-feedback-output').classList.add('hidden');
+                document.getElementById('feedback-text').innerHTML = '';
+                document.getElementById('free-creation-loading').classList.add('hidden');
+                document.getElementById('get-ai-feedback').disabled = false;
+            }
+            // Reset vocabulary expander section specifically
+            if (sectionId === 'vocabulary-expander') {
+                document.getElementById('vocabulary-input').value = '';
+                document.getElementById('vocabulary-output-container').classList.add('hidden');
+                document.getElementById('vocabulary-output').innerHTML = '';
+                document.getElementById('vocabulary-loading').classList.add('hidden');
+                document.getElementById('expand-vocabulary-btn').disabled = false;
+            }
+            // Reset story starter section specifically
+            if (sectionId === 'story-starter') {
+                document.getElementById('story-input').value = '';
+                document.getElementById('story-output-container').classList.add('hidden');
+                document.getElementById('story-output').innerHTML = '';
+                document.getElementById('story-loading').classList.add('hidden');
+                document.getElementById('generate-story-btn').disabled = false;
+            }
+        }
+
+        // --- Gemini API Integration ---
+        /**
+         * Generates inspiration using the Gemini API.
+         * @param {string} sense The sense for which to generate inspiration (e.g., 'visual', 'smell').
+         */
+        async function generateInspiration(sense) {
+            const inspirationOutput = document.getElementById(`${sense}-inspiration-output`);
+            const loadingIndicator = document.getElementById(`${sense}-loading`);
+            const generateButton = document.getElementById(`${sense}-generate-inspiration`);
+
+            if (!inspirationOutput || !loadingIndicator || !generateButton) {
+                console.error(`Elements for ${sense} inspiration not found.`);
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            generateButton.disabled = true; // Disable button during generation
+            inspirationOutput.value = ''; // Clear previous output
+            inspirationOutput.placeholder = 'AI 正在生成靈感中...';
+
+            if (generateStartSynth) generateStartSynth.triggerAttackRelease("C4", "16n"); // Play start sound
+
+            let promptText = '';
+            switch (sense) {
+                case 'visual':
+                    promptText = '請生成一句關於巧克力的視覺描述句，需包含譬喻或轉化修辭，用繁體中文。';
+                    break;
+                case 'smell':
+                    promptText = '請生成一句關於巧-克力的嗅覺描述句，需包含譬喻或擬人修辭，用繁體中文。';
+                    break;
+                case 'sound':
+                    promptText = '請生成一句關於巧克力的聽覺描述句，需包含擬聲或擬人修辭，用繁體中文。';
+                    break;
+                case 'touch':
+                    promptText = '請生成一句關於巧克力的觸覺描述句，需包含譬喻或擬人修辭，用繁體中文。';
+                    break;
+                case 'taste':
+                    promptText = '請生成一句關於巧克力的味覺描述句，需包含排比、譬喻或誇飾修辭，用繁體中文。';
+                    break;
+                case 'heart': // Changed from 'heart' to 'feeling' in prompt text to reflect UI change
+                    promptText = '請生成一句關於巧克力的感覺描述句，需包含對內心感受、情緒或聯想的描述，用繁體中文。';
+                    break;
+                default:
+                    promptText = '請生成一句關於巧克力的描述句，用繁體中文。';
+            }
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: promptText }] });
+
+            const payload = { contents: chatHistory };
+            // Using an empty string for apiKey will allow the Canvas environment to provide it at runtime.
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    inspirationOutput.value = text;
+                    inspirationOutput.placeholder = 'AI 生成的靈感會顯示在這裡...';
+                    if (generateEndSynth) generateEndSynth.triggerAttackRelease("E5", "8n"); // Play end sound
+                } else {
+                    inspirationOutput.value = '生成靈感失敗，請稍後再試。';
+                    console.error('Gemini API returned an unexpected structure or no content:', result);
+                    if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+                }
+            } catch (error) {
+                inspirationOutput.value = '生成靈感時發生錯誤。';
+                console.error('Error calling Gemini API:', error);
+                if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                generateButton.disabled = false; // Re-enable button
+            }
+        }
+
+        /**
+         * Gets AI feedback for user's free creation sentence.
+         */
+        async function getFreeCreationFeedback() {
+            const userSentence = document.getElementById('user-sentence').value.trim();
+            const feedbackOutput = document.getElementById('feedback-text');
+            const feedbackContainer = document.getElementById('ai-feedback-output');
+            const loadingIndicator = document.getElementById('free-creation-loading');
+            const generateButton = document.getElementById('get-ai-feedback');
+
+            if (!userSentence) {
+                feedbackOutput.innerHTML = '請輸入一些文字，AI 才能提供建議喔！';
+                feedbackContainer.classList.remove('hidden');
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            generateButton.disabled = true;
+            feedbackOutput.innerHTML = '';
+            feedbackContainer.classList.add('hidden'); // Hide until feedback is ready
+
+            if (generateStartSynth) generateStartSynth.triggerAttackRelease("C4", "16n"); // Play start sound
+
+            // Modified prompt for free creation feedback
+            const promptText = `使用者提供一句關於巧克力的描述。請您分析其中包含了哪些感官描寫（視覺、嗅覺、聽覺、觸覺、味覺、感覺）以及使用了哪些修辭手法（譬喻、擬人、排比、誇飾）。請以繁體中文，用鼓勵的語氣給予評語，並提供一到兩點具體的寫作建議，幫助使用者讓描述更生動或更豐富。如果句子過於簡短或不完整，也請溫和地引導他們擴寫。請將您的回應控制在300字以內，並且不要使用任何粗體（**）或斜體（*）的標示符號。
+
+現在，請根據以下句子，提供您的分析和建議：
+${userSentence}`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: promptText }] });
+
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas environment provides this
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let text = result.candidates[0].content.parts[0].text;
+                    // Sanitize text: remove ** and *
+                    text = text.replace(/\*\*|\*/g, '');
+                    feedbackOutput.innerHTML = text.replace(/\n/g, '<br>'); // Preserve newlines
+                    feedbackContainer.classList.remove('hidden');
+                    if (generateEndSynth) generateEndSynth.triggerAttackRelease("E5", "8n"); // Play end sound
+                } else {
+                    feedbackOutput.innerHTML = 'AI 無法生成建議，請稍後再試或換個句子。';
+                    feedbackContainer.classList.remove('hidden');
+                    console.error('Gemini API returned an unexpected structure or no content:', result);
+                    if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+                }
+            } catch (error) {
+                feedbackOutput.innerHTML = '在獲取 AI 建議時發生錯誤。請檢查網路連線或稍後再試。';
+                feedbackContainer.classList.remove('hidden');
+                console.error('Error calling Gemini API for free creation:', error);
+                if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                generateButton.disabled = false;
+            }
+        }
+
+        /**
+         * Expands vocabulary using the Gemini API.
+         */
+        async function expandVocabulary() {
+            const vocabularyInput = document.getElementById('vocabulary-input').value.trim();
+            const vocabularyOutput = document.getElementById('vocabulary-output');
+            const vocabularyOutputContainer = document.getElementById('vocabulary-output-container');
+            const loadingIndicator = document.getElementById('vocabulary-loading');
+            const expandButton = document.getElementById('expand-vocabulary-btn');
+
+            if (!vocabularyInput) {
+                vocabularyOutput.innerHTML = '請輸入一個詞彙，AI 才能幫你擴充喔！';
+                vocabularyOutputContainer.classList.remove('hidden');
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            expandButton.disabled = true;
+            vocabularyOutput.innerHTML = '';
+            vocabularyOutputContainer.classList.add('hidden');
+
+            if (generateStartSynth) generateStartSynth.triggerAttackRelease("C4", "16n"); // Play start sound
+
+            // Modified prompt for vocabulary expander
+            const promptText = `請針對以下關於巧克力的詞彙，提供3-5個同義詞、相關詞彙或簡短的描述性片語，以繁體中文呈現。請確保這些詞彙或片語能幫助學生更生動地描寫巧克力。請不要在回應中包含任何拼音。如果詞彙與巧克力無關，請生成相關的描述。
+
+詞彙：${vocabularyInput}`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: promptText }] });
+
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas environment provides this
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    vocabularyOutput.innerHTML = text.replace(/\n/g, '<br>');
+                    vocabularyOutputContainer.classList.remove('hidden');
+                    if (generateEndSynth) generateEndSynth.triggerAttackRelease("E5", "8n"); // Play end sound
+                } else {
+                    vocabularyOutput.innerHTML = '無法擴充詞彙，請稍後再試。';
+                    vocabularyOutputContainer.classList.remove('hidden');
+                    console.error('Gemini API returned an unexpected structure or no content:', result);
+                    if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+                }
+            } catch (error) {
+                vocabularyOutput.innerHTML = '擴充詞彙時發生錯誤。請檢查網路連線或稍後再試。';
+                vocabularyOutputContainer.classList.remove('hidden');
+                console.error('Error calling Gemini API for vocabulary expander:', error);
+                if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                expandButton.disabled = false;
+            }
+        }
+
+        /**
+         * Generates story continuation using the Gemini API.
+         */
+        async function generateStoryContinuation() {
+            const storyInput = document.getElementById('story-input').value.trim();
+            const storyOutput = document.getElementById('story-output');
+            const storyOutputContainer = document.getElementById('story-output-container');
+            const loadingIndicator = document.getElementById('story-loading');
+            const generateButton = document.getElementById('generate-story-btn');
+
+            if (!storyInput) {
+                storyOutput.innerHTML = '請輸入一個故事開頭，AI 才能幫你接龍喔！';
+                storyOutputContainer.classList.remove('hidden');
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            generateButton.disabled = true;
+            storyOutput.innerHTML = '';
+            storyOutputContainer.classList.add('hidden');
+
+            if (generateStartSynth) generateStartSynth.triggerAttackRelease("C4", "16n"); // Play start sound
+
+            const promptText = `請根據以下開頭，繼續編寫一個關於巧克力的短故事，約50-80字，用繁體中文。請確保故事內容有趣且富有想像力。
+
+故事開頭：${storyInput}`;
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: promptText }] });
+
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas environment provides this
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    storyOutput.innerHTML = text.replace(/\n/g, '<br>');
+                    storyOutputContainer.classList.remove('hidden');
+                    if (generateEndSynth) generateEndSynth.triggerAttackRelease("E5", "8n"); // Play end sound
+                } else {
+                    storyOutput.innerHTML = '無法生成故事，請稍後再試。';
+                    storyOutputContainer.classList.remove('hidden');
+                    console.error('Gemini API returned an unexpected structure or no content:', result);
+                    if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+                }
+            } catch (error) {
+                storyOutput.innerHTML = '生成故事時發生錯誤。請檢查網路連線或稍後再試。';
+                storyOutputContainer.classList.remove('hidden');
+                console.error('Error calling Gemini API for story starter:', error);
+                if (incorrectSynth) incorrectSynth.triggerAttackRelease("C3", "8n"); // Play error sound
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                generateButton.disabled = false;
+            }
+        }
+
+
+        // --- Event Listeners ---
+
+        // Start button on intro page
+        startBtn.addEventListener('click', async () => {
+            await startAudioContext(); // Start audio context on first user interaction
+            showSection('intro');
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+
+        // Sense icons on intro page
+        senseIcons.forEach(icon => {
+            icon.addEventListener('click', async () => {
+                await startAudioContext(); // Ensure audio context is started
+                const targetSection = icon.dataset.section;
+                showSection(targetSection);
+                resetChallenge(targetSection); // Reset challenge when entering a section
+                if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+            });
+        });
+
+        // Visual Challenge & Inspiration
+        document.querySelectorAll('#visual .option').forEach(option => {
+            option.addEventListener('click', function() {
+                handleOptionSelection(this,
+                    document.getElementById('visual-feedback'),
+                    document.getElementById('visual-next'),
+                    'visual'
+                );
+            });
+        });
+        document.getElementById('visual-next').addEventListener('click', () => {
+            showSection('intro');
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+        document.getElementById('visual-generate-inspiration').addEventListener('click', () => generateInspiration('visual'));
+
+
+        // Smell Challenge & Inspiration
+        document.querySelectorAll('#smell .option').forEach(option => {
+            option.addEventListener('click', function() {
+                handleOptionSelection(this,
+                    document.getElementById('smell-feedback'),
+                    document.getElementById('smell-next'),
+                    'smell'
+                );
+            });
+        });
+        document.getElementById('smell-next').addEventListener('click', () => {
+            showSection('intro');
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+        document.getElementById('smell-generate-inspiration').addEventListener('click', () => generateInspiration('smell'));
+
+
+        // Sound Challenge & Inspiration
+        document.querySelectorAll('#sound .option').forEach(option => {
+            option.addEventListener('click', function() {
+                handleOptionSelection(this,
+                    document.getElementById('sound-feedback'),
+                    document.getElementById('sound-next'),
+                    'sound'
+                );
+            });
+        });
+        document.getElementById('sound-next').addEventListener('click', () => {
+            showSection('intro');
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+        document.getElementById('sound-generate-inspiration').addEventListener('click', () => generateInspiration('sound'));
+
+
+        // Touch Challenge & Inspiration
+        document.querySelectorAll('#touch .option').forEach(option => {
+            option.addEventListener('click', function() {
+                handleOptionSelection(this,
+                    document.getElementById('touch-feedback'),
+                    document.getElementById('touch-next'),
+                    'touch'
+                );
+            });
+        });
+        document.getElementById('touch-next').addEventListener('click', () => {
+            showSection('intro');
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+        document.getElementById('touch-generate-inspiration').addEventListener('click', () => generateInspiration('touch'));
+
+
+        // Taste Challenge & Inspiration
+        document.querySelectorAll('#taste .option').forEach(option => {
+            option.addEventListener('click', function() {
+                handleOptionSelection(this,
+                    document.getElementById('taste-feedback'),
+                    document.getElementById('taste-next'),
+                    'taste'
+                );
+            });
+        });
+        document.getElementById('taste-next').addEventListener('click', () => {
+            showSection('intro');
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+        document.getElementById('taste-generate-inspiration').addEventListener('click', () => generateInspiration('taste'));
+
+
+        // Heart Challenge & Inspiration
+        document.querySelectorAll('#heart .option').forEach(option => {
+            option.addEventListener('click', function() {
+                handleOptionSelection(this,
+                    document.getElementById('heart-feedback'),
+                    document.getElementById('heart-next'),
+                    'heart'
+                );
+            });
+        });
+        document.getElementById('heart-next').addEventListener('click', () => {
+            showSection('intro');
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+        document.getElementById('heart-generate-inspiration').addEventListener('click', () => generateInspiration('heart'));
+
+        // Free Creation Section
+        document.getElementById('get-ai-feedback').addEventListener('click', getFreeCreationFeedback);
+        document.getElementById('free-creation-next').addEventListener('click', () => {
+            showSection('intro');
+            resetChallenge('free-creation'); // Reset free creation section when returning to intro
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+
+        // Vocabulary Expander Section
+        document.getElementById('expand-vocabulary-btn').addEventListener('click', expandVocabulary);
+        document.getElementById('vocabulary-expander-next').addEventListener('click', () => {
+            showSection('intro');
+            resetChallenge('vocabulary-expander'); // Reset vocabulary expander section
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+
+        // Story Starter Section
+        document.getElementById('generate-story-btn').addEventListener('click', generateStoryContinuation);
+        document.getElementById('story-starter-next').addEventListener('click', () => {
+            showSection('intro');
+            resetChallenge('story-starter'); // Reset story starter section
+            updateVisitedSenses();
+            if (clickSynth) clickSynth.triggerAttackRelease("C5", "8n");
+        });
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateVisitedSenses();
+            // Ensure the intro section is shown by default on load
+            showSection('intro');
+        });
+    </script>
+</body>
+</html>
+�
