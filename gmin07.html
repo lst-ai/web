@@ -1,0 +1,470 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記憶配對遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+        }
+        .memory-card {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+        .memory-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-front {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            transform: rotateY(0deg);
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: white;
+        }
+        .card-icon {
+            font-size: 2rem;
+            color: #4f46e5;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            animation: fall 3s ease-in infinite;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(600px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        .memory-card.matched .card-back {
+            background-color: #d1fae5;
+            box-shadow: 0 0 15px #10b981;
+        }
+        .memory-card.matched .card-icon {
+            color: #10b981;
+        }
+        .game-complete {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        .game-complete.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">記憶配對遊戲</h1>
+            
+            <!-- 遊戲設定區 -->
+            <div id="gameSetup" class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">選擇難度</h2>
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <button class="difficulty-btn bg-green-100 hover:bg-green-200 py-3 px-4 rounded-lg font-medium text-green-800 border-2 border-green-300" data-pairs="6">簡單 (6對)</button>
+                    <button class="difficulty-btn bg-yellow-100 hover:bg-yellow-200 py-3 px-4 rounded-lg font-medium text-yellow-800 border-2 border-yellow-300" data-pairs="8">中等 (8對)</button>
+                    <button class="difficulty-btn bg-red-100 hover:bg-red-200 py-3 px-4 rounded-lg font-medium text-red-800 border-2 border-red-300" data-pairs="10">困難 (10對)</button>
+                </div>
+                
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">選擇主題</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="theme-option rounded-lg overflow-hidden border-2 border-indigo-200 hover:border-indigo-500 cursor-pointer" data-theme="emoji">
+                        <div class="bg-indigo-100 p-4 flex justify-center items-center">
+                            <span class="text-3xl">😀 🎮 🎵</span>
+                        </div>
+                        <p class="text-center py-2 bg-indigo-50">表情符號</p>
+                    </div>
+                    <div class="theme-option rounded-lg overflow-hidden border-2 border-indigo-200 hover:border-indigo-500 cursor-pointer" data-theme="animals">
+                        <div class="bg-indigo-100 p-4 flex justify-center items-center">
+                            <span class="text-3xl">🐱 🐶 🐼</span>
+                        </div>
+                        <p class="text-center py-2 bg-indigo-50">動物</p>
+                    </div>
+                    <div class="theme-option rounded-lg overflow-hidden border-2 border-indigo-200 hover:border-indigo-500 cursor-pointer" data-theme="food">
+                        <div class="bg-indigo-100 p-4 flex justify-center items-center">
+                            <span class="text-3xl">🍕 🍎 🍦</span>
+                        </div>
+                        <p class="text-center py-2 bg-indigo-50">食物</p>
+                    </div>
+                    <div class="theme-option rounded-lg overflow-hidden border-2 border-indigo-200 hover:border-indigo-500 cursor-pointer" data-theme="travel">
+                        <div class="bg-indigo-100 p-4 flex justify-center items-center">
+                            <span class="text-3xl">🚗 ✈️ 🏖️</span>
+                        </div>
+                        <p class="text-center py-2 bg-indigo-50">旅行</p>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button id="startGame" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>開始遊戲</button>
+                </div>
+            </div>
+            
+            <!-- 遊戲區域 -->
+            <div id="gameArea" class="hidden">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/4">
+                        <div class="bg-indigo-50 p-4 rounded-lg shadow mb-4">
+                            <h3 class="font-semibold text-lg mb-2 text-indigo-700">遊戲資訊</h3>
+                            <p class="mb-2"><span class="font-medium">時間:</span> <span id="timer">00:00</span></p>
+                            <p class="mb-2"><span class="font-medium">翻牌次數:</span> <span id="moves">0</span></p>
+                            <p class="mb-2"><span class="font-medium">已配對:</span> <span id="matches">0</span>/<span id="totalPairs">0</span></p>
+                            <div class="mt-4">
+                                <button id="restartGame" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-300">重新開始</button>
+                            </div>
+                            <div class="mt-2">
+                                <button id="backToSetup" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-300">返回設定</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-3/4">
+                        <div id="gameBoard" class="grid gap-4"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 遊戲完成提示 -->
+            <div id="gameComplete" class="game-complete">
+                <div class="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md">
+                    <h2 class="text-3xl font-bold mb-4 text-indigo-700">恭喜完成!</h2>
+                    <p class="mb-2 text-lg">時間: <span id="finalTime"></span></p>
+                    <p class="mb-4 text-lg">翻牌次數: <span id="finalMoves"></span></p>
+                    <div class="flex gap-4 justify-center">
+                        <button id="playAgain" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow transition duration-300">再玩一次</button>
+                        <button id="newGame" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg shadow transition duration-300">新遊戲</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲變數
+        let selectedTheme = null;
+        let selectedPairs = null;
+        let gameStarted = false;
+        let timerInterval = null;
+        let startTime = null;
+        let moves = 0;
+        let matches = 0;
+        let totalPairs = 0;
+        let flippedCards = [];
+        let canFlip = true;
+        
+        // 主題圖示
+        const themes = {
+            emoji: ['😀', '😎', '🤩', '😍', '🥳', '😂', '🤔', '🤯', '😴', '🥶'],
+            animals: ['🐱', '🐶', '🐼', '🦊', '🐨', '🦁', '🐯', '🐮', '🐷', '🐸'],
+            food: ['🍕', '🍔', '🍦', '🍩', '🍎', '🍓', '🍇', '🥑', '🍜', '🍣'],
+            travel: ['🚗', '✈️', '🏖️', '🗼', '🏰', '🚢', '🚲', '🏔️', '🌋', '🏝️']
+        };
+        
+        // 選擇難度
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(el => el.classList.remove('border-4', 'border-indigo-600'));
+                btn.classList.add('border-4', 'border-indigo-600');
+                selectedPairs = parseInt(btn.dataset.pairs);
+                updateStartButton();
+            });
+        });
+        
+        // 選擇主題
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('border-indigo-500', 'border-4'));
+                option.classList.add('border-indigo-500', 'border-4');
+                selectedTheme = option.dataset.theme;
+                updateStartButton();
+            });
+        });
+        
+        // 更新開始按鈕狀態
+        function updateStartButton() {
+            const startButton = document.getElementById('startGame');
+            if (selectedTheme && selectedPairs) {
+                startButton.disabled = false;
+            } else {
+                startButton.disabled = true;
+            }
+        }
+        
+        // 開始遊戲
+        document.getElementById('startGame').addEventListener('click', startGame);
+        
+        // 重新開始遊戲
+        document.getElementById('restartGame').addEventListener('click', () => {
+            resetGame();
+            startGame();
+        });
+        
+        // 返回設定
+        document.getElementById('backToSetup').addEventListener('click', () => {
+            resetGame();
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('gameSetup').classList.remove('hidden');
+        });
+        
+        // 再玩一次
+        document.getElementById('playAgain').addEventListener('click', () => {
+            document.getElementById('gameComplete').classList.remove('show');
+            resetGame();
+            startGame();
+        });
+        
+        // 新遊戲
+        document.getElementById('newGame').addEventListener('click', () => {
+            document.getElementById('gameComplete').classList.remove('show');
+            resetGame();
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('gameSetup').classList.remove('hidden');
+        });
+        
+        // 開始遊戲
+        function startGame() {
+            if (!selectedTheme || !selectedPairs) return;
+            
+            document.getElementById('gameSetup').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+            
+            // 初始化遊戲
+            initGame();
+            
+            // 開始計時
+            startTimer();
+            
+            // 重置計數
+            moves = 0;
+            matches = 0;
+            totalPairs = selectedPairs;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('matches').textContent = matches;
+            document.getElementById('totalPairs').textContent = totalPairs;
+            
+            gameStarted = true;
+        }
+        
+        // 初始化遊戲
+        function initGame() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            // 設置網格佈局
+            let columns;
+            if (selectedPairs <= 6) {
+                columns = 4;
+            } else if (selectedPairs <= 8) {
+                columns = 4;
+            } else {
+                columns = 5;
+            }
+            
+            gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            
+            // 創建卡片
+            const icons = themes[selectedTheme].slice(0, selectedPairs);
+            const cards = [...icons, ...icons];
+            shuffleArray(cards);
+            
+            cards.forEach((icon, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card aspect-square';
+                card.dataset.icon = icon;
+                card.dataset.index = index;
+                
+                card.innerHTML = `
+                    <div class="card-inner h-full">
+                        <div class="card-front">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="card-back">
+                            <span class="card-icon text-4xl">${icon}</span>
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    flipCard(card);
+                });
+                
+                gameBoard.appendChild(card);
+            });
+        }
+        
+        // 翻牌
+        function flipCard(card) {
+            if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                
+                canFlip = false;
+                
+                // 檢查是否配對
+                setTimeout(() => {
+                    checkMatch();
+                }, 800);
+            }
+        }
+        
+        // 檢查配對
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.icon === card2.dataset.icon) {
+                // 配對成功
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matches++;
+                document.getElementById('matches').textContent = matches;
+                
+                // 檢查是否完成遊戲
+                if (matches === totalPairs) {
+                    gameComplete();
+                }
+            } else {
+                // 配對失敗，翻回去
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+            }
+            
+            flippedCards = [];
+            canFlip = true;
+        }
+        
+        // 遊戲完成
+        function gameComplete() {
+            stopTimer();
+            document.getElementById('finalTime').textContent = document.getElementById('timer').textContent;
+            document.getElementById('finalMoves').textContent = moves;
+            
+            setTimeout(() => {
+                document.getElementById('gameComplete').classList.add('show');
+                createConfetti();
+            }, 500);
+        }
+        
+        // 開始計時器
+        function startTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // 立即更新一次
+        }
+        
+        // 更新計時器
+        function updateTimer() {
+            const currentTime = new Date();
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+            
+            const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+            const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+            
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        }
+        
+        // 停止計時器
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        // 重置遊戲
+        function resetGame() {
+            stopTimer();
+            gameStarted = false;
+            moves = 0;
+            matches = 0;
+            flippedCards = [];
+            canFlip = true;
+            document.getElementById('timer').textContent = '00:00';
+        }
+        
+        // 打亂數組
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // 創建慶祝效果
+        function createConfetti() {
+            const container = document.body;
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                container.appendChild(confetti);
+                
+                // 移除元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ac425422e5f1cc',t:'MTc1MTc3NTA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
