@@ -1,0 +1,1091 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛動物拼圖遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .puzzle-piece {
+            cursor: grab;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        .puzzle-piece:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 100;
+        }
+        .puzzle-piece.correct {
+            opacity: 1;
+            box-shadow: 0 0 0 2px #4CAF50;
+        }
+        .puzzle-slot {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px dashed #7c8db5;
+            border-radius: 4px;
+        }
+        .puzzle-container {
+            position: relative;
+            margin: 0 auto;
+            width: 300px;
+            height: 300px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .reference-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            border: 3px solid #7c8db5;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .timer {
+            font-family: monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4338ca;
+        }
+        .stats-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .difficulty-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            background-color: #e0e7ff;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4f46e5;
+            transition: width 0.3s ease;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .pieces-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 8px;
+            justify-content: center;
+            width: 300px;
+            min-height: 100px;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+        .copy-btn {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            background-color: #e0e7ff;
+            border-radius: 4px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .copy-btn:hover {
+            background-color: #c7d2fe;
+        }
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        .copy-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(79, 70, 229, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .copy-notification.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .image-btn {
+            position: relative;
+            overflow: hidden;
+            padding-top: 2.5rem;
+            padding-bottom: 2.5rem;
+        }
+        .image-btn .animal-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .game-instructions {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* 自定義拖動時的預覽圖像 */
+        .drag-image {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-4">
+            <h1 class="text-3xl font-bold text-indigo-800 mb-2">可愛動物拼圖遊戲</h1>
+            <p class="text-gray-600">拖放拼圖塊到正確位置完成圖片，拼圖放對時會顯示綠色邊框</p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-8 justify-center items-start">
+            <!-- 左側面板 -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-xl font-bold text-center mb-4 text-indigo-700">參考圖</h2>
+                <div class="reference-container mb-4" id="referenceImage">
+                    <!-- 參考圖將在這裡顯示 -->
+                </div>
+
+                <div class="stats-container mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-indigo-700">時間:</span>
+                        <div class="timer" id="timer">00:00</div>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-indigo-700">進度:</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar mb-2">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-indigo-700">最佳時間:</span>
+                        <span id="bestTime">--:--</span>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-bold text-center mb-4 text-indigo-700">難度選擇</h2>
+                <div class="flex justify-center gap-2 mb-6">
+                    <button class="difficulty-btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg active" data-difficulty="2">
+                        簡單 (2x2)
+                    </button>
+                    <button class="difficulty-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg" data-difficulty="3">
+                        中等 (3x3)
+                    </button>
+                    <button class="difficulty-btn bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg" data-difficulty="4">
+                        困難 (4x4)
+                    </button>
+                </div>
+
+                <h2 class="text-xl font-bold text-center mb-4 text-indigo-700">動物選擇</h2>
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="image-btn bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-lg active" data-image="0">
+                        <span class="animal-icon">🐱</span>
+                        花園貓咪
+                    </button>
+                    <button class="image-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg" data-image="1">
+                        <span class="animal-icon">🐹</span>
+                        公園倉鼠
+                    </button>
+                    <button class="image-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg" data-image="2">
+                        <span class="animal-icon">🐰</span>
+                        海邊兔子
+                    </button>
+                </div>
+
+                <div class="flex justify-center">
+                    <button id="newGameBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all">
+                        開始新遊戲
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右側拼圖區域 -->
+            <div class="flex flex-col gap-6">
+                <!-- 拼圖區域 -->
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-center mb-4 text-indigo-700">拼圖區</h2>
+                    <div class="puzzle-container" id="puzzleBoard">
+                        <!-- 拼圖槽位將在這裡生成 -->
+                    </div>
+                </div>
+
+                <!-- 拼圖塊區域 - 改為更緊湊的網格佈局 -->
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <h2 class="text-xl font-bold text-center mb-4 text-indigo-700">拼圖塊</h2>
+                    <div class="pieces-container mx-auto" id="piecesContainer">
+                        <!-- 拼圖塊將在這裡生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁腳 -->
+        <footer class="footer text-center mt-8 relative">
+            <p class="text-gray-700">
+                遊戲設計與製作：呂舒婷｜了解更多🔍 
+                Fb：<span class="text-indigo-600">https://www.facebook.com/yobi.lu</span> 
+                <button class="copy-btn ml-1" id="copyFbBtn" title="複製連結">
+                    📋
+                </button>
+                ｜📧 <a href="mailto:luuyobi@gmail.com" class="text-indigo-600 hover:text-indigo-800">luuyobi@gmail.com</a>
+            </p>
+        </footer>
+
+        <!-- 複製成功提示 -->
+        <div id="copyNotification" class="copy-notification">
+            複製成功！
+        </div>
+
+        <!-- 勝利模態框 -->
+        <div id="winModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white p-8 rounded-xl max-w-lg text-center">
+                <div class="text-6xl mb-4">🎉</div>
+                <h3 class="text-2xl font-bold mb-2">恭喜你!</h3>
+                <p class="mb-2">你成功完成了拼圖!</p>
+                <p id="completionTime" class="text-lg font-bold text-indigo-700 mb-2"></p>
+                <p id="newRecord" class="text-lg font-bold text-green-600 mb-6 hidden">新紀錄!</p>
+                <div class="flex justify-center gap-4">
+                    <button id="playAgainBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full">
+                        再玩一次
+                    </button>
+                    <button id="nextLevelBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full">
+                        下一難度
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const puzzleBoard = document.getElementById('puzzleBoard');
+            const piecesContainer = document.getElementById('piecesContainer');
+            const referenceImage = document.getElementById('referenceImage');
+            const newGameBtn = document.getElementById('newGameBtn');
+            const winModal = document.getElementById('winModal');
+            const playAgainBtn = document.getElementById('playAgainBtn');
+            const nextLevelBtn = document.getElementById('nextLevelBtn');
+            const completionTime = document.getElementById('completionTime');
+            const newRecord = document.getElementById('newRecord');
+            const timerElement = document.getElementById('timer');
+            const bestTimeElement = document.getElementById('bestTime');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+            const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+            const imageBtns = document.querySelectorAll('.image-btn');
+            const copyFbBtn = document.getElementById('copyFbBtn');
+            const copyNotification = document.getElementById('copyNotification');
+
+            // 複製按鈕功能
+            copyFbBtn.addEventListener('click', function() {
+                const fbUrl = "https://www.facebook.com/yobi.lu";
+                
+                // 創建一個臨時的textarea元素來執行複製操作
+                const textarea = document.createElement('textarea');
+                textarea.value = fbUrl;
+                textarea.style.position = 'fixed';  // 避免滾動到頁面底部
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    // 執行複製命令
+                    const successful = document.execCommand('copy');
+                    
+                    // 顯示複製成功提示
+                    copyNotification.classList.add('show');
+                    
+                    // 2秒後隱藏提示
+                    setTimeout(function() {
+                        copyNotification.classList.remove('show');
+                    }, 2000);
+                } catch (err) {
+                    console.error('複製失敗:', err);
+                }
+                
+                // 移除臨時元素
+                document.body.removeChild(textarea);
+            });
+
+            // 拼圖設置
+            let gridSize = 2; // 預設簡單難度 (2x2)
+            let pieceSize = 300 / gridSize;
+            let placedPiecesCount = 0; // 已放置的拼圖塊數量
+            let correctPieces = 0;
+            let totalPieces = gridSize * gridSize;
+            let currentImage = 0; // 預設第一張圖片
+            let startTime = null;
+            let timerInterval = null;
+            let bestTimes = JSON.parse(localStorage.getItem('puzzleBestTimes')) || {};
+            let draggedPiece = null; // 追蹤當前拖動的拼圖塊
+
+            // 可愛動物SVG圖片集合 - 添加背景環境
+            const svgImages = [
+                // 花園貓咪 - 增加鳥和更多花朵
+                `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 天空背景 -->
+                    <rect width="300" height="200" fill="#a7d7f9"/>
+                    
+                    <!-- 草地 -->
+                    <rect width="300" height="100" y="200" fill="#86efac"/>
+                    
+                    <!-- 太陽 -->
+                    <circle cx="250" cy="50" r="30" fill="#fcd34d"/>
+                    <circle cx="250" cy="50" r="40" fill="#fcd34d" opacity="0.3"/>
+                    
+                    <!-- 鳥兒 -->
+                    <path d="M60,40 Q70,30 80,40 Q90,30 100,40" stroke="#333" stroke-width="2" fill="none"/>
+                    <circle cx="70" cy="40" r="3" fill="#333"/>
+                    
+                    <path d="M120,60 Q130,50 140,60 Q150,50 160,60" stroke="#333" stroke-width="2" fill="none"/>
+                    <circle cx="130" cy="60" r="3" fill="#333"/>
+                    
+                    <path d="M30,80 Q40,70 50,80 Q60,70 70,80" stroke="#333" stroke-width="2" fill="none"/>
+                    <circle cx="40" cy="80" r="3" fill="#333"/>
+                    
+                    <!-- 花朵 -->
+                    <circle cx="50" cy="220" r="10" fill="#fb7185"/>
+                    <circle cx="50" cy="220" r="5" fill="#fecdd3"/>
+                    <circle cx="45" cy="215" r="5" fill="#fb7185"/>
+                    <circle cx="55" cy="215" r="5" fill="#fb7185"/>
+                    <circle cx="45" cy="225" r="5" fill="#fb7185"/>
+                    <circle cx="55" cy="225" r="5" fill="#fb7185"/>
+                    
+                    <circle cx="250" cy="240" r="10" fill="#a78bfa"/>
+                    <circle cx="250" cy="240" r="5" fill="#ddd6fe"/>
+                    <circle cx="245" cy="235" r="5" fill="#a78bfa"/>
+                    <circle cx="255" cy="235" r="5" fill="#a78bfa"/>
+                    <circle cx="245" cy="245" r="5" fill="#a78bfa"/>
+                    <circle cx="255" cy="245" r="5" fill="#a78bfa"/>
+                    
+                    <circle cx="90" cy="250" r="10" fill="#fbbf24"/>
+                    <circle cx="90" cy="250" r="5" fill="#fef3c7"/>
+                    <circle cx="85" cy="245" r="5" fill="#fbbf24"/>
+                    <circle cx="95" cy="245" r="5" fill="#fbbf24"/>
+                    <circle cx="85" cy="255" r="5" fill="#fbbf24"/>
+                    <circle cx="95" cy="255" r="5" fill="#fbbf24"/>
+                    
+                    <!-- 新增花朵 -->
+                    <circle cx="150" cy="230" r="10" fill="#ec4899"/>
+                    <circle cx="150" cy="230" r="5" fill="#fbcfe8"/>
+                    <circle cx="145" cy="225" r="5" fill="#ec4899"/>
+                    <circle cx="155" cy="225" r="5" fill="#ec4899"/>
+                    <circle cx="145" cy="235" r="5" fill="#ec4899"/>
+                    <circle cx="155" cy="235" r="5" fill="#ec4899"/>
+                    
+                    <circle cx="200" cy="260" r="10" fill="#3b82f6"/>
+                    <circle cx="200" cy="260" r="5" fill="#bfdbfe"/>
+                    <circle cx="195" cy="255" r="5" fill="#3b82f6"/>
+                    <circle cx="205" cy="255" r="5" fill="#3b82f6"/>
+                    <circle cx="195" cy="265" r="5" fill="#3b82f6"/>
+                    <circle cx="205" cy="265" r="5" fill="#3b82f6"/>
+                    
+                    <!-- 蝴蝶 -->
+                    <path d="M280,100 Q290,90 300,100 Q290,110 280,100" fill="#f472b6"/>
+                    <path d="M280,100 Q270,90 260,100 Q270,110 280,100" fill="#f472b6"/>
+                    <line x1="280" y1="100" x2="280" y2="110" stroke="#000000" stroke-width="1"/>
+                    
+                    <!-- 貓咪 -->
+                    <!-- 身體 -->
+                    <ellipse cx="150" cy="170" rx="50" ry="40" fill="#f9a8d4"/>
+                    
+                    <!-- 頭 -->
+                    <circle cx="150" cy="120" r="40" fill="#f9a8d4"/>
+                    
+                    <!-- 耳朵 -->
+                    <polygon points="125,90 110,60 140,75" fill="#f9a8d4"/>
+                    <polygon points="175,90 190,60 160,75" fill="#f9a8d4"/>
+                    <polygon points="127,92 115,65 142,77" fill="#fecdd3"/>
+                    <polygon points="173,92 185,65 158,77" fill="#fecdd3"/>
+                    
+                    <!-- 眼睛 -->
+                    <ellipse cx="135" cy="110" rx="8" ry="12" fill="#ffffff"/>
+                    <ellipse cx="165" cy="110" rx="8" ry="12" fill="#ffffff"/>
+                    <circle cx="135" cy="110" r="4" fill="#000000"/>
+                    <circle cx="165" cy="110" r="4" fill="#000000"/>
+                    
+                    <!-- 鼻子 -->
+                    <polygon points="150,125 145,130 155,130" fill="#fecdd3"/>
+                    
+                    <!-- 嘴 -->
+                    <path d="M145,130 Q150,140 155,130" stroke="#000000" stroke-width="2" fill="none"/>
+                    
+                    <!-- 鬍鬚 -->
+                    <line x1="120" y1="125" x2="90" y2="120" stroke="#000000" stroke-width="1"/>
+                    <line x1="120" y1="130" x2="90" y2="130" stroke="#000000" stroke-width="1"/>
+                    <line x1="120" y1="135" x2="90" y2="140" stroke="#000000" stroke-width="1"/>
+                    <line x1="180" y1="125" x2="210" y2="120" stroke="#000000" stroke-width="1"/>
+                    <line x1="180" y1="130" x2="210" y2="130" stroke="#000000" stroke-width="1"/>
+                    <line x1="180" y1="135" x2="210" y2="140" stroke="#000000" stroke-width="1"/>
+                    
+                    <!-- 尾巴 -->
+                    <path d="M200,170 Q230,150 240,180" stroke="#f9a8d4" stroke-width="10" fill="none"/>
+                    
+                    <!-- 腳 -->
+                    <ellipse cx="130" cy="210" rx="15" ry="10" fill="#f9a8d4"/>
+                    <ellipse cx="170" cy="210" rx="15" ry="10" fill="#f9a8d4"/>
+                </svg>`,
+                
+                // 公園倉鼠 - 更改名稱並增加花朵
+                `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 天空背景 -->
+                    <rect width="300" height="150" fill="#93c5fd"/>
+                    
+                    <!-- 草地 -->
+                    <rect width="300" height="150" y="150" fill="#4ade80"/>
+                    
+                    <!-- 雲朵 -->
+                    <ellipse cx="60" cy="50" rx="25" ry="15" fill="#ffffff"/>
+                    <ellipse cx="85" cy="50" rx="20" ry="12" fill="#ffffff"/>
+                    <ellipse cx="40" cy="50" rx="15" ry="10" fill="#ffffff"/>
+                    
+                    <ellipse cx="230" cy="70" rx="25" ry="15" fill="#ffffff"/>
+                    <ellipse cx="255" cy="70" rx="20" ry="12" fill="#ffffff"/>
+                    <ellipse cx="210" cy="70" rx="15" ry="10" fill="#ffffff"/>
+                    
+                    <!-- 樹 -->
+                    <rect x="40" y="150" width="20" height="50" fill="#854d0e"/>
+                    <circle cx="50" cy="130" r="30" fill="#16a34a"/>
+                    
+                    <rect x="240" y="150" width="20" height="50" fill="#854d0e"/>
+                    <circle cx="250" cy="130" r="30" fill="#16a34a"/>
+                    
+                    <!-- 長椅 -->
+                    <rect x="100" y="200" width="60" height="10" fill="#b45309"/>
+                    <rect x="105" y="210" width="5" height="20" fill="#b45309"/>
+                    <rect x="150" y="210" width="5" height="20" fill="#b45309"/>
+                    
+                    <!-- 花朵 -->
+                    <circle cx="80" cy="220" r="8" fill="#f87171"/>
+                    <circle cx="80" cy="220" r="4" fill="#fecaca"/>
+                    <circle cx="76" cy="216" r="4" fill="#f87171"/>
+                    <circle cx="84" cy="216" r="4" fill="#f87171"/>
+                    <circle cx="76" cy="224" r="4" fill="#f87171"/>
+                    <circle cx="84" cy="224" r="4" fill="#f87171"/>
+                    
+                    <circle cx="180" cy="230" r="8" fill="#fbbf24"/>
+                    <circle cx="180" cy="230" r="4" fill="#fef3c7"/>
+                    <circle cx="176" cy="226" r="4" fill="#fbbf24"/>
+                    <circle cx="184" cy="226" r="4" fill="#fbbf24"/>
+                    <circle cx="176" cy="234" r="4" fill="#fbbf24"/>
+                    <circle cx="184" cy="234" r="4" fill="#fbbf24"/>
+                    
+                    <circle cx="220" cy="250" r="8" fill="#a78bfa"/>
+                    <circle cx="220" cy="250" r="4" fill="#ddd6fe"/>
+                    <circle cx="216" cy="246" r="4" fill="#a78bfa"/>
+                    <circle cx="224" cy="246" r="4" fill="#a78bfa"/>
+                    <circle cx="216" cy="254" r="4" fill="#a78bfa"/>
+                    <circle cx="224" cy="254" r="4" fill="#a78bfa"/>
+                    
+                    <circle cx="30" cy="240" r="8" fill="#34d399"/>
+                    <circle cx="30" cy="240" r="4" fill="#a7f3d0"/>
+                    <circle cx="26" cy="236" r="4" fill="#34d399"/>
+                    <circle cx="34" cy="236" r="4" fill="#34d399"/>
+                    <circle cx="26" cy="244" r="4" fill="#34d399"/>
+                    <circle cx="34" cy="244" r="4" fill="#34d399"/>
+                    
+                    <!-- 倉鼠 -->
+                    <!-- 身體 -->
+                    <ellipse cx="150" cy="180" rx="30" ry="25" fill="#d97706"/>
+                    
+                    <!-- 頭 -->
+                    <circle cx="150" cy="145" r="25" fill="#d97706"/>
+                    
+                    <!-- 耳朵 -->
+                    <ellipse cx="135" cy="130" rx="10" ry="10" fill="#d97706"/>
+                    <ellipse cx="165" cy="130" rx="10" ry="10" fill="#d97706"/>
+                    <ellipse cx="135" cy="130" rx="6" ry="6" fill="#fef3c7"/>
+                    <ellipse cx="165" cy="130" rx="6" ry="6" fill="#fef3c7"/>
+                    
+                    <!-- 眼睛 -->
+                    <ellipse cx="140" cy="140" rx="5" ry="7" fill="#ffffff"/>
+                    <ellipse cx="160" cy="140" rx="5" ry="7" fill="#ffffff"/>
+                    <circle cx="140" cy="140" r="3" fill="#000000"/>
+                    <circle cx="160" cy="140" r="3" fill="#000000"/>
+                    
+                    <!-- 鼻子 -->
+                    <ellipse cx="150" cy="150" rx="5" ry="3" fill="#000000"/>
+                    
+                    <!-- 嘴 -->
+                    <path d="M150,153 Q150,158 145,156" stroke="#000000" stroke-width="1" fill="none"/>
+                    <path d="M150,153 Q150,158 155,156" stroke="#000000" stroke-width="1" fill="none"/>
+                    
+                    <!-- 鬍鬚 -->
+                    <line x1="145" y1="150" x2="125" y2="145" stroke="#000000" stroke-width="1"/>
+                    <line x1="145" y1="152" x2="125" y2="152" stroke="#000000" stroke-width="1"/>
+                    <line x1="145" y1="154" x2="125" y2="159" stroke="#000000" stroke-width="1"/>
+                    <line x1="155" y1="150" x2="175" y2="145" stroke="#000000" stroke-width="1"/>
+                    <line x1="155" y1="152" x2="175" y2="152" stroke="#000000" stroke-width="1"/>
+                    <line x1="155" y1="154" x2="175" y2="159" stroke="#000000" stroke-width="1"/>
+                    
+                    <!-- 腳 -->
+                    <ellipse cx="135" cy="205" rx="8" ry="4" fill="#d97706"/>
+                    <ellipse cx="165" cy="205" rx="8" ry="4" fill="#d97706"/>
+                    
+                    <!-- 尾巴 -->
+                    <path d="M180,180 Q190,170 195,180" stroke="#d97706" stroke-width="5" fill="none"/>
+                    
+                    <!-- 食物 -->
+                    <circle cx="120" cy="170" r="5" fill="#84cc16"/>
+                    <circle cx="130" cy="175" r="5" fill="#84cc16"/>
+                </svg>`,
+                
+                // 海邊兔子 - 增加更多魚和波浪
+                `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 天空背景 -->
+                    <rect width="300" height="150" fill="#38bdf8"/>
+                    
+                    <!-- 海水 -->
+                    <rect width="300" height="150" y="150" fill="#0ea5e9"/>
+                    
+                    <!-- 太陽 -->
+                    <circle cx="50" cy="50" r="30" fill="#fcd34d"/>
+                    <circle cx="50" cy="50" r="40" fill="#fcd34d" opacity="0.3"/>
+                    
+                    <!-- 雲朵 -->
+                    <ellipse cx="200" cy="60" rx="25" ry="15" fill="#ffffff"/>
+                    <ellipse cx="225" cy="60" rx="20" ry="12" fill="#ffffff"/>
+                    <ellipse cx="180" cy="60" rx="15" ry="10" fill="#ffffff"/>
+                    
+                    <ellipse cx="120" cy="40" rx="20" ry="12" fill="#ffffff"/>
+                    <ellipse cx="140" cy="40" rx="15" ry="10" fill="#ffffff"/>
+                    <ellipse cx="100" cy="40" rx="12" ry="8" fill="#ffffff"/>
+                    
+                    <ellipse cx="250" cy="30" rx="15" ry="10" fill="#ffffff"/>
+                    <ellipse cx="265" cy="30" rx="12" ry="8" fill="#ffffff"/>
+                    <ellipse cx="235" cy="30" rx="10" ry="6" fill="#ffffff"/>
+                    
+                    <!-- 魚群 - 增加更多魚 -->
+                    <!-- 魚1 -->
+                    <path d="M70,180 L85,175 L85,185 Z" fill="#f472b6"/>
+                    <circle cx="65" cy="180" r="5" fill="#f472b6"/>
+                    <circle cx="63" cy="178" r="1" fill="#000"/>
+                    <path d="M60,180 Q55,175 60,170 Q65,175 60,180" fill="#f472b6"/>
+                    
+                    <!-- 魚2 -->
+                    <path d="M40,200 L55,195 L55,205 Z" fill="#a78bfa"/>
+                    <circle cx="35" cy="200" r="5" fill="#a78bfa"/>
+                    <circle cx="33" cy="198" r="1" fill="#000"/>
+                    <path d="M30,200 Q25,195 30,190 Q35,195 30,200" fill="#a78bfa"/>
+                    
+                    <!-- 魚3 -->
+                    <path d="M250,190 L265,185 L265,195 Z" fill="#fbbf24"/>
+                    <circle cx="245" cy="190" r="5" fill="#fbbf24"/>
+                    <circle cx="243" cy="188" r="1" fill="#000"/>
+                    <path d="M240,190 Q235,185 240,180 Q245,185 240,190" fill="#fbbf24"/>
+                    
+                    <!-- 魚4 -->
+                    <path d="M220,220 L235,215 L235,225 Z" fill="#34d399"/>
+                    <circle cx="215" cy="220" r="5" fill="#34d399"/>
+                    <circle cx="213" cy="218" r="1" fill="#000"/>
+                    <path d="M210,220 Q205,215 210,210 Q215,215 210,220" fill="#34d399"/>
+                    
+                    <!-- 魚5 -->
+                    <path d="M100,230 L115,225 L115,235 Z" fill="#60a5fa"/>
+                    <circle cx="95" cy="230" r="5" fill="#60a5fa"/>
+                    <circle cx="93" cy="228" r="1" fill="#000"/>
+                    <path d="M90,230 Q85,225 90,220 Q95,225 90,230" fill="#60a5fa"/>
+                    
+                    <!-- 魚6 - 新增 -->
+                    <path d="M170,210 L185,205 L185,215 Z" fill="#ec4899"/>
+                    <circle cx="165" cy="210" r="5" fill="#ec4899"/>
+                    <circle cx="163" cy="208" r="1" fill="#000"/>
+                    <path d="M160,210 Q155,205 160,200 Q165,205 160,210" fill="#ec4899"/>
+                    
+                    <!-- 魚7 - 新增 -->
+                    <path d="M140,180 L155,175 L155,185 Z" fill="#8b5cf6"/>
+                    <circle cx="135" cy="180" r="5" fill="#8b5cf6"/>
+                    <circle cx="133" cy="178" r="1" fill="#000"/>
+                    <path d="M130,180 Q125,175 130,170 Q135,175 130,180" fill="#8b5cf6"/>
+                    
+                    <!-- 魚8 - 新增 -->
+                    <path d="M280,230 L295,225 L295,235 Z" fill="#f97316"/>
+                    <circle cx="275" cy="230" r="5" fill="#f97316"/>
+                    <circle cx="273" cy="228" r="1" fill="#000"/>
+                    <path d="M270,230 Q265,225 270,220 Q275,225 270,230" fill="#f97316"/>
+                    
+                    <!-- 魚9 - 新增 -->
+                    <path d="M190,240 L205,235 L205,245 Z" fill="#10b981"/>
+                    <circle cx="185" cy="240" r="5" fill="#10b981"/>
+                    <circle cx="183" cy="238" r="1" fill="#000"/>
+                    <path d="M180,240 Q175,235 180,230 Q185,235 180,240" fill="#10b981"/>
+                    
+                    <!-- 魚10 - 新增 -->
+                    <path d="M20,170 L35,165 L35,175 Z" fill="#6366f1"/>
+                    <circle cx="15" cy="170" r="5" fill="#6366f1"/>
+                    <circle cx="13" cy="168" r="1" fill="#000"/>
+                    <path d="M10,170 Q5,165 10,160 Q15,165 10,170" fill="#6366f1"/>
+                    
+                    <!-- 波浪 -->
+                    <path d="M0,150 Q25,140 50,150 Q75,160 100,150 Q125,140 150,150 Q175,160 200,150 Q225,140 250,150 Q275,160 300,150" 
+                          stroke="#7dd3fc" stroke-width="5" fill="none"/>
+                    <path d="M0,160 Q25,150 50,160 Q75,170 100,160 Q125,150 150,160 Q175,170 200,160 Q225,150 250,160 Q275,170 300,160" 
+                          stroke="#7dd3fc" stroke-width="5" fill="none"/>
+                    <path d="M0,170 Q25,160 50,170 Q75,180 100,170 Q125,160 150,170 Q175,180 200,170 Q225,160 250,170 Q275,180 300,170" 
+                          stroke="#7dd3fc" stroke-width="5" fill="none"/>
+                    
+                    <!-- 沙灘 -->
+                    <path d="M0,150 Q150,180 300,150 L300,200 L0,200 Z" fill="#fef3c7"/>
+                    
+                    <!-- 貝殼 -->
+                    <ellipse cx="50" cy="170" rx="15" ry="8" fill="#fca5a5"/>
+                    <path d="M35,170 Q50,155 65,170" stroke="#f87171" stroke-width="2" fill="none"/>
+                    
+                    <ellipse cx="250" cy="180" rx="10" ry="5" fill="#fca5a5"/>
+                    <path d="M240,180 Q250,170 260,180" stroke="#f87171" stroke-width="2" fill="none"/>
+                    
+                    <!-- 海星 -->
+                    <path d="M90,180 L100,160 L110,180 L90,170 L110,170 Z" fill="#fb923c"/>
+                    
+                    <!-- 沙堡 -->
+                    <rect x="200" y="160" width="30" height="20" fill="#fde68a"/>
+                    <rect x="195" y="160" width="40" height="10" fill="#fde68a"/>
+                    <rect x="205" y="150" width="10" height="10" fill="#fde68a"/>
+                    <rect x="215" y="150" width="10" height="10" fill="#fde68a"/>
+                    
+                    <!-- 兔子 -->
+                    <!-- 身體 -->
+                    <ellipse cx="150" cy="170" rx="30" ry="25" fill="#fde68a"/>
+                    
+                    <!-- 頭 -->
+                    <circle cx="150" cy="140" r="25" fill="#fde68a"/>
+                    
+                    <!-- 耳朵 -->
+                    <ellipse cx="135" cy="115" rx="8" ry="20" fill="#fde68a"/>
+                    <ellipse cx="165" cy="115" rx="8" ry="20" fill="#fde68a"/>
+                    <ellipse cx="135" cy="115" rx="4" ry="16" fill="#fef3c7"/>
+                    <ellipse cx="165" cy="115" rx="4" ry="16" fill="#fef3c7"/>
+                    
+                    <!-- 眼睛 -->
+                    <ellipse cx="140" cy="135" rx="5" ry="7" fill="#ffffff"/>
+                    <ellipse cx="160" cy="135" rx="5" ry="7" fill="#ffffff"/>
+                    <circle cx="140" cy="135" r="3" fill="#000000"/>
+                    <circle cx="160" cy="135" r="3" fill="#000000"/>
+                    
+                    <!-- 鼻子 -->
+                    <ellipse cx="150" cy="145" rx="5" ry="3" fill="#fecaca"/>
+                    
+                    <!-- 嘴 -->
+                    <path d="M150,148 Q150,155 145,152" stroke="#000000" stroke-width="1" fill="none"/>
+                    <path d="M150,148 Q150,155 155,152" stroke="#000000" stroke-width="1" fill="none"/>
+                    
+                    <!-- 鬍鬚 -->
+                    <line x1="145" y1="145" x2="125" y2="140" stroke="#000000" stroke-width="1"/>
+                    <line x1="145" y1="148" x2="125" y2="148" stroke="#000000" stroke-width="1"/>
+                    <line x1="145" y1="151" x2="125" y2="156" stroke="#000000" stroke-width="1"/>
+                    <line x1="155" y1="145" x2="175" y2="140" stroke="#000000" stroke-width="1"/>
+                    <line x1="155" y1="148" x2="175" y2="148" stroke="#000000" stroke-width="1"/>
+                    <line x1="155" y1="151" x2="175" y2="156" stroke="#000000" stroke-width="1"/>
+                    
+                    <!-- 腳 -->
+                    <ellipse cx="135" cy="195" rx="10" ry="5" fill="#fde68a"/>
+                    <ellipse cx="165" cy="195" rx="10" ry="5" fill="#fde68a"/>
+                    
+                    <!-- 太陽眼鏡 -->
+                    <path d="M135,130 L165,130" stroke="#000000" stroke-width="2" fill="none"/>
+                    <path d="M135,130 L130,125" stroke="#000000" stroke-width="2" fill="none"/>
+                    <path d="M165,130 L170,125" stroke="#000000" stroke-width="2" fill="none"/>
+                    <circle cx="140" cy="135" r="8" fill="#000000" opacity="0.7"/>
+                    <circle cx="160" cy="135" r="8" fill="#000000" opacity="0.7"/>
+                </svg>`
+            ];
+
+            // 初始化遊戲
+            function initGame() {
+                puzzleBoard.innerHTML = '';
+                piecesContainer.innerHTML = '';
+                correctPieces = 0;
+                placedPiecesCount = 0;
+                totalPieces = gridSize * gridSize;
+                pieceSize = 300 / gridSize;
+                
+                // 根據難度調整拼圖塊容器的網格列數
+                if (gridSize === 2) {
+                    piecesContainer.style.gridTemplateColumns = "repeat(2, 1fr)";
+                } else if (gridSize === 3) {
+                    piecesContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+                } else {
+                    piecesContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
+                }
+                
+                // 停止之前的計時器
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                
+                // 開始計時
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+                
+                // 設置參考圖
+                referenceImage.innerHTML = svgImages[currentImage];
+                
+                // 更新最佳時間顯示
+                updateBestTimeDisplay();
+                
+                // 創建拼圖槽位
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'puzzle-slot absolute';
+                        slot.style.width = `${pieceSize}px`;
+                        slot.style.height = `${pieceSize}px`;
+                        slot.style.left = `${col * pieceSize}px`;
+                        slot.style.top = `${row * pieceSize}px`;
+                        slot.dataset.row = row;
+                        slot.dataset.col = col;
+                        
+                        puzzleBoard.appendChild(slot);
+                    }
+                }
+                
+                // 創建拼圖塊
+                const pieces = [];
+                for (let row = 0; row < gridSize; row++) {
+                    for (let col = 0; col < gridSize; col++) {
+                        const piece = document.createElement('div');
+                        piece.className = 'puzzle-piece';
+                        piece.style.width = `${pieceSize}px`;
+                        piece.style.height = `${pieceSize}px`;
+                        piece.style.position = 'relative';
+                        piece.dataset.correctRow = row;
+                        piece.dataset.correctCol = col;
+                        
+                        // 創建SVG視窗
+                        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        svg.setAttribute("width", "100%");
+                        svg.setAttribute("height", "100%");
+                        svg.setAttribute("viewBox", `${col * pieceSize} ${row * pieceSize} ${pieceSize} ${pieceSize}`);
+                        svg.innerHTML = svgImages[currentImage].substring(svgImages[currentImage].indexOf('>') + 1);
+                        
+                        piece.appendChild(svg);
+                        pieces.push(piece);
+                        
+                        // 設置拖拽事件
+                        piece.draggable = true;
+                        piece.addEventListener('dragstart', dragStart);
+                    }
+                }
+                
+                // 打亂拼圖塊順序
+                pieces.sort(() => Math.random() - 0.5);
+                pieces.forEach(piece => piecesContainer.appendChild(piece));
+                
+                // 設置拖放目標
+                puzzleBoard.addEventListener('dragover', dragOver);
+                puzzleBoard.addEventListener('drop', drop);
+                piecesContainer.addEventListener('dragover', dragOver);
+                piecesContainer.addEventListener('drop', dropBackToPieces);
+                
+                // 更新進度
+                updateProgress();
+            }
+            
+            // 更新計時器
+            function updateTimer() {
+                if (!startTime) return;
+                
+                const now = new Date();
+                const elapsedTime = Math.floor((now - startTime) / 1000);
+                const minutes = Math.floor(elapsedTime / 60);
+                const seconds = elapsedTime % 60;
+                
+                timerElement.textContent = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+            }
+            
+            // 更新進度
+            function updateProgress() {
+                const progress = Math.round((placedPiecesCount / totalPieces) * 100);
+                progressText.textContent = `${progress}%`;
+                progressFill.style.width = `${progress}%`;
+            }
+            
+            // 更新最佳時間顯示
+            function updateBestTimeDisplay() {
+                const key = `${gridSize}x${gridSize}-${currentImage}`;
+                const bestTime = bestTimes[key];
+                
+                if (bestTime) {
+                    const minutes = Math.floor(bestTime / 60);
+                    const seconds = bestTime % 60;
+                    bestTimeElement.textContent = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                } else {
+                    bestTimeElement.textContent = '--:--';
+                }
+            }
+            
+            // 拖拽開始 - 使用自定義拖動圖像
+            function dragStart(e) {
+                // 儲存被拖動的拼圖塊引用
+                draggedPiece = this;
+                
+                // 設置拖動數據
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    correctRow: this.dataset.correctRow,
+                    correctCol: this.dataset.correctCol,
+                    fromBoard: this.parentElement === puzzleBoard
+                }));
+                
+                // 創建自定義拖動圖像
+                const dragImage = this.cloneNode(true);
+                dragImage.style.position = 'absolute';
+                dragImage.style.top = '-1000px';
+                dragImage.style.opacity = '0.8';
+                document.body.appendChild(dragImage);
+                
+                // 設置拖動圖像
+                e.dataTransfer.setDragImage(dragImage, pieceSize / 2, pieceSize / 2);
+                
+                // 延遲添加透明度類，以便拖動圖像正確顯示
+                setTimeout(() => {
+                    this.classList.add('opacity-50');
+                    // 在短暫延遲後移除臨時拖動圖像
+                    setTimeout(() => {
+                        document.body.removeChild(dragImage);
+                    }, 100);
+                }, 0);
+            }
+            
+            // 拖拽經過
+            function dragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            }
+            
+            // 放置拼圖塊到拼圖板
+            function drop(e) {
+                e.preventDefault();
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const { correctRow, correctCol, fromBoard } = data;
+                
+                // 獲取放置位置
+                const rect = puzzleBoard.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const dropCol = Math.floor(x / pieceSize);
+                const dropRow = Math.floor(y / pieceSize);
+                
+                // 檢查是否有拼圖塊已經在該位置
+                const existingPiece = Array.from(puzzleBoard.children).find(child => 
+                    child.classList.contains('puzzle-piece') && 
+                    parseInt(child.style.left) === dropCol * pieceSize &&
+                    parseInt(child.style.top) === dropRow * pieceSize
+                );
+                
+                if (existingPiece) {
+                    // 如果位置已被佔用，不允許放置，恢復拖動的拼圖塊外觀
+                    if (draggedPiece) {
+                        draggedPiece.classList.remove('opacity-50');
+                    }
+                    return;
+                }
+                
+                // 獲取被拖拽的拼圖塊
+                if (!draggedPiece) {
+                    draggedPiece = document.querySelector('.puzzle-piece.opacity-50');
+                }
+                
+                if (draggedPiece) {
+                    draggedPiece.classList.remove('opacity-50');
+                    
+                    // 如果拼圖塊不是從拼圖板拖來的，增加已放置計數
+                    if (!fromBoard) {
+                        placedPiecesCount++;
+                    }
+                    
+                    // 移動拼圖塊到拼圖板
+                    puzzleBoard.appendChild(draggedPiece);
+                    draggedPiece.style.position = 'absolute';
+                    draggedPiece.style.left = `${dropCol * pieceSize}px`;
+                    draggedPiece.style.top = `${dropRow * pieceSize}px`;
+                    
+                    // 檢查是否放置正確
+                    const isCorrectPosition = parseInt(correctRow) === dropRow && parseInt(correctCol) === dropCol;
+                    
+                    if (isCorrectPosition) {
+                        draggedPiece.classList.add('correct');
+                        correctPieces++;
+                    } else {
+                        draggedPiece.classList.remove('correct');
+                    }
+                    
+                    // 更新進度
+                    updateProgress();
+                    
+                    // 檢查是否完成拼圖
+                    checkPuzzleCompletion();
+                    
+                    // 重置拖動的拼圖塊引用
+                    draggedPiece = null;
+                }
+            }
+            
+            // 放置拼圖塊回拼圖塊區域
+            function dropBackToPieces(e) {
+                e.preventDefault();
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const { fromBoard } = data;
+                
+                // 獲取被拖拽的拼圖塊
+                if (!draggedPiece) {
+                    draggedPiece = document.querySelector('.puzzle-piece.opacity-50');
+                }
+                
+                if (draggedPiece) {
+                    draggedPiece.classList.remove('opacity-50');
+                    
+                    // 如果拼圖塊是從拼圖板拖來的，減少已放置計數
+                    if (fromBoard) {
+                        placedPiecesCount--;
+                        
+                        // 如果這個拼圖塊是正確放置的，減少正確計數
+                        if (draggedPiece.classList.contains('correct')) {
+                            correctPieces--;
+                        }
+                        
+                        // 移除正確標記
+                        draggedPiece.classList.remove('correct');
+                    }
+                    
+                    // 移動拼圖塊回拼圖塊區域
+                    piecesContainer.appendChild(draggedPiece);
+                    draggedPiece.style.position = 'relative';
+                    draggedPiece.style.left = '';
+                    draggedPiece.style.top = '';
+                    
+                    // 更新進度
+                    updateProgress();
+                    
+                    // 重置拖動的拼圖塊引用
+                    draggedPiece = null;
+                }
+            }
+            
+            // 檢查拼圖是否完成
+            function checkPuzzleCompletion() {
+                // 只有當正確的拼圖塊數量等於總拼圖塊數量時才檢查
+                if (correctPieces === totalPieces) {
+                    // 檢查拼圖區是否與參考圖一致
+                    const puzzlePieces = Array.from(puzzleBoard.querySelectorAll('.puzzle-piece'));
+                    let allCorrect = true;
+                    
+                    for (const piece of puzzlePieces) {
+                        const correctRow = parseInt(piece.dataset.correctRow);
+                        const correctCol = parseInt(piece.dataset.correctCol);
+                        const currentLeft = parseInt(piece.style.left) / pieceSize;
+                        const currentTop = parseInt(piece.style.top) / pieceSize;
+                        
+                        if (correctRow !== currentTop || correctCol !== currentLeft) {
+                            allCorrect = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allCorrect) {
+                        clearInterval(timerInterval);
+                        const endTime = new Date();
+                        const elapsedTime = Math.floor((endTime - startTime) / 1000);
+                        const minutes = Math.floor(elapsedTime / 60);
+                        const seconds = elapsedTime % 60;
+                        
+                        completionTime.textContent = `完成時間: ${minutes}分 ${seconds}秒`;
+                        
+                        // 檢查是否為最佳時間
+                        const key = `${gridSize}x${gridSize}-${currentImage}`;
+                        if (!bestTimes[key] || elapsedTime < bestTimes[key]) {
+                            bestTimes[key] = elapsedTime;
+                            localStorage.setItem('puzzleBestTimes', JSON.stringify(bestTimes));
+                            newRecord.classList.remove('hidden');
+                        } else {
+                            newRecord.classList.add('hidden');
+                        }
+                        
+                        winModal.classList.remove('hidden');
+                    }
+                }
+            }
+            
+            // 難度選擇
+            difficultyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    difficultyBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    gridSize = parseInt(this.dataset.difficulty);
+                });
+            });
+            
+            // 圖片選擇
+            imageBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    imageBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentImage = parseInt(this.dataset.image);
+                });
+            });
+            
+            // 開始新遊戲
+            newGameBtn.addEventListener('click', initGame);
+            
+            // 再玩一次
+            playAgainBtn.addEventListener('click', function() {
+                winModal.classList.add('hidden');
+                initGame();
+            });
+            
+            // 下一難度
+            nextLevelBtn.addEventListener('click', function() {
+                winModal.classList.add('hidden');
+                
+                // 增加難度
+                if (gridSize < 4) {
+                    gridSize++;
+                    difficultyBtns.forEach(btn => {
+                        if (parseInt(btn.dataset.difficulty) === gridSize) {
+                            difficultyBtns.forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                        }
+                    });
+                }
+                
+                initGame();
+            });
+            
+            // 初始化遊戲
+            initGame();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95abedd92021f212',t:'MTc1MTc3MTYzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
