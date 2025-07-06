@@ -1,0 +1,978 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲林縣斗六教師研習中心啟用典禮</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            font-family: "Microsoft JhengHei", "微軟正黑體", Arial, sans-serif;
+            background: linear-gradient(to bottom, #050520, #0a0a2a, #1a1a4a);
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+        
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            animation: twinkle 2s infinite ease-in-out;
+        }
+        
+        .star-white {
+            background-color: white;
+            box-shadow: 0 0 5px 1px rgba(255, 255, 255, 0.8);
+        }
+        
+        .star-yellow {
+            background-color: #ffff66;
+            box-shadow: 0 0 8px 2px rgba(255, 255, 102, 0.8);
+            animation: yellowTwinkle 1.5s infinite ease-in-out;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.1; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0.1; transform: scale(0.8); }
+        }
+        
+        @keyframes yellowTwinkle {
+            0% { opacity: 0.2; transform: scale(0.7); }
+            50% { opacity: 1; transform: scale(1.4); }
+            100% { opacity: 0.2; transform: scale(0.7); }
+        }
+        
+        .meteor {
+            position: absolute;
+            width: 2px;
+            height: 80px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.8));
+            transform-origin: top;
+            z-index: 2;
+            opacity: 0;
+        }
+        
+        .title-container {
+            position: absolute;
+            top: 10%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .title {
+            color: #ff69b4;
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 
+                -3px -3px 0 white, 
+                3px -3px 0 white, 
+                -3px 3px 0 white, 
+                3px 3px 0 white,
+                0 0 10px rgba(255, 105, 180, 0.7);
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #ff69b4;
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 
+                -3px -3px 0 white, 
+                3px -3px 0 white, 
+                -3px 3px 0 white, 
+                3px 3px 0 white,
+                0 0 10px rgba(255, 105, 180, 0.7);
+            margin-bottom: 0.3rem;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 5%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .footer-text {
+            color: red;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white;
+        }
+        
+        .balloon-container {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            animation: float 2s infinite ease-in-out;
+            z-index: 5;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(-5deg); }
+            50% { transform: translate(-50%, -50%) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) rotate(-5deg); }
+        }
+        
+        .balloon {
+            width: 120px;
+            height: 150px;
+            background-color: rgba(255, 0, 0, 0.7); /* 降低透明度，讓氣球更清晰 */
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 
+                inset -15px -15px 40px rgba(255, 255, 255, 0.3),
+                inset 15px 15px 40px rgba(0, 0, 0, 0.1),
+                0 0 20px rgba(255, 0, 0, 0.3);
+        }
+        
+        .balloon:after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 20px;
+            background-color: rgba(255, 0, 0, 0.7); /* 與氣球主體透明度一致 */
+            border-radius: 0 0 5px 5px;
+            box-shadow: 
+                inset -2px -2px 5px rgba(255, 255, 255, 0.3),
+                inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .balloon-text {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .click-me {
+            position: absolute;
+            top: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.2rem;
+            animation: pulse 1.5s infinite;
+            white-space: nowrap;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: translateX(-50%) scale(0.95); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+            100% { opacity: 0.5; transform: translateX(-50%) scale(0.95); }
+        }
+        
+        .countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem; /* 初始大小 */
+            color: yellow;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 255, 0, 0.7);
+            z-index: 20;
+            opacity: 0;
+            display: none;
+            animation: numberGlow 1s infinite alternate;
+            transition: font-size 0.5s ease;
+        }
+        
+        @keyframes numberGlow {
+            0% { 
+                text-shadow: 0 0 20px rgba(255, 255, 0, 0.7); 
+            }
+            100% { 
+                text-shadow: 0 0 40px rgba(255, 255, 0, 1), 
+                             0 0 80px rgba(255, 255, 0, 0.8),
+                             0 0 120px rgba(255, 255, 0, 0.6); 
+            }
+        }
+        
+        .activation-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: gold;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            z-index: 20;
+            opacity: 0;
+            display: none;
+            animation: textGlow 2s infinite alternate;
+        }
+        
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.7); }
+            100% { text-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 215, 0, 0.8); }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            z-index: 15;
+            opacity: 0;
+        }
+        
+        .celebration-balloon {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            z-index: 5;
+        }
+        
+        .celebration-balloon:after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 10px;
+            border-radius: 0 0 3px 3px;
+        }
+        
+        .celebration-text {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+        
+        .falling-ribbon {
+            position: absolute;
+            top: -50px;
+            width: 10px;
+            height: 30px;
+            z-index: 3;
+            transform-origin: center;
+            animation: fall 10s linear forwards;
+        }
+        
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(calc(100vh + 50px)) rotate(360deg); }
+        }
+        
+        .petal {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.8;
+            z-index: 2;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            z-index: 4;
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: white;
+            border-radius: 50%;
+            z-index: 6;
+            animation: sparkle 1.5s infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+    </style>
+</head>
+<body>
+    <div class="title-container">
+        <div class="title">歡迎蒞臨</div>
+        <div class="subtitle">雲林縣斗六教師研習中心</div>
+        <div class="subtitle">啟用典禮</div>
+    </div>
+    
+    <div class="footer">
+        <div class="footer-text">雲林縣數位學習推動辦公室 同賀</div>
+    </div>
+    
+    <div class="balloon-container" id="mainBalloon">
+        <div class="balloon">
+            <span class="balloon-text" id="balloonText">點擊</span>
+            <div class="countdown" id="countdown"></div>
+        </div>
+        <div class="click-me">點擊氣球開始剪綵</div>
+    </div>
+    
+    <div class="activation-text" id="activationText">正式啟用</div>
+    
+    <script>
+        // 頁面載入時立即創建星空效果
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            createMeteors();
+            createSparkles();
+            initGame();
+        });
+        
+        // 創建星星背景
+        function createStars() {
+            const starsCount = 300; // 白色星星數量
+            const yellowStarsCount = 100; // 黃色星星數量
+            const container = document.body;
+            
+            // 創建白色星星
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star star-white';
+                
+                // 隨機位置
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                // 隨機大小
+                const size = Math.random() * 3;
+                
+                // 隨機閃爍延遲
+                const delay = Math.random() * 3;
+                
+                star.style.left = `${x}px`;
+                star.style.top = `${y}px`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(star);
+            }
+            
+            // 創建黃色星星
+            for (let i = 0; i < yellowStarsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star star-yellow';
+                
+                // 隨機位置
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                // 隨機大小 (黃色星星稍大)
+                const size = 1 + Math.random() * 3;
+                
+                // 隨機閃爍延遲
+                const delay = Math.random() * 2;
+                
+                star.style.left = `${x}px`;
+                star.style.top = `${y}px`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(star);
+            }
+        }
+        
+        // 創建流星
+        function createMeteors() {
+            function createMeteor() {
+                const meteor = document.createElement('div');
+                meteor.className = 'meteor';
+                
+                // 隨機位置和角度
+                const startX = Math.random() * window.innerWidth;
+                const angle = 30 + Math.random() * 30; // 30-60度角
+                
+                meteor.style.left = `${startX}px`;
+                meteor.style.top = '0';
+                meteor.style.transform = `rotate(${angle}deg)`;
+                
+                document.body.appendChild(meteor);
+                
+                // 流星動畫
+                let opacity = 0;
+                let position = -100;
+                const speed = 5 + Math.random() * 10;
+                
+                const animate = () => {
+                    position += speed;
+                    
+                    // 淡入淡出
+                    if (position < 100) {
+                        opacity = position / 100;
+                    } else if (position > window.innerHeight - 100) {
+                        opacity = (window.innerHeight - position) / 100;
+                    } else {
+                        opacity = 1;
+                    }
+                    
+                    if (position > window.innerHeight || opacity <= 0) {
+                        meteor.remove();
+                        return;
+                    }
+                    
+                    meteor.style.top = `${position}px`;
+                    meteor.style.opacity = opacity;
+                    
+                    requestAnimationFrame(animate);
+                };
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 隨機創建流星
+            function randomMeteor() {
+                // 有30%的機率創建流星
+                if (Math.random() < 0.3) {
+                    createMeteor();
+                }
+                
+                // 3-8秒後再次嘗試創建
+                const nextTime = 3000 + Math.random() * 5000;
+                setTimeout(randomMeteor, nextTime);
+            }
+            
+            // 開始創建流星
+            setTimeout(randomMeteor, 2000);
+        }
+        
+        // 創建閃光效果
+        function createSparkles() {
+            function createSparkle() {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                sparkle.style.left = `${x}px`;
+                sparkle.style.top = `${y}px`;
+                sparkle.style.animationDelay = `${Math.random() * 2}s`;
+                
+                document.body.appendChild(sparkle);
+                
+                // 一段時間後移除
+                setTimeout(() => {
+                    sparkle.remove();
+                }, 4000);
+            }
+            
+            // 創建多個閃光
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createSparkle();
+                }, i * 200);
+            }
+            
+            // 持續創建閃光
+            setInterval(() => {
+                createSparkle();
+            }, 500);
+        }
+        
+        // 創建彩帶和慶祝效果
+        function createConfetti(x, y) {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#8800ff'];
+            const confettiCount = 300; // 增加彩帶數量
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 5 + Math.random() * 10;
+                const rotationSpeed = (Math.random() - 0.5) * 20;
+                
+                confetti.style.backgroundColor = color;
+                confetti.style.left = `${x}px`;
+                confetti.style.top = `${y}px`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                document.body.appendChild(confetti);
+                
+                // 動畫
+                let posX = x;
+                let posY = y;
+                let rotation = 0;
+                let opacity = 1;
+                let gravity = 0.1;
+                let velocityY = -velocity * Math.sin(angle);
+                let velocityX = velocity * Math.cos(angle);
+                
+                confetti.style.opacity = '1';
+                
+                const animate = () => {
+                    velocityY += gravity;
+                    posX += velocityX;
+                    posY += velocityY;
+                    rotation += rotationSpeed;
+                    opacity -= 0.005;
+                    
+                    if (opacity <= 0) {
+                        confetti.remove();
+                        return;
+                    }
+                    
+                    confetti.style.left = `${posX}px`;
+                    confetti.style.top = `${posY}px`;
+                    confetti.style.transform = `rotate(${rotation}deg)`;
+                    confetti.style.opacity = opacity;
+                    
+                    requestAnimationFrame(animate);
+                };
+                
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        // 創建慶祝氣球
+        function createCelebrationBalloons() {
+            const words = ["數位", "教育", "精進", "卓越", "創新", "合作", "專業", "成長", "學習", "未來"];
+            const colors = [
+                'rgba(255, 0, 0, 0.6)', 
+                'rgba(0, 255, 0, 0.6)', 
+                'rgba(0, 0, 255, 0.6)', 
+                'rgba(255, 255, 0, 0.6)', 
+                'rgba(255, 0, 255, 0.6)', 
+                'rgba(0, 255, 255, 0.6)',
+                'rgba(255, 165, 0, 0.6)',
+                'rgba(128, 0, 128, 0.6)',
+                'rgba(0, 128, 128, 0.6)',
+                'rgba(255, 192, 203, 0.6)'
+            ];
+            
+            // 創建一個氣球
+            function createOneBalloon() {
+                const balloon = document.createElement('div');
+                balloon.className = 'celebration-balloon';
+                
+                const word = words[Math.floor(Math.random() * words.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const startX = Math.random() * window.innerWidth;
+                
+                // 隨機大小 - 更大範圍
+                const size = 40 + Math.random() * 100;
+                const height = size * 1.25;
+                
+                balloon.style.backgroundColor = color;
+                balloon.style.left = `${startX}px`;
+                balloon.style.top = `${window.innerHeight + 50}px`;
+                balloon.style.opacity = '0.8';
+                balloon.style.width = `${size}px`;
+                balloon.style.height = `${height}px`;
+                
+                const text = document.createElement('span');
+                text.className = 'celebration-text';
+                text.textContent = word;
+                text.style.fontSize = `${size / 4}px`;
+                balloon.appendChild(text);
+                
+                // 氣球尾部顏色
+                const tailWidth = size / 12;
+                const tailHeight = size / 6;
+                
+                // 設置氣球尾部
+                const tail = document.createElement('div');
+                tail.style.position = 'absolute';
+                tail.style.bottom = `-${tailHeight}px`;
+                tail.style.left = `50%`;
+                tail.style.transform = `translateX(-50%)`;
+                tail.style.width = `${tailWidth}px`;
+                tail.style.height = `${tailHeight}px`;
+                tail.style.backgroundColor = color;
+                tail.style.borderRadius = `0 0 ${tailWidth/2}px ${tailWidth/2}px`;
+                balloon.appendChild(tail);
+                
+                document.body.appendChild(balloon);
+                
+                // 氣球上升動畫
+                let posY = window.innerHeight + 50;
+                let posX = startX;
+                let wobblePhase = Math.random() * Math.PI * 2;
+                let wobbleSpeed = 0.01 + Math.random() * 0.02;
+                let wobbleAmount = 10 + Math.random() * 20;
+                let speed = 0.5 + Math.random() * 0.5; // 更快的上升速度
+                
+                const animate = () => {
+                    posY -= speed;
+                    wobblePhase += wobbleSpeed;
+                    posX = startX + Math.sin(wobblePhase) * wobbleAmount;
+                    
+                    if (posY < -100) {
+                        balloon.remove();
+                        return;
+                    }
+                    
+                    balloon.style.left = `${posX}px`;
+                    balloon.style.top = `${posY}px`;
+                    
+                    requestAnimationFrame(animate);
+                };
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 立即創建一批氣球
+            for (let i = 0; i < 15; i++) { // 減少初始氣球數量
+                setTimeout(() => {
+                    createOneBalloon();
+                }, i * 100);
+            }
+            
+            // 持續創建氣球，但頻率降低
+            let balloonInterval = setInterval(() => {
+                createOneBalloon();
+            }, 1000); // 降低創建頻率
+            
+            // 5分鐘後停止創建氣球
+            setTimeout(() => {
+                clearInterval(balloonInterval);
+            }, 5 * 60 * 1000);
+        }
+        
+        // 創建從上方落下的彩帶
+        function createFallingRibbons() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#8800ff'];
+            
+            function createRibbon() {
+                const ribbon = document.createElement('div');
+                ribbon.className = 'falling-ribbon';
+                
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const startX = Math.random() * window.innerWidth;
+                const width = 5 + Math.random() * 10;
+                const height = 20 + Math.random() * 40;
+                const fallDuration = 8 + Math.random() * 7;
+                
+                ribbon.style.backgroundColor = color;
+                ribbon.style.left = `${startX}px`;
+                ribbon.style.width = `${width}px`;
+                ribbon.style.height = `${height}px`;
+                ribbon.style.animationDuration = `${fallDuration}s`;
+                
+                document.body.appendChild(ribbon);
+                
+                // 一段時間後移除彩帶
+                setTimeout(() => {
+                    ribbon.remove();
+                }, fallDuration * 1000);
+            }
+            
+            // 立即創建一批彩帶
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createRibbon();
+                }, i * 50);
+            }
+            
+            // 持續創建彩帶
+            let ribbonInterval = setInterval(() => {
+                createRibbon();
+            }, 150); // 增加彩帶創建頻率
+            
+            // 5分鐘後停止創建彩帶
+            setTimeout(() => {
+                clearInterval(ribbonInterval);
+            }, 5 * 60 * 1000);
+        }
+        
+        // 創建花瓣效果
+        function createPetals() {
+            function createPetal() {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                
+                // 使用CSS創建花瓣形狀
+                const colors = ['#ff9999', '#ffcccc', '#ff6666', '#ff3366', '#ff99cc'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                petal.style.backgroundColor = color;
+                petal.style.borderRadius = '100% 0';
+                petal.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                const startX = Math.random() * window.innerWidth;
+                petal.style.left = `${startX}px`;
+                petal.style.top = '-20px';
+                
+                document.body.appendChild(petal);
+                
+                // 動畫
+                let posY = -20;
+                let posX = startX;
+                let rotation = Math.random() * 360;
+                let rotationSpeed = Math.random() * 2 - 1;
+                let horizontalSpeed = Math.random() * 2 - 1;
+                let fallSpeed = 0.5 + Math.random() * 1;
+                
+                const animate = () => {
+                    posY += fallSpeed;
+                    posX += horizontalSpeed;
+                    rotation += rotationSpeed;
+                    
+                    if (posY > window.innerHeight + 20) {
+                        petal.remove();
+                        return;
+                    }
+                    
+                    petal.style.top = `${posY}px`;
+                    petal.style.left = `${posX}px`;
+                    petal.style.transform = `rotate(${rotation}deg)`;
+                    
+                    requestAnimationFrame(animate);
+                };
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 持續創建花瓣
+            let petalInterval = setInterval(() => {
+                createPetal();
+            }, 500);
+            
+            // 5分鐘後停止創建花瓣
+            setTimeout(() => {
+                clearInterval(petalInterval);
+            }, 5 * 60 * 1000);
+        }
+        
+        // 創建煙火效果
+        function createFireworks() {
+            function launchFirework() {
+                const colors = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff'];
+                const startX = 100 + Math.random() * (window.innerWidth - 200);
+                const startY = window.innerHeight;
+                const targetY = 100 + Math.random() * (window.innerHeight * 0.5);
+                
+                // 發射階段
+                let posX = startX;
+                let posY = startY;
+                let progress = 0;
+                let speed = 0.02 + Math.random() * 0.01;
+                
+                function launch() {
+                    progress += speed;
+                    posY = startY - (startY - targetY) * progress;
+                    
+                    if (progress >= 1) {
+                        explode(posX, posY);
+                        return;
+                    }
+                    
+                    requestAnimationFrame(launch);
+                }
+                
+                // 爆炸階段
+                function explode(x, y) {
+                    const particles = 50 + Math.floor(Math.random() * 50);
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    for (let i = 0; i < particles; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'firework';
+                        particle.style.backgroundColor = color;
+                        particle.style.left = `${x}px`;
+                        particle.style.top = `${y}px`;
+                        document.body.appendChild(particle);
+                        
+                        const angle = Math.random() * Math.PI * 2;
+                        const velocity = 1 + Math.random() * 3;
+                        const life = 1000 + Math.random() * 1000;
+                        let opacity = 1;
+                        
+                        let particleX = x;
+                        let particleY = y;
+                        let velocityX = Math.cos(angle) * velocity;
+                        let velocityY = Math.sin(angle) * velocity;
+                        
+                        const startTime = Date.now();
+                        
+                        function animateParticle() {
+                            const elapsed = Date.now() - startTime;
+                            
+                            if (elapsed > life) {
+                                particle.remove();
+                                return;
+                            }
+                            
+                            opacity = 1 - (elapsed / life);
+                            velocityY += 0.01; // 輕微重力
+                            
+                            particleX += velocityX;
+                            particleY += velocityY;
+                            
+                            particle.style.left = `${particleX}px`;
+                            particle.style.top = `${particleY}px`;
+                            particle.style.opacity = opacity;
+                            
+                            requestAnimationFrame(animateParticle);
+                        }
+                        
+                        requestAnimationFrame(animateParticle);
+                    }
+                }
+                
+                launch();
+            }
+            
+            // 隨機發射煙火
+            function randomFireworks() {
+                launchFirework();
+                
+                const nextTime = 1000 + Math.random() * 3000;
+                setTimeout(randomFireworks, nextTime);
+            }
+            
+            // 開始煙火表演
+            setTimeout(randomFireworks, 2000);
+        }
+        
+        // 主要遊戲邏輯
+        function initGame() {
+            const mainBalloon = document.getElementById('mainBalloon');
+            const balloon = mainBalloon.querySelector('.balloon');
+            const balloonText = document.getElementById('balloonText');
+            const countdownElement = document.getElementById('countdown');
+            const activationText = document.getElementById('activationText');
+            let isAnimating = false;
+            
+            mainBalloon.addEventListener('click', () => {
+                if (isAnimating) return;
+                isAnimating = true;
+                
+                // 隱藏點擊提示和氣球文字
+                mainBalloon.querySelector('.click-me').style.display = 'none';
+                balloonText.style.display = 'none';
+                
+                // 設置初始倒數
+                let countdown = 5;
+                countdownElement.textContent = countdown;
+                countdownElement.style.display = 'block';
+                countdownElement.style.opacity = '1';
+                
+                // 確保倒數數字在氣球中央
+                balloon.appendChild(countdownElement);
+                
+                // 氣球初始大小和最終大小
+                let initialSize = 1;
+                let finalSize = 6.0; // 增加最終氣球尺寸，讓它更大
+                
+                // 氣球充氣動畫
+                let inflateProgress = 0;
+                const inflateSpeed = 0.02; // 調整充氣速度
+                let lastPulse = Date.now();
+                const pulseInterval = 200; // 每200毫秒脈動一次
+                
+                // 倒數計時器
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    countdownElement.textContent = countdown;
+                    
+                    // 如果倒數結束
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        
+                        // 氣球爆炸
+                        balloon.style.opacity = '0';
+                        
+                        // 創建爆炸效果
+                        const balloonRect = balloon.getBoundingClientRect();
+                        const centerX = balloonRect.left + balloonRect.width / 2;
+                        const centerY = balloonRect.top + balloonRect.height / 2;
+                        
+                        createConfetti(centerX, centerY);
+                        
+                        // 隱藏倒數
+                        countdownElement.style.opacity = '0';
+                        
+                        // 將倒數數字移回原位置
+                        document.body.appendChild(countdownElement);
+                        
+                        // 顯示啟用文字
+                        setTimeout(() => {
+                            countdownElement.style.display = 'none';
+                            activationText.style.display = 'block';
+                            activationText.style.opacity = '1';
+                            
+                            // 創建慶祝效果
+                            createCelebrationBalloons();
+                            createFallingRibbons();
+                            createPetals();
+                            createFireworks();
+                        }, 1000);
+                    }
+                }, 1000);
+                
+                // 氣球充氣動畫
+                function inflateAnimation() {
+                    const now = Date.now();
+                    
+                    // 計算當前進度 - 根據倒數計時調整
+                    const targetProgress = (5 - countdown) / 5;
+                    
+                    // 平滑過渡到目標進度
+                    inflateProgress += (targetProgress - inflateProgress) * 0.1;
+                    
+                    // 計算當前氣球大小
+                    const baseSize = initialSize + (finalSize - initialSize) * inflateProgress;
+                    
+                    // 添加脈動效果模擬真實充氣
+                    let pulseEffect = 0;
+                    if (now - lastPulse > pulseInterval) {
+                        pulseEffect = 0.05; // 脈動幅度
+                        lastPulse = now;
+                    }
+                    
+                    const currentSize = baseSize * (1 + pulseEffect * Math.sin(inflateProgress * 20));
+                    
+                    // 更新氣球大小
+                    balloon.style.transform = `scale(${currentSize})`;
+                    
+                    // 更新數字大小 - 與氣球大小成比例
+                    const fontSize = 4 + (12 - 4) * inflateProgress; // 從4rem到12rem
+                    countdownElement.style.fontSize = `${fontSize}rem`;
+                    
+                    // 如果倒數還沒結束，繼續動畫
+                    if (countdown > 0 || inflateProgress < 1) {
+                        requestAnimationFrame(inflateAnimation);
+                    }
+                }
+                
+                // 開始充氣動畫
+                inflateAnimation();
+            });
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95abdf34e521f201',t:'MTc1MTc3MTAzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
