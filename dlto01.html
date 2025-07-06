@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數位課堂QR Code檢核表產生器</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Print Styles for A4 Layout */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .print\:hidden {
+                display: none !important;
+            }
+            .learning-sheet {
+                display: block;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                width: auto;
+            }
+            .page-container {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 !important;
+                padding: 0.5mm 15mm !important; /* Ensured consistent padding for print */
+                box-shadow: none !important;
+                border: none !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 4px 20px; /* Ensured consistent gap for print */
+            }
+            .page-container:last-child {
+                page-break-after: auto;
+            }
+            .qr-code-item-container {
+                page-break-inside: avoid;
+                overflow: visible !important;
+            }
+            .col-span-2 {
+                grid-column: span 2 / span 2;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter">
+    <div id="root"></div>
+
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel Standalone for JSX in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- html2canvas and jsPDF CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script type="text/babel">
+        // Main App component
+        const App = () => {
+            // State for an array of QR code entries
+            // Each entry includes id, url, name, and imageUrl for the generated QR code
+            const [qrCodeEntries, setQrCodeEntries] = React.useState([
+                { id: 1, url: '', name: '', imageUrl: '' }
+            ]);
+            // State to manage loading status during QR code generation
+            const [isLoading, setIsLoading] = React.useState(false);
+            // State for displaying messages to the user (e.g., error messages or success messages)
+            const [message, setMessage] = React.useState('');
+            // Ref for the printable area, used to capture content for PDF generation or print
+            const printableAreaRef = React.useRef(null);
+
+            // useEffect to dynamically load html2canvas and jsPDF scripts (already loaded via CDN in HTML)
+            // This useEffect is now redundant as scripts are in head, but keeping it for consistency if it had other logic
+            React.useEffect(() => {
+                // No need to load scripts dynamically here as they are in the HTML head
+            }, []);
+
+            /**
+             * Adds a new QR code entry to the list.
+             * Generates a unique ID for the new entry.
+             */
+            const addQrCodeEntry = () => {
+                setQrCodeEntries(prevEntries => {
+                    // Calculate a new unique ID based on the maximum existing ID
+                    const newId = prevEntries.length > 0 ? Math.max(...prevEntries.map(e => e.id)) + 1 : 1;
+                    return [...prevEntries, { id: newId, url: '', name: '', imageUrl: '' }];
+                });
+                setMessage(''); // Clear any previous messages when adding a new entry
+            };
+
+            /**
+             * Removes a QR code entry from the list based on its ID.
+             * @param {number} id - The ID of the entry to remove.
+             */
+            const removeQrCodeEntry = (id) => {
+                setQrCodeEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+                setMessage(''); // Clear any previous messages when removing an entry
+            };
+
+            /**
+             * Handles changes in the input fields (URL or name) for a specific QR code entry.
+             * @param {number} id - The ID of the entry being updated.
+             * @param {string} field - The field name ('url' or 'name') that is being updated.
+             * @param {string} value - The new value for the field.
+             */
+            const handleEntryChange = (id, field, value) => {
+                setQrCodeEntries(prevEntries =>
+                    prevEntries.map(entry =>
+                        entry.id === id ? { ...entry, [field]: value } : entry
+                    )
+                );
+                setMessage(''); // Clear any previous messages on input change
+            };
+
+            /**
+             * Generates QR codes for all entries in the list.
+             * Iterates through each entry, constructs the QR code API URL, and updates the imageUrl.
+             * Includes a small delay to prevent overwhelming the external QR code API.
+             */
+            const generateAllQrCodes = async () => {
+                setMessage(''); // Clear previous messages
+                setIsLoading(true); // Set loading state to true
+                let hasEmptyUrl = false; // Flag to check if any URL is empty
+
+                // Use Promise.all to generate QR codes for all entries concurrently (with a small delay)
+                const updatedEntries = await Promise.all(qrCodeEntries.map(async (entry) => {
+                    if (entry.url.trim() === '') {
+                        hasEmptyUrl = true; // Mark if an empty URL is found
+                        return { ...entry, imageUrl: '' }; // Clear image if URL is empty
+                    }
+                    // Construct the QR Code API URL using a public service
+                    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(entry.url)}`;
+                    // Add a small delay to prevent overwhelming the QR code API
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    return { ...entry, imageUrl: apiUrl };
+                }));
+
+                setQrCodeEntries(updatedEntries); // Update the state with generated image URLs
+                setIsLoading(false); // Set loading state to false
+
+                // Display a message if any URL was empty
+                if (hasEmptyUrl) {
+                    setMessage('部分網址為空，請輸入有效的網址！');
+                }
+            };
+
+            /**
+             * Resets all QR code entries to a single default empty entry.
+             */
+            const resetEntries = () => {
+                setQrCodeEntries([
+                    { id: 1, url: '', name: '', imageUrl: '' }
+                ]);
+                setMessage(''); // Clear any messages
+            };
+
+            /**
+             * Triggers the browser's print functionality for previewing.
+             */
+            const handlePreviewPrint = () => {
+                window.print();
+            };
+
+            /**
+             * Generates and downloads the learning sheet as a PDF.
+             * Uses html2canvas to capture the content and jsPDF to create the PDF.
+             */
+            const handleDownloadPdf = async () => {
+                setMessage('正在生成 PDF，請稍候...');
+                setIsLoading(true); // Use global isLoading for PDF generation
+
+                // Ensure html2canvas and jsPDF are available globally
+                if (typeof window.html2canvas === 'undefined' || typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                    setMessage('PDF 生成所需的函式庫未載入。請稍後再試或檢查網路連線。');
+                    setIsLoading(false);
+                    console.error('html2canvas or jsPDF not loaded. Please ensure CDN scripts are included.');
+                    return;
+                }
+
+                const input = printableAreaRef.current;
+                if (!input) {
+                    setMessage('找不到學習單內容。');
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Temporarily hide elements that should not appear in the PDF
+                const printHiddenElements = document.querySelectorAll('.print\\:hidden');
+                printHiddenElements.forEach(el => el.style.display = 'none');
+
+                try {
+                    const { jsPDF } = window.jspdf; // Access jsPDF from the window object
+
+                    // A4 dimensions in points (1mm = 2.83465 points, 210mm x 297mm)
+                    const A4_WIDTH_MM = 210;
+                    const A4_HEIGHT_MM = 297;
+                    const A4_WIDTH_PT = A4_WIDTH_MM * 2.83465; // ~595.28 pt
+                    const A4_HEIGHT_PT = A4_HEIGHT_MM * 2.83465; // ~841.89 pt
+
+                    const doc = new jsPDF('p', 'pt', 'a4'); // 'p' for portrait, 'pt' for points, 'a4' for A4 size
+
+                    // Get all page containers within the printable area
+                    const pageContainers = input.querySelectorAll('.page-container');
+
+                    for (let i = 0; i < pageContainers.length; i++) {
+                        const pageContainer = pageContainers[i];
+
+                        // Capture the content of each page container as an image
+                        const canvas = await html2canvas(pageContainer, {
+                            scale: 3, // Increased scale for higher resolution capture
+                            useCORS: true, // Important for images loaded from external URLs (like QR codes)
+                            logging: false, // Disable logging for cleaner console output
+                            // Ensure full content capture by setting width/height and scroll positions
+                            windowWidth: pageContainer.scrollWidth,
+                            windowHeight: pageContainer.scrollHeight,
+                            x: 0,
+                            y: 0,
+                            width: pageContainer.scrollWidth,
+                            height: pageContainer.scrollHeight,
+                            scrollX: 0,
+                            scrollY: 0,
+                        });
+
+                        const imgData = canvas.toDataURL('image/png');
+                        const imgWidth = A4_WIDTH_PT; // Image width should match A4 width in points
+                        // Calculate image height to maintain aspect ratio, scaling to fit the A4 width
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                        // If it's not the first page, add a new page before adding content
+                        if (i > 0) {
+                            doc.addPage();
+                        }
+
+                        // Add the captured image to the PDF, maintaining its aspect ratio.
+                        // This will fit the width to A4, and let height adjust proportionally.
+                        doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                    }
+
+                    doc.save('QR_Code_學習單.pdf'); // Save the PDF with a default filename
+
+                    setMessage('PDF 已成功生成並下載！');
+                } catch (error) {
+                    console.error('PDF generation failed:', error);
+                    setMessage('PDF 生成失敗，請檢查控制台錯誤訊息。');
+                } finally {
+                    setIsLoading(false); // Reset loading state
+                    // Restore hidden elements after PDF generation
+                    printHiddenElements.forEach(el => el.style.display = '');
+                }
+            };
+
+            // Group QR code entries into pages, with a maximum of 6 entries per page.
+            const pages = [];
+            for (let i = 0; i < qrCodeEntries.length; i += 6) {
+                pages.push(qrCodeEntries.slice(i, i + 6));
+            }
+
+            // Tailwind CSS is assumed to be available
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center p-4 font-inter">
+                    {/* Input and Control Section - Hidden when printing */}
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl mb-6 print:hidden">
+                        <h1 className="text-3xl font-bold text-blue-800 mb-2 text-center">數位課堂QR Code檢核表產生器</h1>
+                        <p className="text-sm text-gray-600 mb-2 text-center">為每個連結生成專屬 QR Code，讓學生輕鬆掃描完成自學</p>
+                        <p className="text-xs text-gray-500 mb-6 text-center">設計與製作：🔍 FB｜呂舒婷</p>
+
+                        {/* Message display area for errors or notifications */}
+                        {message && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                                <span className="block sm:inline">{message}</span>
+                            </div>
+                        )}
+
+                        {/* Dynamic QR Code Entry Inputs */}
+                        {qrCodeEntries.map((entry, index) => (
+                            <div key={entry.id} className="flex items-center space-x-3 mb-4">
+                                {/* Label for each group (e.g., "第 1 組") - Larger font */}
+                                <label htmlFor={`url-input-${entry.id}`} className="flex-shrink-0 text-lg font-bold text-blue-700 w-16">
+                                    第 {index + 1} 組:
+                                </label>
+                                <input
+                                    type="text"
+                                    id={`url-input-${entry.id}`}
+                                    className="flex-grow px-3 py-2 border border-blue-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="例如: https://padlet.com/..."
+                                    value={entry.url}
+                                    onChange={(e) => handleEntryChange(entry.id, 'url', e.target.value)}
+                                />
+                                <div className="flex flex-col flex-grow"> {/* Wrapper for input and reminder */}
+                                    <input
+                                        type="text"
+                                        id={`qr-name-input-${entry.id}`}
+                                        className="px-3 py-2 border border-blue-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="名稱 (10字)" // Changed placeholder to include reminder and new limit
+                                        value={entry.name}
+                                        maxLength={10} // Set max length for input to 10
+                                        onChange={(e) => handleEntryChange(entry.id, 'name', e.target.value)}
+                                    />
+                                </div>
+                                {qrCodeEntries.length > 1 && (
+                                    <button
+                                        onClick={() => removeQrCodeEntry(entry.id)}
+                                        className="flex-shrink-0 p-2 text-red-500 hover:text-red-700 transition duration-300 ease-in-out rounded-full hover:bg-red-100 shadow-md hover:shadow-lg transform hover:scale-105"
+                                        title="移除此項目"
+                                    >
+                                        🗑️ {/* Replaced Trash2 icon */}
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+
+                        <div className="flex justify-start mb-6">
+                            <button
+                                onClick={addQrCodeEntry}
+                                className="flex items-center bg-blue-200 hover:bg-blue-300 text-blue-700 font-bold py-2 px-4 rounded-md shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
+                            >
+                                ➕ 新增欄位 {/* Replaced Plus icon */}
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-4">
+                            <button
+                                onClick={generateAllQrCodes}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        產生中...
+                                    </>
+                                ) : (
+                                    <>
+                                        🔗 產生 QR Code {/* Replaced icon */}
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                onClick={resetEntries}
+                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                            >
+                                🔄 重置 {/* Replaced RefreshCcw icon */}
+                            </button>
+                            <button
+                                onClick={handlePreviewPrint}
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                            >
+                                👁️ 預覽全部 {/* Replaced Eye icon */}
+                            </button>
+                            <button
+                                onClick={handleDownloadPdf}
+                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        下載中...
+                                    </>
+                                ) : (
+                                    <>
+                                        ⬇️ 下載 PDF {/* Replaced Download icon */}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Learning Sheet Preview (A4 Layout) */}
+                    <div
+                        ref={printableAreaRef}
+                        className="learning-sheet bg-white p-8 rounded-lg shadow-lg w-full overflow-auto border border-gray-300"
+                        style={{
+                            boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '0.5mm',
+                            padding: '0.5mm 0',
+                        }}
+                    >
+                        {/* Map through pages (each containing up to 6 QR codes) */}
+                        {pages.map((pageEntries, pageIndex) => (
+                            <div
+                                key={pageIndex}
+                                className="page-container bg-white p-8 rounded-lg shadow-lg"
+                                style={{
+                                    width: '210mm',
+                                    minHeight: '297mm',
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(2, 1fr)',
+                                    gap: '4px 20px',
+                                    padding: '0.5mm 15mm', /* Keep padding consistent for all pages */
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                {/* Header Section - Spans two columns */}
+                                <div className="text-center mb-0 col-span-2">
+                                    <h2 className="text-3xl font-bold text-blue-800 mb-0">數位課堂QR Code檢核表產生器</h2>
+                                    <p className="text-lg text-gray-700">透過數位小遊戲成為學習的高手</p>
+                                </div>
+
+                                {/* Student Info Section - Spans two columns */}
+                                <div className="flex flex-wrap justify-between items-baseline mb-0 col-span-2 text-base">
+                                    <div className="flex items-baseline mb-0 md:mb-0">
+                                        <span className="font-semibold text-gray-800">學校:</span>{' '}
+                                        <span className="inline-block ml-1 text-gray-700">＿＿</span>
+                                    </div>
+                                    <div className="flex items-baseline mb-0 md:mb-0">
+                                        <span className="font-semibold text-gray-800">班級:</span>{' '}
+                                        <span className="inline-block ml-1 text-gray-700">＿＿</span>
+                                    </div>
+                                    <div className="flex items-baseline">
+                                        <span className="font-semibold text-gray-800">姓名:</span>{' '}
+                                        <span className="inline-block ml-1 text-gray-700">＿＿＿＿</span>
+                                    </div>
+                                </div>
+
+                                {/* Dynamic QR Code Items - Arranged in a 2-column grid */}
+                                {pageEntries.map((entry, entryIndex) => (
+                                    <div key={entry.id} className="qr-code-item-container relative flex flex-col items-center justify-start border border-blue-300 p-4 rounded-md bg-blue-50 text-center shadow-sm">
+                                        {/* Number and Name on the same line */}
+                                        <div className="flex items-baseline absolute top-2 left-2">
+                                            <p className="text-4xl font-extrabold text-blue-700 mr-2 z-10">
+                                                {pageIndex * 6 + entryIndex + 1}.
+                                            </p>
+                                            <h3 className="text-lg font-semibold text-blue-800">
+                                                名稱: <span className="text-blue-700">{entry.name || `項目 ${pageIndex * 6 + entryIndex + 1}`}</span>
+                                            </h3>
+                                        </div>
+
+                                        {entry.imageUrl ? (
+                                            <img
+                                                src={entry.imageUrl}
+                                                alt={`Generated QR Code for ${entry.name || `項目 ${pageIndex * 6 + entryIndex + 1}`}`}
+                                                className="w-36 h-auto object-contain rounded-md shadow-md border border-blue-200 mt-12 mb-2"
+                                                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/144x144/FF0000/FFFFFF?text=QR+Code+載入失敗"; }}
+                                            />
+                                        ) : (
+                                            <div className="w-36 h-36 bg-blue-100 rounded-md flex items-center justify-center text-blue-500 text-xs text-center p-1 mt-12 mb-2 border border-blue-200">
+                                                請輸入網址並點擊產生
+                                            </div>
+                                        )}
+                                        {/* Removed "掃描上方QR Code以進行挑戰" */}
+
+                                        {/* Challenge Details and Checklist for each QR Code */}
+                                        <div className="text-sm w-full text-left mt-2">
+                                            <div className="flex justify-between items-baseline mb-1">
+                                                <span className="font-semibold text-gray-800">時間:</span>{' '}
+                                                <span className="inline-block mx-1 text-gray-700">＿＿</span>
+                                                <span className="font-semibold text-gray-800 ml-2">答題數:</span>{' '}
+                                                <span className="inline-block mx-1 text-gray-700">＿＿</span>
+                                            </div>
+
+                                            <div className="mt-1 w-full text-left">
+                                                <h3 className="text-base font-semibold text-gray-800 mb-0">檢核:</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {/* Footer for each page - Spans two columns */}
+                                <div className="text-center text-sm text-gray-500 mt-auto pt-0 border-t border-gray-200 col-span-2">
+                                    {/* Removed the entire paragraph containing the generator info */}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
