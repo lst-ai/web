@@ -1,0 +1,1386 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歡樂泡泡紙</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 20px 20px, rgba(255, 255, 255, 0.8), rgba(220, 240, 255, 0.5));
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5), 
+                        inset -2px -2px 5px rgba(0, 0, 0, 0.1),
+                        2px 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .bubble.target {
+            background: radial-gradient(circle at 20px 20px, rgba(255, 255, 255, 0.8), rgba(255, 220, 220, 0.7));
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5), 
+                        inset -2px -2px 5px rgba(0, 0, 0, 0.1),
+                        0 0 15px rgba(255, 100, 100, 0.7);
+        }
+        
+        .bubble.popped {
+            background: radial-gradient(circle at center, rgba(200, 200, 200, 0.3), rgba(180, 180, 180, 0.2));
+            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+            transform: scale(0.85);
+        }
+        
+        .bubble::before {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 7px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            top: 15px;
+            left: 15px;
+            transform: rotate(35deg);
+        }
+        
+        .bubble.popped::before {
+            opacity: 0;
+        }
+        
+        .bubble.creative {
+            transition: all 0.3s ease;
+        }
+        
+        .bubble.creative:hover {
+            transform: scale(1.05);
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5), 
+                        inset -2px -2px 5px rgba(0, 0, 0, 0.1),
+                        0 0 15px rgba(100, 100, 255, 0.4);
+        }
+        
+        .bubble.creative.popped {
+            transform: scale(0.85);
+            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .bubble.target {
+            animation: pulse 1s infinite;
+        }
+        
+        .bubble.target.popped {
+            animation: none;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            transition: width 0.1s linear;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-50px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .sound-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+        
+        .mode-card {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .mode-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .floating-bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40%, rgba(255, 255, 255, 0.8), rgba(220, 240, 255, 0.5));
+            box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5), 
+                        inset -2px -2px 5px rgba(0, 0, 0, 0.1),
+                        2px 2px 10px rgba(0, 0, 0, 0.1);
+            animation: float-animation 15s infinite linear;
+            opacity: 0.7;
+        }
+        
+        @keyframes float-animation {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(10px, -15px) rotate(90deg);
+            }
+            50% {
+                transform: translate(20px, 0) rotate(180deg);
+            }
+            75% {
+                transform: translate(10px, 15px) rotate(270deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+        
+        .note-indicator {
+            position: absolute;
+            font-size: 12px;
+            color: #3b82f6;
+            font-weight: bold;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+        
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .difficulty-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .difficulty-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Grid size adjustments for different difficulties */
+        .grid-5x5 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        
+        .grid-6x6 {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        
+        .grid-7x7 {
+            grid-template-columns: repeat(7, 1fr);
+        }
+        
+        /* Smaller bubbles for larger grids */
+        .grid-6x6 .bubble {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .grid-7x7 .bubble {
+            width: 42px;
+            height: 42px;
+        }
+        
+        .grid-7x7 .bubble::before {
+            width: 12px;
+            height: 6px;
+            top: 12px;
+            left: 12px;
+        }
+        
+        .grid-6x6 .bubble::before {
+            width: 13px;
+            height: 6px;
+            top: 13px;
+            left: 13px;
+        }
+        
+        .grid-6x6 .note-indicator,
+        .grid-7x7 .note-indicator {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+    <button id="sound-toggle" class="sound-toggle bg-white bg-opacity-80 hover:bg-opacity-100 text-blue-600 font-bold py-2 px-4 rounded-full shadow-md transition-all flex items-center">
+        <svg id="sound-on-icon" class="w-6 h-6 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"></path>
+        </svg>
+        <svg id="sound-off-icon" class="w-6 h-6 mr-1 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+        <span id="sound-text">音效開啟</span>
+    </button>
+
+    <!-- Mode Selection Screen -->
+    <div id="mode-selection" class="flex flex-col items-center justify-center w-full h-full">
+        <div id="floating-bubbles-container"></div>
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-700 mb-2">歡樂泡泡紙</h1>
+            <p class="text-lg text-blue-600">選擇遊戲模式</p>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-6 max-w-3xl">
+            <div class="mode-card bg-white bg-opacity-90 rounded-2xl shadow-xl p-6 w-64 cursor-pointer" id="challenge-mode-btn">
+                <div class="bg-blue-100 rounded-xl p-4 mb-4 flex justify-center">
+                    <svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-blue-700 mb-2">挑戰模式</h2>
+                <p class="text-gray-600">在限定時間內完成指定泡泡位置，挑戰高分！</p>
+            </div>
+            
+            <div class="mode-card bg-white bg-opacity-90 rounded-2xl shadow-xl p-6 w-64 cursor-pointer" id="creative-mode-btn">
+                <div class="bg-purple-100 rounded-xl p-4 mb-4 flex justify-center">
+                    <svg class="w-16 h-16 text-purple-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-purple-700 mb-2">創作模式</h2>
+                <p class="text-gray-600">自由按壓泡泡紙，創作屬於你的音樂！</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Mode Screen -->
+    <div id="challenge-mode" class="w-full max-w-lg hidden">
+        <button id="challenge-back-btn" class="back-button bg-white bg-opacity-80 hover:bg-opacity-100 text-blue-600 font-bold py-2 px-4 rounded-full shadow-md transition-all flex items-center">
+            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+            </svg>
+            返回
+        </button>
+        
+        <div class="bg-white bg-opacity-90 rounded-2xl shadow-xl p-6">
+            <h1 class="text-3xl font-bold text-center text-blue-600 mb-2">挑戰模式</h1>
+            
+            <div class="difficulty-selector">
+                <div class="difficulty-btn bg-green-100 text-green-700 active" data-difficulty="easy">簡單</div>
+                <div class="difficulty-btn bg-blue-100 text-blue-700" data-difficulty="normal">普通</div>
+                <div class="difficulty-btn bg-red-100 text-red-700" data-difficulty="hard">困難</div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-lg font-medium">
+                    時間: <span id="challenge-timer" class="text-red-500 font-bold">30</span> 秒
+                </div>
+                <div class="text-lg font-medium">
+                    得分: <span id="challenge-score" class="text-green-500 font-bold">0</span>
+                </div>
+            </div>
+            
+            <div class="progress-bar mb-4">
+                <div id="challenge-progress-fill" class="progress-fill" style="width: 100%"></div>
+            </div>
+            
+            <div id="challenge-game-container" class="grid grid-cols-5 gap-3 mb-4 grid-5x5">
+                <!-- Bubbles will be generated here -->
+            </div>
+            
+            <div class="flex justify-center gap-4">
+                <button id="challenge-start-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all">
+                    開始遊戲
+                </button>
+                <button id="challenge-reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all" disabled>
+                    重新開始
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Creative Mode Screen -->
+    <div id="creative-mode" class="w-full max-w-lg hidden">
+        <button id="creative-back-btn" class="back-button bg-white bg-opacity-80 hover:bg-opacity-100 text-purple-600 font-bold py-2 px-4 rounded-full shadow-md transition-all flex items-center">
+            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+            </svg>
+            返回
+        </button>
+        
+        <div class="bg-white bg-opacity-90 rounded-2xl shadow-xl p-6">
+            <h1 class="text-3xl font-bold text-center text-purple-600 mb-2">創作模式</h1>
+            
+            <div class="difficulty-selector">
+                <div class="difficulty-btn bg-green-100 text-green-700 active" data-difficulty="easy">簡單</div>
+                <div class="difficulty-btn bg-blue-100 text-blue-700" data-difficulty="normal">普通</div>
+                <div class="difficulty-btn bg-red-100 text-red-700" data-difficulty="hard">困難</div>
+            </div>
+            
+            <p class="text-center text-gray-600 mb-4">點擊泡泡創作音樂！每個泡泡都有不同的音符。</p>
+            
+            <div id="creative-game-container" class="grid grid-cols-5 gap-3 mb-4 grid-5x5">
+                <!-- Bubbles will be generated here -->
+            </div>
+            
+            <div class="flex justify-center gap-4">
+                <button id="creative-reset-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all">
+                    重置泡泡
+                </button>
+                <button id="creative-play-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all">
+                    自動演奏
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full text-center shadow-2xl transform transition-all">
+            <h2 id="result-title" class="text-3xl font-bold mb-4">遊戲結束</h2>
+            <p class="text-xl mb-2">你的得分: <span id="final-score" class="text-green-500 font-bold">0</span></p>
+            <p id="result-message" class="text-lg mb-6">再接再厲！</p>
+            <button id="play-again-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all">
+                再玩一次
+            </button>
+        </div>
+    </div>
+    
+    <div id="confetti-container"></div>
+    
+    <script>
+        // DOM Elements
+        const modeSelection = document.getElementById('mode-selection');
+        const challengeMode = document.getElementById('challenge-mode');
+        const creativeMode = document.getElementById('creative-mode');
+        const challengeModeBtn = document.getElementById('challenge-mode-btn');
+        const creativeModeBtn = document.getElementById('creative-mode-btn');
+        const challengeBackBtn = document.getElementById('challenge-back-btn');
+        const creativeBackBtn = document.getElementById('creative-back-btn');
+        const floatingBubblesContainer = document.getElementById('floating-bubbles-container');
+        
+        // Challenge Mode Elements
+        const challengeGameContainer = document.getElementById('challenge-game-container');
+        const challengeStartBtn = document.getElementById('challenge-start-btn');
+        const challengeResetBtn = document.getElementById('challenge-reset-btn');
+        const challengeTimerDisplay = document.getElementById('challenge-timer');
+        const challengeScoreDisplay = document.getElementById('challenge-score');
+        const challengeProgressFill = document.getElementById('challenge-progress-fill');
+        const challengeDifficultyBtns = challengeMode.querySelectorAll('.difficulty-btn');
+        
+        // Creative Mode Elements
+        const creativeGameContainer = document.getElementById('creative-game-container');
+        const creativeResetBtn = document.getElementById('creative-reset-btn');
+        const creativePlayBtn = document.getElementById('creative-play-btn');
+        const creativeDifficultyBtns = creativeMode.querySelectorAll('.difficulty-btn');
+        
+        // Game Over Modal Elements
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        
+        // Sound Toggle Elements
+        const soundToggle = document.getElementById('sound-toggle');
+        const soundOnIcon = document.getElementById('sound-on-icon');
+        const soundOffIcon = document.getElementById('sound-off-icon');
+        const soundText = document.getElementById('sound-text');
+        
+        // Confetti Container
+        const confettiContainer = document.getElementById('confetti-container');
+        
+        // Game Variables
+        let challengeBubbles = [];
+        let creativeBubbles = [];
+        let targetBubbles = [];
+        let score = 0; // This will now persist across game sessions
+        let timeLeft = 30; // Default for easy mode
+        let maxTime = 30; // Default for easy mode
+        let gameInterval;
+        let gameActive = false;
+        let totalTargets = 0;
+        let targetsPopped = 0;
+        let soundEnabled = true;
+        let autoPlayInterval;
+        let roundsCompleted = 0; // Track how many rounds have been completed
+        let availableBubblesCount = 0; // Track how many bubbles are still available
+        
+        // Difficulty settings
+        const challengeDifficulties = {
+            easy: {
+                time: 30,
+                targetCount: { min: 2, max: 4 },
+                gridSize: 5,
+                scoreMultiplier: 1
+            },
+            normal: {
+                time: 20,
+                targetCount: { min: 3, max: 5 },
+                gridSize: 5,
+                scoreMultiplier: 1.5
+            },
+            hard: {
+                time: 10,
+                targetCount: { min: 4, max: 6 },
+                gridSize: 5,
+                scoreMultiplier: 2
+            }
+        };
+        
+        const creativeDifficulties = {
+            easy: {
+                gridSize: 5,
+                noteRange: 'pentatonic-basic' // C4, D4, E4, G4, A4
+            },
+            normal: {
+                gridSize: 6,
+                noteRange: 'pentatonic-extended' // C4, D4, E4, G4, A4, C5, D5, E5
+            },
+            hard: {
+                gridSize: 7,
+                noteRange: 'full-scale' // Full C major scale across two octaves
+            }
+        };
+        
+        // Current difficulty settings
+        let currentChallengeDifficulty = 'easy';
+        let currentCreativeDifficulty = 'easy';
+        
+        // Audio context and sounds
+        let audioContext;
+        let popSounds = [];
+        let successSound;
+        let gameOverSound;
+        let victorySound;
+        let musicNotes = {
+            'pentatonic-basic': [],
+            'pentatonic-extended': [],
+            'full-scale': []
+        };
+        
+        // Create floating bubbles for the mode selection screen
+        function createFloatingBubbles() {
+            floatingBubblesContainer.innerHTML = '';
+            
+            for (let i = 0; i < 15; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'floating-bubble';
+                
+                // Random size
+                const size = 30 + Math.random() * 60;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                
+                // Random position
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation duration and delay
+                const duration = 10 + Math.random() * 20;
+                const delay = Math.random() * 10;
+                bubble.style.animationDuration = `${duration}s`;
+                bubble.style.animationDelay = `-${delay}s`;
+                
+                // Random color tint
+                const hue = 180 + Math.random() * 60;
+                bubble.style.background = `radial-gradient(circle at 40%, rgba(255, 255, 255, 0.8), hsla(${hue}, 70%, 85%, 0.5))`;
+                
+                floatingBubblesContainer.appendChild(bubble);
+            }
+        }
+        
+        // Initialize audio
+        function initAudio() {
+            try {
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create different pop sounds
+                for (let i = 0; i < 3; i++) {
+                    createPopSound(300 + i * 100).then(sound => {
+                        popSounds.push(sound);
+                    });
+                }
+                
+                // Create success sound (when all targets are popped)
+                createSuccessSound().then(sound => {
+                    successSound = sound;
+                });
+                
+                // Create game over sound
+                createGameOverSound().then(sound => {
+                    gameOverSound = sound;
+                });
+                
+                // Create victory sound
+                createVictorySound().then(sound => {
+                    victorySound = sound;
+                });
+                
+                // Create music notes for creative mode
+                
+                // Pentatonic basic (C4, D4, E4, G4, A4)
+                const pentatonicBasicNotes = [
+                    261.63, // C4
+                    293.66, // D4
+                    329.63, // E4
+                    392.00, // G4
+                    440.00  // A4
+                ];
+                
+                // Pentatonic extended (adds C5, D5, E5)
+                const pentatonicExtendedNotes = [
+                    ...pentatonicBasicNotes,
+                    523.25, // C5
+                    587.33, // D5
+                    659.25  // E5
+                ];
+                
+                // Full C major scale across two octaves
+                const fullScaleNotes = [
+                    261.63, // C4
+                    293.66, // D4
+                    329.63, // E4
+                    349.23, // F4
+                    392.00, // G4
+                    440.00, // A4
+                    493.88, // B4
+                    523.25, // C5
+                    587.33, // D5
+                    659.25, // E5
+                    698.46, // F5
+                    783.99, // G5
+                    880.00, // A5
+                    987.77  // B5
+                ];
+                
+                // Create all note sets
+                pentatonicBasicNotes.forEach(frequency => {
+                    createMusicNote(frequency).then(note => {
+                        musicNotes['pentatonic-basic'].push(note);
+                    });
+                });
+                
+                pentatonicExtendedNotes.forEach(frequency => {
+                    createMusicNote(frequency).then(note => {
+                        musicNotes['pentatonic-extended'].push(note);
+                    });
+                });
+                
+                fullScaleNotes.forEach(frequency => {
+                    createMusicNote(frequency).then(note => {
+                        musicNotes['full-scale'].push(note);
+                    });
+                });
+                
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser");
+                soundEnabled = false;
+                updateSoundToggle();
+            }
+        }
+        
+        // Create a pop sound
+        async function createPopSound(frequency) {
+            const attackTime = 0.001;
+            const decayTime = 0.1;
+            const sustainLevel = 0.3;
+            const releaseTime = 0.2;
+            
+            return {
+                play: function() {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = frequency;
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    const now = audioContext.currentTime;
+                    
+                    // ADSR envelope
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(1, now + attackTime);
+                    gainNode.gain.linearRampToValueAtTime(sustainLevel, now + attackTime + decayTime);
+                    gainNode.gain.linearRampToValueAtTime(0, now + attackTime + decayTime + releaseTime);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + attackTime + decayTime + releaseTime);
+                }
+            };
+        }
+        
+        // Create a music note for creative mode
+        async function createMusicNote(frequency) {
+            const attackTime = 0.01;
+            const decayTime = 0.1;
+            const sustainLevel = 0.5;
+            const releaseTime = 0.8;
+            
+            return {
+                frequency: frequency,
+                play: function() {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = frequency;
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    const now = audioContext.currentTime;
+                    
+                    // ADSR envelope
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.7, now + attackTime);
+                    gainNode.gain.linearRampToValueAtTime(sustainLevel, now + attackTime + decayTime);
+                    gainNode.gain.linearRampToValueAtTime(0, now + attackTime + decayTime + releaseTime);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + attackTime + decayTime + releaseTime);
+                }
+            };
+        }
+        
+        // Create success sound
+        async function createSuccessSound() {
+            return {
+                play: function() {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const now = audioContext.currentTime;
+                    
+                    // Play a sequence of notes
+                    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                    const duration = 0.15;
+                    
+                    notes.forEach((freq, i) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = freq;
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        gainNode.gain.setValueAtTime(0, now + i * duration);
+                        gainNode.gain.linearRampToValueAtTime(0.3, now + i * duration + 0.01);
+                        gainNode.gain.linearRampToValueAtTime(0, now + (i + 1) * duration);
+                        
+                        oscillator.start(now + i * duration);
+                        oscillator.stop(now + (i + 1) * duration);
+                    });
+                }
+            };
+        }
+        
+        // Create game over sound
+        async function createGameOverSound() {
+            return {
+                play: function() {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const now = audioContext.currentTime;
+                    
+                    // Play a descending sequence
+                    const notes = [392.00, 349.23, 293.66]; // G4, F4, D4
+                    const duration = 0.2;
+                    
+                    notes.forEach((freq, i) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = freq;
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        gainNode.gain.setValueAtTime(0, now + i * duration);
+                        gainNode.gain.linearRampToValueAtTime(0.3, now + i * duration + 0.01);
+                        gainNode.gain.linearRampToValueAtTime(0, now + (i + 1) * duration);
+                        
+                        oscillator.start(now + i * duration);
+                        oscillator.stop(now + (i + 1) * duration);
+                    });
+                }
+            };
+        }
+        
+        // Create victory sound
+        async function createVictorySound() {
+            return {
+                play: function() {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const now = audioContext.currentTime;
+                    
+                    // Play a fanfare
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    const duration = 0.15;
+                    
+                    notes.forEach((freq, i) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = freq;
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        gainNode.gain.setValueAtTime(0, now + i * duration);
+                        gainNode.gain.linearRampToValueAtTime(0.3, now + i * duration + 0.01);
+                        gainNode.gain.linearRampToValueAtTime(0, now + (i + 1) * duration);
+                        
+                        oscillator.start(now + i * duration);
+                        oscillator.stop(now + (i + 1) * duration + 0.1);
+                    });
+                }
+            };
+        }
+        
+        // Toggle sound
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            updateSoundToggle();
+            
+            // Resume audio context if it was suspended
+            if (soundEnabled && audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+        
+        // Update sound toggle button
+        function updateSoundToggle() {
+            if (soundEnabled) {
+                soundOnIcon.classList.remove('hidden');
+                soundOffIcon.classList.add('hidden');
+                soundText.textContent = '音效開啟';
+            } else {
+                soundOnIcon.classList.add('hidden');
+                soundOffIcon.classList.remove('hidden');
+                soundText.textContent = '音效關閉';
+            }
+        }
+        
+        // Set challenge difficulty
+        function setChallengeModeDifficulty(difficulty) {
+            currentChallengeDifficulty = difficulty;
+            
+            // Update UI
+            challengeDifficultyBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.difficulty === difficulty) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update game settings
+            const settings = challengeDifficulties[difficulty];
+            timeLeft = settings.time;
+            maxTime = settings.time;
+            challengeTimerDisplay.textContent = timeLeft;
+            
+            // Update grid size if needed
+            challengeGameContainer.className = `grid gap-3 mb-4 grid-${settings.gridSize}x${settings.gridSize}`;
+            
+            // Reset game if it's active
+            if (gameActive) {
+                resetChallengeGame();
+            } else {
+                createChallengeBubbles();
+            }
+        }
+        
+        // Set creative difficulty
+        function setCreativeModeDifficulty(difficulty) {
+            currentCreativeDifficulty = difficulty;
+            
+            // Update UI
+            creativeDifficultyBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.difficulty === difficulty) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update grid size
+            const settings = creativeDifficulties[difficulty];
+            creativeGameContainer.className = `grid gap-3 mb-4 grid-${settings.gridSize}x${settings.gridSize}`;
+            
+            // Recreate bubbles
+            createCreativeBubbles();
+        }
+        
+        // Create bubbles for challenge mode
+        function createChallengeBubbles() {
+            challengeGameContainer.innerHTML = '';
+            challengeBubbles = [];
+            
+            const settings = challengeDifficulties[currentChallengeDifficulty];
+            const gridSize = settings.gridSize;
+            const totalBubbles = gridSize * gridSize;
+            
+            for (let i = 0; i < totalBubbles; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.dataset.index = i;
+                
+                bubble.addEventListener('click', () => {
+                    if (!gameActive || bubble.classList.contains('popped')) return;
+                    
+                    bubble.classList.add('popped');
+                    
+                    // Play pop sound
+                    if (popSounds.length > 0) {
+                        // Randomly select one of the pop sounds
+                        const randomSound = popSounds[Math.floor(Math.random() * popSounds.length)];
+                        randomSound.play();
+                    }
+                    
+                    // Visual feedback for popping
+                    createPopEffect(bubble);
+                    
+                    if (bubble.classList.contains('target')) {
+                        // Score based on difficulty
+                        const points = 10 * settings.scoreMultiplier;
+                        score += points;
+                        targetsPopped++;
+                        challengeScoreDisplay.textContent = score;
+                        
+                        // Check if all targets are popped
+                        if (targetsPopped === totalTargets) {
+                            // Play success sound
+                            if (successSound) {
+                                successSound.play();
+                            }
+                            
+                            // Check if there are enough bubbles left for a new round
+                            const availableBubbles = challengeBubbles.filter(bubble => !bubble.classList.contains('popped'));
+                            availableBubblesCount = availableBubbles.length;
+                            
+                            // If there are enough bubbles for at least the minimum target count, set new targets
+                            if (availableBubbles.length >= settings.targetCount.min) {
+                                setNewTargets();
+                                roundsCompleted++;
+                            } else {
+                                // End the game if there aren't enough bubbles left
+                                endChallengeGame(true); // true indicates successful completion
+                            }
+                        }
+                    } else {
+                        // Penalty for popping non-target bubbles
+                        const penalty = 5 * settings.scoreMultiplier;
+                        score = Math.max(0, score - penalty);
+                        challengeScoreDisplay.textContent = score;
+                        
+                        // Check if there are enough bubbles left for the current targets
+                        const availableBubbles = challengeBubbles.filter(bubble => !bubble.classList.contains('popped'));
+                        availableBubblesCount = availableBubbles.length;
+                        
+                        // If there aren't enough unpoppable bubbles left to complete the current targets, end the game
+                        const remainingTargets = totalTargets - targetsPopped;
+                        if (availableBubbles.length < remainingTargets) {
+                            endChallengeGame(false); // false indicates unsuccessful completion
+                        }
+                    }
+                });
+                
+                challengeGameContainer.appendChild(bubble);
+                challengeBubbles.push(bubble);
+            }
+        }
+        
+        // Create bubbles for creative mode
+        function createCreativeBubbles() {
+            creativeGameContainer.innerHTML = '';
+            creativeBubbles = [];
+            
+            const settings = creativeDifficulties[currentCreativeDifficulty];
+            const gridSize = settings.gridSize;
+            const totalBubbles = gridSize * gridSize;
+            const noteSet = musicNotes[settings.noteRange];
+            
+            for (let i = 0; i < totalBubbles; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble creative';
+                bubble.dataset.index = i;
+                
+                // Assign a music note to each bubble
+                const noteIndex = i % noteSet.length;
+                bubble.dataset.noteIndex = noteIndex;
+                
+                // Add note indicator
+                const noteIndicator = document.createElement('div');
+                noteIndicator.className = 'note-indicator';
+                noteIndicator.textContent = getNoteNameFromFrequency(noteSet[noteIndex].frequency);
+                bubble.appendChild(noteIndicator);
+                
+                // Color the bubble based on the note
+                const hue = (noteIndex * 36) % 360;
+                bubble.style.background = `radial-gradient(circle at 20px 20px, rgba(255, 255, 255, 0.8), hsla(${hue}, 70%, 85%, 0.5))`;
+                
+                bubble.addEventListener('click', () => {
+                    if (bubble.classList.contains('popped')) return;
+                    
+                    bubble.classList.add('popped');
+                    
+                    // Play the assigned music note
+                    if (noteSet.length > 0 && noteIndex < noteSet.length) {
+                        noteSet[noteIndex].play();
+                    }
+                    
+                    // Visual feedback for popping
+                    createPopEffect(bubble);
+                    
+                    // Automatically reset after a delay
+                    setTimeout(() => {
+                        bubble.classList.remove('popped');
+                    }, 2000);
+                });
+                
+                creativeGameContainer.appendChild(bubble);
+                creativeBubbles.push(bubble);
+            }
+        }
+        
+        // Auto play creative mode
+        function autoPlayCreative() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                creativePlayBtn.textContent = '自動演奏';
+                return;
+            }
+            
+            creativePlayBtn.textContent = '停止演奏';
+            
+            const settings = creativeDifficulties[currentCreativeDifficulty];
+            const noteSet = musicNotes[settings.noteRange];
+            
+            // Play a random sequence
+            let index = 0;
+            autoPlayInterval = setInterval(() => {
+                // Find a random bubble that isn't currently popped
+                const availableBubbles = creativeBubbles.filter(bubble => !bubble.classList.contains('popped'));
+                
+                if (availableBubbles.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * availableBubbles.length);
+                    const bubble = availableBubbles[randomIndex];
+                    
+                    // Simulate a click
+                    bubble.click();
+                }
+                
+                index++;
+                
+                // Stop after playing a sequence
+                if (index > 20) {
+                    clearInterval(autoPlayInterval);
+                    autoPlayInterval = null;
+                    creativePlayBtn.textContent = '自動演奏';
+                }
+            }, 300);
+        }
+        
+        // Get note name from frequency
+        function getNoteNameFromFrequency(frequency) {
+            // C major scale note frequencies (C4 to B5)
+            const noteFrequencies = {
+                'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+                'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00, 'B5': 987.77
+            };
+            
+            // Find the closest note
+            let closestNote = '';
+            let minDifference = Infinity;
+            
+            for (const [note, freq] of Object.entries(noteFrequencies)) {
+                const difference = Math.abs(frequency - freq);
+                if (difference < minDifference) {
+                    minDifference = difference;
+                    closestNote = note;
+                }
+            }
+            
+            return closestNote;
+        }
+        
+        function createPopEffect(bubble) {
+            const rect = bubble.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Create small particles
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute rounded-full';
+                particle.style.width = '4px';
+                particle.style.height = '4px';
+                particle.style.backgroundColor = `hsl(${Math.random() * 60 + 190}, 80%, 70%)`;
+                particle.style.left = `${centerX}px`;
+                particle.style.top = `${centerY}px`;
+                particle.style.zIndex = '20';
+                
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 3;
+                const distance = 20 + Math.random() * 30;
+                
+                document.body.appendChild(particle);
+                
+                // Animate particles
+                const startTime = Date.now();
+                const duration = 500 + Math.random() * 500;
+                
+                function animateParticle() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    const x = centerX + Math.cos(angle) * distance * progress;
+                    const y = centerY + Math.sin(angle) * distance * progress;
+                    
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+                    particle.style.opacity = 1 - progress;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateParticle);
+                    } else {
+                        particle.remove();
+                    }
+                }
+                
+                requestAnimationFrame(animateParticle);
+            }
+        }
+        
+        function setNewTargets() {
+            // Clear previous targets
+            targetBubbles.forEach(bubble => {
+                if (bubble && !bubble.classList.contains('popped')) {
+                    bubble.classList.remove('target');
+                }
+            });
+            
+            targetBubbles = [];
+            
+            // Set new targets (only on bubbles that aren't popped yet)
+            const availableBubbles = challengeBubbles.filter(bubble => !bubble.classList.contains('popped'));
+            
+            const settings = challengeDifficulties[currentChallengeDifficulty];
+            const minTargets = settings.targetCount.min;
+            const maxTargets = settings.targetCount.max;
+            
+            if (availableBubbles.length < minTargets) {
+                // If less than min bubbles are available, game is effectively over
+                endChallengeGame(true);
+                return;
+            }
+            
+            // Randomly select bubbles as targets
+            const numTargets = Math.min(Math.floor(Math.random() * (maxTargets - minTargets + 1)) + minTargets, availableBubbles.length);
+            totalTargets = numTargets;
+            targetsPopped = 0;
+            
+            const shuffled = [...availableBubbles].sort(() => 0.5 - Math.random());
+            targetBubbles = shuffled.slice(0, numTargets);
+            
+            targetBubbles.forEach(bubble => {
+                bubble.classList.add('target');
+            });
+        }
+        
+        function startChallengeGame() {
+            // Initialize audio context on first interaction
+            if (!audioContext) {
+                initAudio();
+            } else if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            createChallengeBubbles();
+            // Don't reset score here to allow accumulation
+            // score = 0;
+            
+            const settings = challengeDifficulties[currentChallengeDifficulty];
+            timeLeft = settings.time;
+            maxTime = settings.time;
+            
+            gameActive = true;
+            roundsCompleted = 0;
+            
+            challengeScoreDisplay.textContent = score;
+            challengeTimerDisplay.textContent = timeLeft;
+            challengeProgressFill.style.width = '100%';
+            
+            challengeStartBtn.disabled = true;
+            challengeResetBtn.disabled = false;
+            
+            setNewTargets();
+            
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                challengeTimerDisplay.textContent = timeLeft;
+                challengeProgressFill.style.width = `${(timeLeft / maxTime) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    endChallengeGame(false);
+                }
+            }, 1000);
+        }
+        
+        function endChallengeGame(successful = false) {
+            clearInterval(gameInterval);
+            gameActive = false;
+            
+            finalScoreDisplay.textContent = score;
+            
+            // Score thresholds based on difficulty
+            let highScoreThreshold, mediumScoreThreshold;
+            
+            switch (currentChallengeDifficulty) {
+                case 'easy':
+                    highScoreThreshold = 100;
+                    mediumScoreThreshold = 50;
+                    break;
+                case 'normal':
+                    highScoreThreshold = 150;
+                    mediumScoreThreshold = 75;
+                    break;
+                case 'hard':
+                    highScoreThreshold = 200;
+                    mediumScoreThreshold = 100;
+                    break;
+            }
+            
+            if (successful) {
+                // If the game ended because all bubbles were successfully used
+                resultTitle.textContent = '完成挑戰！';
+                resultMessage.textContent = `你成功完成了 ${roundsCompleted} 輪挑戰！`;
+                createConfetti();
+                
+                // Play victory sound
+                if (victorySound) {
+                    victorySound.play();
+                }
+            } else if (score >= highScoreThreshold) {
+                resultTitle.textContent = '太棒了！';
+                resultMessage.textContent = '你是泡泡紙高手！';
+                createConfetti();
+                
+                // Play victory sound
+                if (victorySound) {
+                    victorySound.play();
+                }
+            } else if (score >= mediumScoreThreshold) {
+                resultTitle.textContent = '做得好！';
+                resultMessage.textContent = '繼續練習，你會更好！';
+                
+                // Play game over sound
+                if (gameOverSound) {
+                    gameOverSound.play();
+                }
+            } else {
+                resultTitle.textContent = '遊戲結束';
+                resultMessage.textContent = '再接再厲！';
+                
+                // Play game over sound
+                if (gameOverSound) {
+                    gameOverSound.play();
+                }
+            }
+            
+            gameOverModal.classList.remove('hidden');
+        }
+        
+        function resetChallengeGame() {
+            clearInterval(gameInterval);
+            gameActive = false;
+            challengeStartBtn.disabled = false;
+            challengeResetBtn.disabled = true;
+            
+            // Reset score only when explicitly requested
+            if (event && event.target.id === 'challenge-reset-btn') {
+                score = 0;
+            }
+            
+            const settings = challengeDifficulties[currentChallengeDifficulty];
+            timeLeft = settings.time;
+            maxTime = settings.time;
+            
+            challengeScoreDisplay.textContent = score;
+            challengeTimerDisplay.textContent = timeLeft;
+            challengeProgressFill.style.width = '100%';
+            
+            createChallengeBubbles();
+        }
+        
+        function resetCreativeGame() {
+            creativeBubbles.forEach(bubble => {
+                bubble.classList.remove('popped');
+            });
+            
+            // Stop auto play if active
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                creativePlayBtn.textContent = '自動演奏';
+            }
+        }
+        
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 80%, 60%)`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                
+                // Random shape
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                } else {
+                    confetti.style.width = '8px';
+                    confetti.style.height = '8px';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                }
+                
+                confettiContainer.appendChild(confetti);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        // Show mode selection screen
+        function showModeSelection() {
+            modeSelection.classList.remove('hidden');
+            challengeMode.classList.add('hidden');
+            creativeMode.classList.add('hidden');
+            
+            // Reset games when returning to mode selection
+            if (gameActive) {
+                resetChallengeGame();
+            }
+            resetCreativeGame();
+        }
+        
+        // Show challenge mode screen
+        function showChallengeMode() {
+            modeSelection.classList.add('hidden');
+            challengeMode.classList.remove('hidden');
+            creativeMode.classList.add('hidden');
+            
+            // Initialize challenge mode
+            setChallengeModeDifficulty(currentChallengeDifficulty);
+        }
+        
+        // Show creative mode screen
+        function showCreativeMode() {
+            modeSelection.classList.add('hidden');
+            challengeMode.classList.add('hidden');
+            creativeMode.classList.remove('hidden');
+            
+            // Initialize creative mode
+            setCreativeModeDifficulty(currentCreativeDifficulty);
+        }
+        
+        // Event Listeners
+        challengeModeBtn.addEventListener('click', showChallengeMode);
+        creativeModeBtn.addEventListener('click', showCreativeMode);
+        challengeBackBtn.addEventListener('click', showModeSelection);
+        creativeBackBtn.addEventListener('click', showModeSelection);
+        
+        challengeStartBtn.addEventListener('click', startChallengeGame);
+        challengeResetBtn.addEventListener('click', function(event) {
+            // Pass the event to resetChallengeGame to identify when it's an explicit reset
+            resetChallengeGame(event);
+        });
+        creativeResetBtn.addEventListener('click', resetCreativeGame);
+        creativePlayBtn.addEventListener('click', autoPlayCreative);
+        
+        playAgainBtn.addEventListener('click', () => {
+            gameOverModal.classList.add('hidden');
+            // Don't reset the score here, just start a new game
+            startChallengeGame();
+        });
+        
+        soundToggle.addEventListener('click', toggleSound);
+        
+        // Difficulty button event listeners
+        challengeDifficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setChallengeModeDifficulty(btn.dataset.difficulty);
+            });
+        });
+        
+        creativeDifficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setCreativeModeDifficulty(btn.dataset.difficulty);
+            });
+        });
+        
+        // Initialize the game
+        createFloatingBubbles();
+        
+        // Initialize audio on first user interaction
+        document.addEventListener('click', function initOnFirstClick() {
+            if (!audioContext) {
+                initAudio();
+            }
+            document.removeEventListener('click', initOnFirstClick);
+        }, { once: true });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95abd17da4fff23c',t:'MTc1MTc3MDQ3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
