@@ -1,0 +1,525 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尋寶遊戲線索卡</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f9ff;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px) rotate(2deg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            transition: transform 0.6s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .flipped .card-front {
+            transform: rotateY(180deg);
+        }
+        
+        .flipped .card-back {
+            transform: rotateY(0deg);
+        }
+        
+        .answer {
+            display: none;
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 0 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .answer-visible {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .copy-btn {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            background-color: #e0e7ff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .copy-btn:hover {
+            background-color: #c7d2fe;
+        }
+        
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .copy-success {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .copy-success.show {
+            opacity: 1;
+            visibility: visible;
+            animation: fadeInOut 2s ease-in-out;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-700 mb-2">神秘尋寶遊戲</h1>
+            <p class="text-xl text-indigo-500">點擊卡片查看線索！</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            <!-- 線索卡 1 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-yellow-300 to-yellow-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 1</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="30" fill="#FFD700"/>
+                            <circle cx="40" cy="40" r="5" fill="#FFFFFF"/>
+                            <circle cx="60" cy="40" r="5" fill="#FFFFFF"/>
+                            <path d="M 40 60 Q 50 70 60 60" stroke="#8B4513" stroke-width="3" fill="none"/>
+                            <path d="M 30 30 L 20 20" stroke="#FFD700" stroke-width="3"/>
+                            <path d="M 70 30 L 80 20" stroke="#FFD700" stroke-width="3"/>
+                            <path d="M 30 70 L 20 80" stroke="#FFD700" stroke-width="3"/>
+                            <path d="M 70 70 L 80 80" stroke="#FFD700" stroke-width="3"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我能保持食物冰涼，但我自己卻不冷。你每天都會來看我好幾次。」</p>
+                        <div class="answer" id="answer-1">
+                            <p class="font-bold text-yellow-800">答案：冰箱</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-yellow-600 hover:bg-yellow-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 1)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 2 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-blue-300 to-blue-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 2</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="30" width="60" height="40" fill="#8B4513"/>
+                            <rect x="25" y="35" width="50" height="30" fill="#A0522D"/>
+                            <circle cx="65" cy="50" r="5" fill="#FFD700"/>
+                            <rect x="20" y="70" width="60" height="10" fill="#8B4513"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我有四條腿但不會走路，人們坐在我身上休息，但我從不抱怨。」</p>
+                        <div class="answer" id="answer-2">
+                            <p class="font-bold text-blue-800">答案：椅子</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-blue-600 hover:bg-blue-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 2)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 3 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-green-300 to-green-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 3</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="40" y="20" width="20" height="60" fill="#8B4513"/>
+                            <circle cx="50" cy="30" r="20" fill="#228B22"/>
+                            <circle cx="50" cy="30" r="15" fill="#32CD32"/>
+                            <circle cx="50" cy="30" r="10" fill="#90EE90"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-green-400 to-green-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我有葉子但不是植物，我有背脊但沒有骨頭，我能告訴你故事但不會說話。」</p>
+                        <div class="answer" id="answer-3">
+                            <p class="font-bold text-green-800">答案：書</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-green-600 hover:bg-green-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 3)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 4 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-red-300 to-red-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 4</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="25" y="30" width="50" height="40" fill="#C0C0C0"/>
+                            <rect x="30" y="35" width="40" height="30" fill="#000000"/>
+                            <rect x="45" y="70" width="10" height="10" fill="#C0C0C0"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-red-400 to-red-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我能讓你看到遠方的世界，但你必須用按鈕控制我。有時我顯示真實，有時我顯示虛構。」</p>
+                        <div class="answer" id="answer-4">
+                            <p class="font-bold text-red-800">答案：電視</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-red-600 hover:bg-red-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 4)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 5 (更新為抽象幾何圖形) -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-purple-300 to-purple-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 5</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 抽象幾何圖形，不再是時鐘 -->
+                            <rect x="30" y="30" width="40" height="40" fill="#9370DB" />
+                            <circle cx="50" cy="50" r="25" fill="#8A2BE2" />
+                            <polygon points="50,25 60,40 70,30 65,50 70,70 50,65 30,70 35,50 30,30 40,40" fill="#9932CC" />
+                            <circle cx="50" cy="50" r="10" fill="#BA55D3" />
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我總是在走動，但從不離開我的位置。我有手但沒有手指，有臉但不能看。」</p>
+                        <div class="answer" id="answer-5">
+                            <p class="font-bold text-purple-800">答案：時鐘</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-purple-600 hover:bg-purple-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 5)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 6 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-pink-300 to-pink-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 6</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="40" width="60" height="40" fill="#8B4513"/>
+                            <rect x="30" y="50" width="40" height="20" fill="#A0522D"/>
+                            <circle cx="60" cy="60" r="3" fill="#FFD700"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-pink-400 to-pink-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我能讓你進出，但我自己卻不能移動。人們經常敲我，但我從不回答。」</p>
+                        <div class="answer" id="answer-6">
+                            <p class="font-bold text-pink-800">答案：門</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-pink-600 hover:bg-pink-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 6)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 7 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-orange-300 to-orange-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 7</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M 20 80 L 50 20 L 80 80 Z" fill="#87CEEB"/>
+                            <circle cx="50" cy="50" r="10" fill="#FFFF00"/>
+                            <path d="M 30 70 Q 50 60 70 70" fill="#7CFC00"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我能讓你看到外面的世界，但你不能穿過我。當下雨時，我會變得模糊。」</p>
+                        <div class="answer" id="answer-7">
+                            <p class="font-bold text-orange-800">答案：窗戶</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-orange-600 hover:bg-orange-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 7)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 8 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-teal-300 to-teal-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 8</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="30" y="30" width="40" height="60" fill="#8B4513"/>
+                            <rect x="35" y="35" width="30" height="50" fill="#D2B48C"/>
+                            <rect x="45" y="60" width="10" height="25" fill="#8B4513"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我有許多層，但不是蛋糕。我能保護你免受寒冷，但我不是外套。你睡覺時會用到我。」</p>
+                        <div class="answer" id="answer-8">
+                            <p class="font-bold text-teal-800">答案：被子</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-teal-600 hover:bg-teal-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 8)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 9 (更新為抽象幾何圖形) -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-300 to-indigo-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 9</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 抽象幾何圖形，不再是時鐘 -->
+                            <polygon points="20,20 80,20 80,80 20,80" fill="#4B0082" />
+                            <circle cx="50" cy="50" r="25" fill="#6A5ACD" />
+                            <rect x="35" y="35" width="30" height="30" fill="#483D8B" />
+                            <polygon points="50,30 65,50 50,70 35,50" fill="#7B68EE" />
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">我在哪裡？</h3>
+                        <p class="text-white text-center">「我能讓你保持乾淨，但我自己總是濕的。你每天都會用我好幾次，但很少注意我。」</p>
+                        <div class="answer" id="answer-9">
+                            <p class="font-bold text-indigo-800">答案：水龍頭</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-indigo-600 hover:bg-indigo-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 9)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 線索卡 10 -->
+            <div class="card-container h-80 relative">
+                <div class="card h-full w-full relative" onclick="flipCard(this)">
+                    <div class="card-front absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-300 to-cyan-500 p-4 flex flex-col items-center justify-center shadow-lg">
+                        <div class="text-3xl font-bold mb-4">線索 10</div>
+                        <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="30" width="60" height="40" fill="#8B4513"/>
+                            <circle cx="50" cy="50" r="15" fill="#FFD700"/>
+                            <path d="M 50 35 L 50 65" stroke="#8B4513" stroke-width="2"/>
+                            <path d="M 35 50 L 65 50" stroke="#8B4513" stroke-width="2"/>
+                        </svg>
+                        <div class="mt-4 text-center text-white font-bold">點擊查看線索</div>
+                    </div>
+                    <div class="card-back absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 p-6 flex flex-col items-center justify-center shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-4">恭喜！</h3>
+                        <p class="text-white text-center">「你找到了最後一個線索！寶藏就藏在一個地方，那裡有許多書，但人們不是來買書的。」</p>
+                        <div class="answer" id="answer-10">
+                            <p class="font-bold text-cyan-800">答案：圖書館</p>
+                        </div>
+                        <button class="absolute bottom-4 right-4 bg-white text-cyan-600 hover:bg-cyan-100 font-bold py-1 px-3 rounded-lg text-sm" onclick="showAnswer(event, 10)">
+                            查看答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-10 text-center">
+            <button id="resetBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105">
+                重置所有卡片
+            </button>
+        </div>
+        
+        <!-- 添加設計者資訊 -->
+        <div class="mt-12 py-6 border-t border-indigo-200 text-center">
+            <p class="text-gray-700">
+                遊戲設計與製作：呂舒婷｜探索更多🔍 Fb：
+                <span class="relative inline-flex items-center">
+                    <span class="text-gray-700">https://www.facebook.com/yobi.lu</span>
+                    <button class="ml-2 copy-btn text-indigo-600" onclick="copyToClipboard('https://www.facebook.com/yobi.lu')">
+                        📋
+                    </button>
+                </span>
+                ｜📧 luuyobi@gmail.com
+            </p>
+        </div>
+    </div>
+    
+    <!-- 複製成功提示 -->
+    <div id="copySuccess" class="copy-success">
+        已複製連結！
+    </div>
+
+    <script>
+        function flipCard(element) {
+            // 只有當點擊的不是答案按鈕時才翻轉卡片
+            if (!event.target.classList.contains('absolute') && !event.target.classList.contains('copy-btn')) {
+                element.classList.toggle('flipped');
+            }
+        }
+        
+        function showAnswer(event, cardNumber) {
+            event.stopPropagation(); // 防止事件冒泡到卡片，避免卡片翻轉
+            
+            const answerElement = document.getElementById(`answer-${cardNumber}`);
+            
+            // 切換答案的顯示狀態
+            if (answerElement.classList.contains('answer-visible')) {
+                answerElement.classList.remove('answer-visible');
+                event.target.textContent = '查看答案';
+            } else {
+                answerElement.classList.add('answer-visible');
+                event.target.textContent = '隱藏答案';
+            }
+        }
+        
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.classList.remove('flipped');
+            });
+            
+            // 隱藏所有答案
+            const answers = document.querySelectorAll('.answer');
+            answers.forEach(answer => {
+                answer.classList.remove('answer-visible');
+            });
+            
+            // 重置所有按鈕文字
+            const buttons = document.querySelectorAll('.card-back button');
+            buttons.forEach(button => {
+                button.textContent = '查看答案';
+            });
+        });
+        
+        // 複製連結到剪貼板
+        function copyToClipboard(text) {
+            // 使用現代的 Clipboard API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        showCopySuccess();
+                    })
+                    .catch(err => {
+                        console.error('無法複製文字: ', err);
+                        // 如果 Clipboard API 失敗，嘗試備用方法
+                        fallbackCopyTextToClipboard(text);
+                    });
+            } else {
+                // 對於不支持 Clipboard API 的瀏覽器，使用備用方法
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+        
+        // 備用複製方法
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // 避免滾動到底部
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    console.error('複製命令未成功執行');
+                    alert('複製失敗，請手動複製連結');
+                }
+            } catch (err) {
+                console.error('複製時出錯', err);
+                alert('複製失敗，請手動複製連結');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        // 顯示複製成功提示
+        function showCopySuccess() {
+            const copySuccess = document.getElementById('copySuccess');
+            copySuccess.classList.add('show');
+            
+            // 2秒後隱藏提示
+            setTimeout(function() {
+                copySuccess.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae11dc2517f244',t:'MTc1MTc5NDA4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
