@@ -1,0 +1,398 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數位寫作角色扮演</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0e6ff;
+            background-image: radial-gradient(#d4c1f9 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .card-container {
+            position: relative;
+            min-height: 480px; /* Ensure enough space for the card */
+        }
+        
+        .card {
+            perspective: 1000px;
+            transition: transform 0.6s;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .card-inner {
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto; /* Allow scrolling if content is too long */
+        }
+        
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .prompt-box {
+            border: 2px dashed #9c6ade;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #9c6ade 0%, #6d28d9 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);
+        }
+        
+        .btn-flip {
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-flip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+        }
+        
+        .btn-publish {
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        .btn-publish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(5, 150, 105, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+        }
+        
+        .character-icon {
+            font-size: 3rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .description-prompt {
+            border-left: 4px solid #9c6ade;
+        }
+        
+        /* Ensure buttons stay below the card */
+        .button-container {
+            position: relative;
+            margin-top: 500px; /* Match or exceed card height */
+        }
+        
+        @media (max-width: 768px) {
+            .card-container {
+                min-height: 520px; /* Slightly taller on mobile */
+            }
+            
+            .button-container {
+                margin-top: 540px; /* Match or exceed mobile card height */
+            }
+        }
+        
+        /* Footer styles */
+        .footer {
+            border-top: 1px solid rgba(156, 106, 222, 0.3);
+        }
+        
+        .copy-btn {
+            background-color: #9c6ade;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background-color: #8b5cf6;
+        }
+        
+        .copy-success {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .copy-success.show {
+            opacity: 1;
+        }
+        
+        /* Responsive footer */
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                gap: 0.75rem;
+                align-items: center;
+            }
+            
+            .divider {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">數位寫作角色扮演</h1>
+            <p class="text-lg text-purple-600">以第一人稱描述物件的外觀、功能與感受，激發創意思考！</p>
+        </header>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="flex flex-col">
+                <!-- Card container with fixed height -->
+                <div class="card-container">
+                    <div class="card rounded-2xl shadow-xl" id="card">
+                        <div class="card-inner">
+                            <!-- 卡片正面 -->
+                            <div class="card-front bg-white rounded-2xl p-6 flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-2xl font-bold text-purple-800" id="objectName">咖啡杯</h2>
+                                    <span class="character-icon" id="objectIcon">☕</span>
+                                </div>
+                                <div class="bg-purple-50 rounded-xl p-4 mb-4 flex-grow">
+                                    <h3 class="font-bold text-purple-700 mb-2">角色背景</h3>
+                                    <p class="text-gray-700" id="objectBackground">我是一個精緻的陶瓷咖啡杯，每天早晨陪伴主人開始新的一天。我的杯身有著漂亮的藍色花紋，是主人最喜歡的顏色。我已經陪伴主人三年了，見證了許多重要時刻。</p>
+                                </div>
+                                <div class="bg-purple-50 rounded-xl p-4">
+                                    <h3 class="font-bold text-purple-700 mb-2">角色特性</h3>
+                                    <ul class="list-disc list-inside text-gray-700" id="objectTraits">
+                                        <li>堅固耐用，但也有脆弱的一面</li>
+                                        <li>喜歡被溫暖的液體填滿</li>
+                                        <li>有輕微的完美主義傾向</li>
+                                        <li>對溫度變化非常敏感</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 卡片背面 -->
+                            <div class="card-back bg-white rounded-2xl p-6 flex flex-col">
+                                <h2 class="text-2xl font-bold text-purple-800 mb-4">擬人化描述指引</h2>
+                                <div class="flex-grow space-y-4">
+                                    <div class="description-prompt bg-purple-50 p-3 pl-4 rounded-lg">
+                                        <h3 class="font-bold text-purple-700">外觀描述</h3>
+                                        <p class="text-gray-700">「我看起來...」「我摸起來...」「我聞起來...」</p>
+                                    </div>
+                                    
+                                    <div class="description-prompt bg-purple-50 p-3 pl-4 rounded-lg">
+                                        <h3 class="font-bold text-purple-700">功能描述</h3>
+                                        <p class="text-gray-700">「我的工作是...」「當人們使用我時...」「我最擅長...」</p>
+                                    </div>
+                                    
+                                    <div class="description-prompt bg-purple-50 p-3 pl-4 rounded-lg">
+                                        <h3 class="font-bold text-purple-700">感受描述</h3>
+                                        <p class="text-gray-700">「我最喜歡...」「我最害怕...」「我希望...」</p>
+                                    </div>
+                                    
+                                    <div class="description-prompt bg-purple-50 p-3 pl-4 rounded-lg">
+                                        <h3 class="font-bold text-purple-700">互動描述</h3>
+                                        <p class="text-gray-700">「當你碰觸我時...」「如果你對我說話...」「我們一起能...」</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 按鈕移到卡片下方，固定位置 -->
+                <div class="button-container flex justify-between gap-4 mt-4">
+                    <button id="generateBtn" class="btn-generate text-white font-medium py-3 px-6 rounded-full flex-1">生成角色卡</button>
+                    <button id="flipBtn" class="btn-flip text-white font-medium py-3 px-6 rounded-full flex-1">翻轉卡片</button>
+                </div>
+            </div>
+            
+            <div class="flex flex-col space-y-6">
+                <div class="prompt-box rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-purple-800 mb-4">遊戲說明</h2>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>點擊「生成角色卡」獲取隨機物件角色</li>
+                        <li>點擊「翻轉卡片」查看擬人化描述指引</li>
+                        <li>以第一人稱扮演該物件，根據指引描述自己</li>
+                        <li>先到筆記區可記下重點</li>
+                        <li>最後記得到創作發表區進到padlet發表</li>
+                    </ol>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-md">
+                    <h2 class="text-xl font-bold text-purple-800 mb-4">筆記區</h2>
+                    <textarea id="creativeText" class="w-full h-32 p-3 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="以第一人稱開始你的擬人化描述..."></textarea>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-md">
+                    <h2 class="text-xl font-bold text-purple-800 mb-4">創意提示</h2>
+                    <p class="text-gray-700 mb-3">嘗試從不同角度思考物件的「感受」：</p>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700">
+                        <li>這個物件如何看待自己的存在價值？</li>
+                        <li>它與其他物件或人類的關係如何？</li>
+                        <li>它有什麼秘密或願望？</li>
+                        <li>它最自豪或最遺憾的事情是什麼？</li>
+                    </ul>
+                    <div class="mt-6">
+                        <a href="https://ylcdo.padlet.org/Lu/padlet-l5g4w1wcz74ll06s" target="_blank" class="btn-publish text-white font-bold py-3 px-8 rounded-full block text-center text-lg">
+                            前往創作發表區
+                            <span class="ml-2">→</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 更新後的頁腳 -->
+        <footer class="footer mt-12 pt-6 pb-8 text-center">
+            <div class="footer-content text-purple-700 flex items-center justify-center flex-wrap gap-2">
+                <span>遊戲設計與製作：呂舒婷</span>
+                <span class="divider mx-2">｜</span>
+                <span>了解更多🔍</span>
+                <div class="flex items-center relative">
+                    <span class="mr-1">Fb：</span>
+                    <span id="fbLink" class="mr-1">https://www.facebook.com/yobi.lu</span>
+                    <button id="copyBtn" class="copy-btn text-white px-2 py-0.5 rounded text-sm">複製</button>
+                    <span id="copySuccess" class="copy-success">已複製</span>
+                </div>
+                <span class="divider mx-2">｜</span>
+                <a href="mailto:luuyobi@gmail.com" class="inline-flex items-center">
+                    <span class="mr-1">📧</span>
+                    <span class="hover:text-purple-900">luuyobi@gmail.com</span>
+                </a>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        const objects = [
+            { name: "咖啡杯", icon: "☕", background: "我是一個精緻的陶瓷咖啡杯，每天早晨陪伴主人開始新的一天。我的杯身有著漂亮的藍色花紋，是主人最喜歡的顏色。我已經陪伴主人三年了，見證了許多重要時刻。", traits: ["堅固耐用，但也有脆弱的一面", "喜歡被溫暖的液體填滿", "有輕微的完美主義傾向", "對溫度變化非常敏感"] },
+            { name: "鋼筆", icon: "🖋️", background: "我是一支傳家寶級的鋼筆，曾經屬於一位著名作家。我的筆身是深藍色的，鑲嵌著精緻的金色花紋。我已經存在了幾十年，記錄了無數故事和秘密。", traits: ["優雅流暢，字跡如行雲流水", "對紙張的質感極為挑剔", "喜歡被人輕柔地握在手中", "害怕被遺忘在抽屜深處"] },
+            { name: "相機", icon: "📷", background: "我是一台來自1980年代的寶麗來相機，曾經環遊世界各地。我的機身有些磨損，但鏡頭依然清晰。我捕捉了數千個珍貴瞬間，是記憶的守護者。", traits: ["善於捕捉最真實的瞬間", "有點懷舊，偏愛膠片的質感", "對光線極為敏感", "喜歡被人小心翼翼地對待"] },
+            { name: "書本", icon: "📚", background: "我是一本被翻閱過無數次的小說，書頁已經泛黃，書角有些磨損。我的故事曾讓許多人笑過、哭過。我曾被帶到海邊、咖啡廳，甚至是醫院病房。", traits: ["充滿智慧和想像力", "喜歡被人細細品味每一頁", "害怕被水浸濕或被遺忘", "能夠帶人逃離現實世界"] },
+            { name: "鬧鐘", icon: "⏰", background: "我是一個古董鬧鐘，已經在同一個家庭服務了三代人。我的金屬外殼有些生鏽，但內部機芯依然精準。我見證了這個家庭的成長與變化。", traits: ["極度準時，從不遲到", "聲音洪亮，確保主人不會睡過頭", "有點固執，不喜歡被調整時間", "對電子鬧鐘有些不屑"] },
+            { name: "雨傘", icon: "☂️", background: "我是一把鮮紅色的雨傘，在雨天保護主人不被淋濕。我的傘面上有一些小補丁，那是經歷風雨的證明。我最喜歡聽雨滴落在我身上的聲音。", traits: ["堅強可靠，能抵擋狂風暴雨", "喜歡在雨天展現自己的價值", "討厭被人遺忘在公車或餐廳", "渴望更多冒險的機會"] },
+            { name: "盆栽", icon: "🪴", background: "我是一盆小巧的多肉植物，生活在明亮的窗台上。我的葉片肥厚多汁，呈現出美麗的淺綠色。我生長緩慢但堅韌，能夠適應各種環境。", traits: ["耐旱耐寒，生命力頑強", "喜歡沐浴在溫暖的陽光下", "不需要太多關注和照顧", "默默觀察著屋內的一切變化"] },
+            { name: "吉他", icon: "🎸", background: "我是一把有著數十年歷史的木吉他，曾經陪伴主人走過青春歲月。我的琴身有些刮痕，但音色更加醇厚。我見證了無數的歡笑和淚水。", traits: ["音色溫暖，富有感情", "喜歡被人輕撫琴弦", "對溫度和濕度變化敏感", "珍藏著許多未被人知的歌曲"] },
+            { name: "手錶", icon: "⌚", background: "我是一只精緻的機械手錶，是主人畢業時父親送的禮物。我的錶盤簡約優雅，錶帶是柔軟的真皮。我每天都緊貼著主人的手腕，感受著他的脈搏。", traits: ["精準可靠，從不出錯", "喜歡被人欣賞錶盤的細節", "害怕被摔落或進水", "對主人的生活節奏瞭如指掌"] },
+            { name: "皮箱", icon: "🧳", background: "我是一個歷經滄桑的皮箱，表面有許多旅行留下的痕跡。我曾經去過許多國家，裝載過無數珍貴的物品和回憶。我的皮革已經有些褪色，但依然堅固。", traits: ["堅固耐用，能承載重物", "保守秘密，守護主人的私人物品", "喜歡新的旅行和冒險", "對自己身上的每個痕跡都引以為傲"] },
+            { name: "毛絨玩具", icon: "🧸", background: "我是一隻陪伴主人長大的泰迪熊，已經有些掉毛和磨損。我曾經是主人最好的朋友，分享過所有的秘密和淚水。現在我住在衣櫃的角落，偶爾被拿出來回憶。", traits: ["柔軟舒適，給人安全感", "善於傾聽，從不批判", "懷念被擁抱的感覺", "珍藏著主人童年的所有記憶"] },
+            { name: "收音機", icon: "📻", background: "我是一台復古風格的收音機，曾經是家中娛樂的中心。我的旋鈕已經有些鬆動，但音質依然清晰。我播放過無數的音樂、新聞和故事，連接著這個家庭與外界。", traits: ["聲音渾厚，音質優美", "喜歡被人細心調頻", "懷念被全家人圍繞的日子", "對數字化設備有些不服氣"] },
+            { name: "鞋子", icon: "👟", background: "我是一雙運動鞋，陪伴主人跑過無數條街道和小徑。我的鞋面有些髒污，那是我們一起經歷的證明。我知道主人腳步的每一個細節，也記得每一次奔跑的感覺。", traits: ["舒適貼合，提供良好支撐", "喜歡感受不同地面的觸感", "害怕被雨水浸濕或泥濘弄髒", "渴望探索更多未知的道路"] },
+            { name: "鉛筆", icon: "✏️", background: "我是一支普通的鉛筆，但我記錄了許多重要的想法和創意。我的身體隨著使用逐漸變短，但這正是我實現價值的證明。我喜歡在紙上滑行的感覺。", traits: ["靈活多變，可粗可細", "謙虛低調，不求張揚", "害怕被削得太短或折斷", "為能留下永恆的痕跡而自豪"] },
+            { name: "橡皮擦", icon: "🧽", background: "我是一塊小小的橡皮擦，我的工作是修正錯誤，給予重新開始的機會。我的身體隨著使用而變小，但每一次消耗都是有意義的。我和鉛筆是最好的搭檔。", traits: ["善於消除痕跡，給予新機會", "默默無聞，卻不可或缺", "隨著工作而逐漸消耗自己", "對完美有著執著的追求"] },
+            { name: "球", icon: "⚽", background: "我是一顆足球，經歷過無數次的踢打和飛翔。我的表面有些磨損，但這些都是榮譽的象徵。我帶給人們歡樂，也見證了許多激動人心的時刻。", traits: ["充滿彈性和活力", "喜歡在空中飛翔的感覺", "害怕被遺忘在角落裡", "渴望成為比賽中的主角"] },
+            { name: "風箏", icon: "🪁", background: "我是一隻色彩鮮艷的風箏，生來就是為了飛翔。我的身體輕盈，尾巴飄逸，最喜歡在藍天白雲間舞動。我連接著地面和天空，也連接著大人和孩子的心。", traits: ["自由奔放，熱愛高空", "依賴風的力量才能飛翔", "害怕線斷或被樹枝纏住", "渴望飛得更高更遠"] }
+        ];
+        
+        const card = document.getElementById('card');
+        const generateBtn = document.getElementById('generateBtn');
+        const flipBtn = document.getElementById('flipBtn');
+        const objectName = document.getElementById('objectName');
+        const objectIcon = document.getElementById('objectIcon');
+        const objectBackground = document.getElementById('objectBackground');
+        const objectTraits = document.getElementById('objectTraits');
+        const creativeText = document.getElementById('creativeText');
+        const copyBtn = document.getElementById('copyBtn');
+        const fbLink = document.getElementById('fbLink');
+        const copySuccess = document.getElementById('copySuccess');
+        
+        // 生成隨機角色卡
+        generateBtn.addEventListener('click', () => {
+            const randomObject = objects[Math.floor(Math.random() * objects.length)];
+            
+            objectName.textContent = randomObject.name;
+            objectIcon.textContent = randomObject.icon;
+            objectBackground.textContent = randomObject.background;
+            
+            // 清空並重新填充特性列表
+            objectTraits.innerHTML = '';
+            randomObject.traits.forEach(trait => {
+                const li = document.createElement('li');
+                li.textContent = trait;
+                li.className = 'text-gray-700';
+                objectTraits.appendChild(li);
+            });
+            
+            // 如果卡片是翻轉狀態，先翻回正面
+            if (card.classList.contains('flipped')) {
+                card.classList.remove('flipped');
+            }
+            
+            // 清空筆記區
+            creativeText.value = '';
+            
+            // 添加動畫效果
+            card.classList.add('animate-pulse');
+            setTimeout(() => {
+                card.classList.remove('animate-pulse');
+            }, 500);
+        });
+        
+        // 翻轉卡片
+        flipBtn.addEventListener('click', () => {
+            card.classList.toggle('flipped');
+        });
+        
+        // 複製Facebook連結
+        copyBtn.addEventListener('click', () => {
+            // 創建一個臨時的textarea元素來複製文字
+            const textarea = document.createElement('textarea');
+            textarea.value = 'https://www.facebook.com/yobi.lu';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            // 顯示已複製提示
+            copySuccess.classList.add('show');
+            setTimeout(() => {
+                copySuccess.classList.remove('show');
+            }, 2000);
+        });
+        
+        // 初始化時生成一個隨機角色卡
+        window.addEventListener('DOMContentLoaded', () => {
+            generateBtn.click();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae0db62336f244',t:'MTc1MTc5MzkxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
