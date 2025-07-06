@@ -1,0 +1,979 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激活大腦的數獨遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Baloo+2:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Baloo 2', 'Poppins', sans-serif;
+            background-color: #f8f5f2; /* 淺咖啡色背景 */
+            min-height: 100vh;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            margin: 0;
+            border: 1px solid #d1c3b8; /* 咖啡色邊框 */
+        }
+        
+        @media (max-width: 640px) {
+            .cell {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+        
+        .cell:hover:not(.initial) {
+            background-color: #e6f2ff; /* 淺藍色懸停 */
+        }
+        
+        .cell.selected {
+            background-color: #b3d9ff; /* 中藍色選中 */
+            box-shadow: inset 0 0 0 2px #3a86ff; /* 深藍色邊框 */
+        }
+        
+        .cell.initial {
+            color: #1565c0; /* 深藍色文字 */
+            font-weight: 700;
+            background-color: #d6e8ff; /* 淺藍色背景 */
+        }
+        
+        .cell.empty {
+            background-color: #f8f5f2; /* 淺咖啡色背景 */
+        }
+        
+        .cell.user-input {
+            color: #8b5a2b; /* 咖啡色文字 */
+            font-weight: 600;
+            background-color: #f0e6d9; /* 淺咖啡色背景 */
+        }
+        
+        .cell.error {
+            color: #d32f2f;
+            background-color: #ffebee;
+        }
+        
+        .number-pad button {
+            width: 45px;
+            height: 45px;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background-color: #e1f5fe;
+            color: #0277bd;
+            border: 1px solid #81d4fa;
+        }
+        
+        .number-pad button:hover {
+            background-color: #b3e5fc;
+        }
+        
+        @media (max-width: 640px) {
+            .number-pad button {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+            
+            .number-pad-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+        }
+        
+        /* 3x3 區塊邊框 */
+        .border-top-thick {
+            border-top: 3px solid #8b5a2b; /* 咖啡色粗邊框 */
+        }
+        
+        .border-left-thick {
+            border-left: 3px solid #8b5a2b; /* 咖啡色粗邊框 */
+        }
+        
+        .border-right-thick {
+            border-right: 3px solid #8b5a2b; /* 咖啡色粗邊框 */
+        }
+        
+        .border-bottom-thick {
+            border-bottom: 3px solid #8b5a2b; /* 咖啡色粗邊框 */
+        }
+        
+        /* 完成遊戲動畫 */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0.7;
+            animation: fall 4s linear forwards;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .difficulty-btn {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        
+        .difficulty-btn:hover {
+            background-color: #d6e8ff; /* 淺藍色懸停 */
+        }
+        
+        .difficulty-btn.active {
+            background-color: #3a86ff; /* 深藍色激活 */
+            color: white;
+        }
+        
+        .timer {
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .modal {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-content {
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .game-container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .sudoku-board {
+            background-color: #e6d7c9; /* 淺咖啡色背景 */
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+            border: 3px solid #8b5a2b; /* 咖啡色邊框 */
+        }
+        
+        .btn {
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background-color: #3a86ff; /* 深藍色按鈕 */
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #8b5a2b; /* 咖啡色按鈕 */
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #d32f2f;
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: #f57c00;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #388e3c;
+            color: white;
+        }
+        
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e6f2ff; /* 淺藍色背景 */
+            color: #3a86ff; /* 深藍色文字 */
+            border: 1px solid #b3d9ff; /* 中藍色邊框 */
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background-color: #b3d9ff; /* 中藍色懸停 */
+        }
+        
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .footer {
+            border-top: 1px solid #e0d5cc; /* 淺咖啡色邊框 */
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            color: #8b5a2b; /* 咖啡色文字 */
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-3xl mx-auto game-container p-6 mb-8">
+        <h1 class="text-3xl font-bold text-center text-blue-700 mb-2">
+            激活大腦的數獨遊戲 🧩
+        </h1>
+        <p class="text-center text-gray-600 mb-6">快來挑戰你的邏輯思維能力吧！</p>
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+            <div class="flex space-x-2 mb-4 md:mb-0">
+                <button id="easy-btn" class="difficulty-btn px-4 py-2 bg-blue-100 rounded-lg font-medium text-blue-800 active">簡單</button>
+                <button id="medium-btn" class="difficulty-btn px-4 py-2 bg-blue-100 rounded-lg font-medium text-blue-800">中等</button>
+                <button id="hard-btn" class="difficulty-btn px-4 py-2 bg-blue-100 rounded-lg font-medium text-blue-800">困難</button>
+            </div>
+            
+            <div class="flex space-x-4">
+                <div class="bg-blue-100 px-4 py-2 rounded-lg">
+                    <span class="font-medium text-blue-800">時間：</span>
+                    <span id="timer" class="timer text-blue-800">00:00</span>
+                </div>
+                <button id="new-game-btn" class="btn btn-primary px-4 py-2 rounded-lg font-medium">
+                    新遊戲
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex flex-col md:flex-row justify-center items-center gap-6">
+            <!-- 數獨遊戲板 -->
+            <div class="relative">
+                <div id="sudoku-board" class="sudoku-board grid grid-cols-9">
+                    <!-- 數獨格子將由 JavaScript 動態生成 -->
+                </div>
+                
+                <!-- 完成遊戲提示 -->
+                <div id="completion-message" class="hidden absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center rounded-lg">
+                    <div class="text-center p-4">
+                        <h2 class="text-2xl font-bold text-green-600 mb-2">恭喜完成！</h2>
+                        <p class="text-gray-700">你成功解開了數獨謎題！</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 數字鍵盤和控制按鈕 -->
+            <div class="number-pad-container">
+                <div class="number-pad grid grid-cols-3 gap-3 mb-4">
+                    <button class="num-btn">1</button>
+                    <button class="num-btn">2</button>
+                    <button class="num-btn">3</button>
+                    <button class="num-btn">4</button>
+                    <button class="num-btn">5</button>
+                    <button class="num-btn">6</button>
+                    <button class="num-btn">7</button>
+                    <button class="num-btn">8</button>
+                    <button class="num-btn">9</button>
+                </div>
+                
+                <div class="flex justify-center gap-3 mb-4">
+                    <button id="erase-btn" class="btn btn-danger px-4 py-2 rounded-lg font-medium">
+                        清除
+                    </button>
+                    <button id="hint-btn" class="btn btn-warning px-4 py-2 rounded-lg font-medium">
+                        提示
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <button id="check-btn" class="btn btn-success w-full px-4 py-2 rounded-lg font-medium">
+                        檢查答案
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h2 class="text-lg font-bold text-blue-800 mb-2">
+                遊戲規則
+            </h2>
+            <p class="text-blue-700">每行、每列和每個3x3方格中，數字1-9只能出現一次。點擊空格填入數字，完成所有格子即可獲勝！</p>
+        </div>
+        
+        <!-- 添加底部資訊 -->
+        <div class="footer text-center">
+            <p class="mb-2">遊戲設計與製作：呂舒婷｜<a href="#" class="text-blue-600 hover:underline">了解更多🔍</a></p>
+            <p class="mb-2">
+                Fb：<span class="text-blue-600">https://www.facebook.com/yobi.lu</span>
+                <button id="copy-fb-btn" class="copy-btn ml-1">複製</button>
+            </p>
+            <p>📧 <a href="mailto:luuyobi@gmail.com" class="text-blue-600 hover:underline">luuyobi@gmail.com</a></p>
+        </div>
+    </div>
+    
+    <!-- 遊戲完成彈窗 -->
+    <div id="completion-modal" class="modal fixed inset-0 flex items-center justify-center hidden z-50">
+        <div class="modal-content bg-white p-8 max-w-md mx-4">
+            <div class="text-center">
+                <div class="inline-block p-4 bg-blue-100 rounded-full mb-4">
+                    <span class="text-5xl">🎉</span>
+                </div>
+                <h2 class="text-2xl font-bold text-blue-600 mb-2">恭喜完成！</h2>
+                <p class="text-gray-600 mb-6">你成功解開了數獨謎題！太棒了！</p>
+                <div class="mb-6">
+                    <p class="text-lg font-medium text-gray-700">完成時間：<span id="completion-time" class="text-gray-900 font-bold">00:00</span></p>
+                    <p class="text-lg font-medium text-gray-700">難度：<span id="completion-difficulty" class="text-gray-900 font-bold">簡單</span></p>
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <button id="play-again-btn" class="btn btn-primary px-6 py-2 rounded-lg font-medium">再玩一次</button>
+                    <button id="close-modal-btn" class="btn btn-secondary px-6 py-2 rounded-lg font-medium">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 慶祝動畫容器 -->
+    <div id="celebration" class="celebration hidden"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 遊戲變數
+            let selectedCell = null;
+            let difficulty = 'easy'; // 預設難度
+            let gameBoard = [];
+            let solution = [];
+            let startTime = null;
+            let timerInterval = null;
+            let hintsUsed = 0;
+            
+            // 難度設定 (空格數量)
+            const difficultySettings = {
+                easy: 30,
+                medium: 45,
+                hard: 55
+            };
+            
+            // 初始化遊戲板
+            function initializeBoard() {
+                const board = document.getElementById('sudoku-board');
+                board.innerHTML = '';
+                
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell', 'empty');
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        // 添加3x3區塊的粗邊框
+                        if (row % 3 === 0) cell.classList.add('border-top-thick');
+                        if (col % 3 === 0) cell.classList.add('border-left-thick');
+                        if (row === 8) cell.classList.add('border-bottom-thick');
+                        if (col === 8) cell.classList.add('border-right-thick');
+                        
+                        cell.addEventListener('click', handleCellClick);
+                        
+                        board.appendChild(cell);
+                    }
+                }
+            }
+            
+            // 生成數獨謎題
+            function generateSudoku() {
+                // 清空遊戲板
+                gameBoard = Array(9).fill().map(() => Array(9).fill(0));
+                
+                // 生成完整解答
+                solution = generateSolution();
+                
+                // 根據難度移除數字
+                const emptyCells = difficultySettings[difficulty];
+                const puzzle = [...solution.map(row => [...row])];
+                
+                let cellsToRemove = emptyCells;
+                while (cellsToRemove > 0) {
+                    const row = Math.floor(Math.random() * 9);
+                    const col = Math.floor(Math.random() * 9);
+                    
+                    if (puzzle[row][col] !== 0) {
+                        puzzle[row][col] = 0;
+                        cellsToRemove--;
+                    }
+                }
+                
+                gameBoard = puzzle;
+                updateBoardUI();
+                
+                // 重置並啟動計時器
+                resetTimer();
+                startTimer();
+                
+                // 重置提示使用次數
+                hintsUsed = 0;
+                
+                // 隱藏完成訊息
+                document.getElementById('completion-message').classList.add('hidden');
+                document.getElementById('completion-modal').classList.add('hidden');
+            }
+            
+            // 生成完整的數獨解答
+            function generateSolution() {
+                // 創建空白數獨板
+                const board = Array(9).fill().map(() => Array(9).fill(0));
+                
+                // 嘗試填充數獨
+                if (solveSudoku(board)) {
+                    return board;
+                }
+                
+                // 如果無法解決，返回空板（理論上不應該發生）
+                console.error("無法生成有效的數獨解答");
+                return Array(9).fill().map(() => Array(9).fill(0));
+            }
+            
+            // 解決數獨的回溯算法
+            function solveSudoku(board) {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        // 找到空格
+                        if (board[row][col] === 0) {
+                            // 嘗試填入1-9
+                            const numbers = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                            
+                            for (let num of numbers) {
+                                if (isValid(board, row, col, num)) {
+                                    board[row][col] = num;
+                                    
+                                    // 遞迴嘗試解決剩餘部分
+                                    if (solveSudoku(board)) {
+                                        return true;
+                                    }
+                                    
+                                    // 如果無法解決，回溯
+                                    board[row][col] = 0;
+                                }
+                            }
+                            
+                            // 無法填入任何數字，需要回溯
+                            return false;
+                        }
+                    }
+                }
+                
+                // 所有格子都已填滿
+                return true;
+            }
+            
+            // 檢查在指定位置填入數字是否有效
+            function isValid(board, row, col, num) {
+                // 檢查行
+                for (let c = 0; c < 9; c++) {
+                    if (board[row][c] === num) return false;
+                }
+                
+                // 檢查列
+                for (let r = 0; r < 9; r++) {
+                    if (board[r][col] === num) return false;
+                }
+                
+                // 檢查3x3方格
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        if (board[boxRow + r][boxCol + c] === num) return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            // 打亂數組順序
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // 更新遊戲板UI
+            function updateBoardUI() {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                        const value = gameBoard[row][col];
+                        
+                        // 清除所有狀態類
+                        cell.classList.remove('initial', 'user-input', 'empty', 'error');
+                        
+                        if (value === 0) {
+                            cell.textContent = '';
+                            cell.classList.add('empty');
+                        } else {
+                            cell.textContent = value;
+                            cell.classList.add('initial');
+                        }
+                    }
+                }
+            }
+            
+            // 處理格子點擊
+            function handleCellClick(e) {
+                const cell = e.target;
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                
+                // 如果是初始數字，不能修改
+                if (cell.classList.contains('initial')) return;
+                
+                // 取消之前選中的格子
+                if (selectedCell) {
+                    selectedCell.classList.remove('selected');
+                }
+                
+                // 選中當前格子
+                cell.classList.add('selected');
+                selectedCell = cell;
+            }
+            
+            // 處理數字按鈕點擊
+            function handleNumberClick(e) {
+                if (!selectedCell) return;
+                
+                const number = e.target.textContent;
+                const row = parseInt(selectedCell.dataset.row);
+                const col = parseInt(selectedCell.dataset.col);
+                
+                // 如果格子已有數字且與點擊的數字相同，則清空格子
+                if (selectedCell.textContent === number) {
+                    selectedCell.textContent = '';
+                    selectedCell.classList.add('empty');
+                    selectedCell.classList.remove('user-input', 'error');
+                    gameBoard[row][col] = 0;
+                    return;
+                }
+                
+                // 填入數字
+                selectedCell.textContent = number;
+                selectedCell.classList.remove('empty', 'error');
+                selectedCell.classList.add('user-input');
+                
+                // 更新遊戲板數據
+                gameBoard[row][col] = parseInt(number);
+                
+                // 檢查是否完成遊戲
+                if (isBoardFilled() && isBoardCorrect()) {
+                    gameCompleted();
+                }
+            }
+            
+            // 檢查遊戲板是否已填滿
+            function isBoardFilled() {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (gameBoard[row][col] === 0) return false;
+                    }
+                }
+                return true;
+            }
+            
+            // 檢查遊戲板是否正確
+            function isBoardCorrect() {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (gameBoard[row][col] !== solution[row][col]) return false;
+                    }
+                }
+                return true;
+            }
+            
+            // 檢查答案
+            function checkAnswer() {
+                let hasError = false;
+                
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                        
+                        // 跳過空格和初始數字
+                        if (cell.classList.contains('empty') || cell.classList.contains('initial')) continue;
+                        
+                        // 檢查用戶輸入是否正確
+                        if (gameBoard[row][col] !== solution[row][col]) {
+                            cell.classList.add('error');
+                            hasError = true;
+                        } else {
+                            cell.classList.remove('error');
+                        }
+                    }
+                }
+                
+                // 如果沒有錯誤且遊戲板已填滿，則完成遊戲
+                if (!hasError && isBoardFilled()) {
+                    gameCompleted();
+                } else if (!hasError) {
+                    // 顯示鼓勵訊息
+                    showToast('目前填寫的都是正確的！繼續加油！');
+                }
+            }
+            
+            // 提供提示
+            function giveHint() {
+                // 找出所有空格或錯誤的格子
+                const emptyCells = [];
+                
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (gameBoard[row][col] === 0 || gameBoard[row][col] !== solution[row][col]) {
+                            emptyCells.push({ row, col });
+                        }
+                    }
+                }
+                
+                // 如果沒有空格或錯誤，返回
+                if (emptyCells.length === 0) {
+                    showToast('已經沒有需要提示的格子了！');
+                    return;
+                }
+                
+                // 隨機選擇一個空格
+                const randomIndex = Math.floor(Math.random() * emptyCells.length);
+                const { row, col } = emptyCells[randomIndex];
+                
+                // 填入正確答案
+                gameBoard[row][col] = solution[row][col];
+                
+                // 更新UI
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                cell.textContent = solution[row][col];
+                cell.classList.remove('empty', 'error', 'user-input');
+                cell.classList.add('initial');
+                
+                // 增加提示使用次數
+                hintsUsed++;
+                
+                // 檢查是否完成遊戲
+                if (isBoardFilled() && isBoardCorrect()) {
+                    gameCompleted();
+                }
+            }
+            
+            // 清除選中格子
+            function eraseCell() {
+                if (!selectedCell || selectedCell.classList.contains('initial')) return;
+                
+                const row = parseInt(selectedCell.dataset.row);
+                const col = parseInt(selectedCell.dataset.col);
+                
+                // 清空格子
+                selectedCell.textContent = '';
+                selectedCell.classList.remove('user-input', 'error');
+                selectedCell.classList.add('empty');
+                gameBoard[row][col] = 0;
+            }
+            
+            // 遊戲完成
+            function gameCompleted() {
+                // 停止計時器
+                stopTimer();
+                
+                // 顯示完成訊息
+                document.getElementById('completion-modal').classList.remove('hidden');
+                document.getElementById('completion-modal').classList.add('show');
+                
+                // 設置完成時間和難度
+                document.getElementById('completion-time').textContent = document.getElementById('timer').textContent;
+                document.getElementById('completion-difficulty').textContent = getDifficultyText();
+                
+                // 創建慶祝動畫
+                createCelebration();
+            }
+            
+            // 創建慶祝動畫
+            function createCelebration() {
+                const celebration = document.getElementById('celebration');
+                celebration.innerHTML = '';
+                celebration.classList.remove('hidden');
+                
+                // 創建五彩紙屑
+                const colors = ['#3a86ff', '#8b5a2b', '#f57c00', '#d32f2f', '#7b1fa2', '#0288d1', '#689f38', '#e64a19', '#512da8', '#0097a7'];
+                
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('confetti');
+                    
+                    // 隨機顏色
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.backgroundColor = color;
+                    
+                    // 隨機位置
+                    const left = Math.random() * 100;
+                    confetti.style.left = `${left}%`;
+                    
+                    // 隨機大小
+                    const size = Math.random() * 10 + 5;
+                    confetti.style.width = `${size}px`;
+                    confetti.style.height = `${size}px`;
+                    
+                    // 隨機形狀
+                    const borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    confetti.style.borderRadius = borderRadius;
+                    
+                    // 隨機動畫延遲
+                    const delay = Math.random() * 3;
+                    confetti.style.animationDelay = `${delay}s`;
+                    
+                    celebration.appendChild(confetti);
+                }
+                
+                // 5秒後移除慶祝動畫
+                setTimeout(() => {
+                    celebration.classList.add('hidden');
+                }, 5000);
+            }
+            
+            // 顯示提示訊息
+            function showToast(message) {
+                // 創建提示元素
+                const toast = document.createElement('div');
+                toast.classList.add('fixed', 'bottom-4', 'left-1/2', 'transform', '-translate-x-1/2', 'bg-blue-600', 'text-white', 'px-6', 'py-3', 'rounded-lg', 'shadow-lg', 'z-50');
+                toast.textContent = message;
+                
+                // 添加到頁面
+                document.body.appendChild(toast);
+                
+                // 淡入效果
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                }, 2000);
+                
+                // 移除元素
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 2500);
+            }
+            
+            // 計時器功能
+            function startTimer() {
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+            
+            function resetTimer() {
+                stopTimer();
+                document.getElementById('timer').textContent = '00:00';
+            }
+            
+            function updateTimer() {
+                const now = new Date();
+                const diff = Math.floor((now - startTime) / 1000);
+                
+                const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+                const seconds = (diff % 60).toString().padStart(2, '0');
+                
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            }
+            
+            // 獲取難度文字
+            function getDifficultyText() {
+                switch (difficulty) {
+                    case 'easy': return '簡單';
+                    case 'medium': return '中等';
+                    case 'hard': return '困難';
+                    default: return '簡單';
+                }
+            }
+            
+            // 設置難度按鈕點擊事件
+            document.getElementById('easy-btn').addEventListener('click', function() {
+                setDifficulty('easy');
+            });
+            
+            document.getElementById('medium-btn').addEventListener('click', function() {
+                setDifficulty('medium');
+            });
+            
+            document.getElementById('hard-btn').addEventListener('click', function() {
+                setDifficulty('hard');
+            });
+            
+            // 設置難度
+            function setDifficulty(newDifficulty) {
+                difficulty = newDifficulty;
+                
+                // 更新按鈕狀態
+                document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                document.getElementById(`${difficulty}-btn`).classList.add('active');
+                
+                // 生成新遊戲
+                generateSudoku();
+            }
+            
+            // 設置數字按鈕點擊事件
+            document.querySelectorAll('.num-btn').forEach(btn => {
+                btn.addEventListener('click', handleNumberClick);
+            });
+            
+            // 設置其他按鈕點擊事件
+            document.getElementById('new-game-btn').addEventListener('click', function() {
+                generateSudoku();
+            });
+            
+            document.getElementById('check-btn').addEventListener('click', function() {
+                checkAnswer();
+            });
+            
+            document.getElementById('hint-btn').addEventListener('click', function() {
+                giveHint();
+            });
+            
+            document.getElementById('erase-btn').addEventListener('click', function() {
+                eraseCell();
+            });
+            
+            document.getElementById('play-again-btn').addEventListener('click', function() {
+                document.getElementById('completion-modal').classList.add('hidden');
+                generateSudoku();
+            });
+            
+            document.getElementById('close-modal-btn').addEventListener('click', function() {
+                document.getElementById('completion-modal').classList.add('hidden');
+            });
+            
+            // 添加鍵盤支持
+            document.addEventListener('keydown', function(e) {
+                if (!selectedCell) return;
+                
+                if (e.key >= '1' && e.key <= '9') {
+                    // 模擬數字按鈕點擊
+                    const numBtn = document.querySelector(`.num-btn:nth-child(${e.key})`);
+                    if (numBtn) {
+                        numBtn.click();
+                    }
+                } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                    // 清除格子
+                    eraseCell();
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    // 方向鍵移動選擇
+                    const row = parseInt(selectedCell.dataset.row);
+                    const col = parseInt(selectedCell.dataset.col);
+                    
+                    let newRow = row;
+                    let newCol = col;
+                    
+                    if (e.key === 'ArrowUp') newRow = Math.max(0, row - 1);
+                    if (e.key === 'ArrowDown') newRow = Math.min(8, row + 1);
+                    if (e.key === 'ArrowLeft') newCol = Math.max(0, col - 1);
+                    if (e.key === 'ArrowRight') newCol = Math.min(8, col + 1);
+                    
+                    const newCell = document.querySelector(`.cell[data-row="${newRow}"][data-col="${newCol}"]`);
+                    if (newCell) {
+                        newCell.click();
+                    }
+                }
+            });
+            
+            // 複製Facebook連結功能
+            document.getElementById('copy-fb-btn').addEventListener('click', function() {
+                const fbLink = 'https://www.facebook.com/yobi.lu';
+                
+                // 創建一個臨時的textarea元素來複製文字
+                const textarea = document.createElement('textarea');
+                textarea.value = fbLink;
+                textarea.style.position = 'fixed';  // 避免滾動頁面
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    // 執行複製命令
+                    document.execCommand('copy');
+                    
+                    // 更改按鈕文字
+                    const copyBtn = document.getElementById('copy-fb-btn');
+                    copyBtn.textContent = '已複製';
+                    
+                    // 添加視覺反饋
+                    copyBtn.style.backgroundColor = '#c8e6c9';
+                    copyBtn.style.color = '#2e7d32';
+                    copyBtn.style.borderColor = '#a5d6a7';
+                    
+                    // 2秒後恢復按鈕文字和樣式
+                    setTimeout(() => {
+                        copyBtn.textContent = '複製';
+                        copyBtn.style.backgroundColor = '';
+                        copyBtn.style.color = '';
+                        copyBtn.style.borderColor = '';
+                    }, 2000);
+                    
+                    // 顯示提示訊息
+                    showToast('已複製連結到剪貼簿');
+                } catch (err) {
+                    console.error('複製失敗:', err);
+                    showToast('複製失敗，請手動複製');
+                }
+                
+                // 移除臨時元素
+                document.body.removeChild(textarea);
+            });
+            
+            // 初始化遊戲
+            initializeBoard();
+            generateSudoku();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95abf57250abf209',t:'MTc1MTc3MTk0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
