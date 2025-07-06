@@ -1,0 +1,1385 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛接牛肉遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            touch-action: none;
+            user-select: none;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .grass-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cdefs%3E%3Cpattern id='grass' patternUnits='userSpaceOnUse' width='100' height='100'%3E%3Cpath d='M0,0 L100,0 L100,100 L0,100 Z' fill='%2365a30d'/%3E%3Cpath d='M0,90 Q10,70 15,85 Q20,100 25,80 Q30,60 35,85 Q40,110 45,80 Q50,50 55,75 Q60,100 65,85 Q70,70 75,90 Q80,110 85,80 Q90,50 95,70 Q100,90 100,90 L100,100 L0,100 Z' fill='%2384cc16'/%3E%3Cpath d='M0,95 Q5,80 10,90 Q15,100 20,85 Q25,70 30,90 Q35,110 40,85 Q45,60 50,80 Q55,100 60,90 Q65,80 70,95 Q75,110 80,85 Q85,60 90,75 Q95,90 100,95 L100,100 L0,100 Z' fill='%234ade80'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='400' height='400' fill='url(%23grass)'/%3E%3C/svg%3E");
+            background-size: cover;
+            z-index: 1;
+        }
+        
+        .sky-background {
+            position: absolute;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to bottom, #87CEEB, #B0E0E6);
+            z-index: 0;
+        }
+        
+        #basket {
+            position: absolute;
+            bottom: 20px;
+            width: 120px;
+            height: 80px;
+            transition: transform 0.1s;
+            z-index: 10;
+            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.2));
+        }
+        
+        .falling-item {
+            position: absolute;
+            z-index: 5;
+            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.2));
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #6A3805;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 12px 16px;
+            border-radius: 20px;
+            z-index: 20;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #FFC107;
+        }
+        
+        #timer-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #6A3805;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 12px 16px;
+            border-radius: 20px;
+            z-index: 20;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #FFC107;
+        }
+        
+        #cow-counter {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #6A3805;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 12px 16px;
+            border-radius: 20px;
+            z-index: 20;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #FFC107;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background-color: #FFF9C4;
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 5px solid #FFB74D;
+        }
+        
+        .btn {
+            background-color: #FF9800;
+            color: white;
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn:hover {
+            background-color: #F57C00;
+            transform: scale(1.05);
+        }
+        
+        .food-item {
+            position: absolute;
+            cursor: pointer;
+            z-index: 5;
+            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.2));
+        }
+        
+        .cow {
+            position: absolute;
+            z-index: 10;
+            transition: all 0.5s;
+            filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.3));
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.05); }
+        }
+        
+        .bounce {
+            animation: bounce 0.5s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .float {
+            animation: float 2s infinite ease-in-out;
+        }
+        
+        .clouds {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .cloud {
+            position: absolute;
+            opacity: 0.8;
+        }
+        
+        .visual-feedback {
+            position: absolute;
+            font-size: 40px;
+            opacity: 1;
+            z-index: 50;
+            pointer-events: none;
+            transition: all 0.5s;
+        }
+        
+        .sun {
+            position: absolute;
+            top: 40px;
+            right: 80px;
+            width: 80px;
+            height: 80px;
+            z-index: 1;
+        }
+        
+        .sound-indicator {
+            position: absolute;
+            font-size: 24px;
+            color: #FFD700;
+            opacity: 0;
+            z-index: 50;
+            pointer-events: none;
+            animation: soundWave 0.5s ease-out;
+        }
+        
+        @keyframes soundWave {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB, #4CAF50);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #6A3805;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px 40px;
+            border-radius: 30px;
+            border: 5px solid #FFB74D;
+        }
+        
+        .start-btn {
+            background-color: #FF9800;
+            color: white;
+            padding: 20px 60px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 28px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        .start-btn:hover {
+            background-color: #F57C00;
+            transform: scale(1.1);
+        }
+        
+        .game-logo {
+            width: 300px;
+            height: 200px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <div class="game-logo">
+            <svg viewBox="0 0 300 200">
+                <!-- 籃子 -->
+                <path d="M110,140 L190,140 L200,180 L100,180 Z" fill="#8B4513" />
+                <path d="M115,145 L185,145 L193,175 L107,175 Z" fill="#DEB887" />
+                <path d="M110,140 C110,130 130,120 150,120 C170,120 190,130 190,140" stroke="#8B4513" stroke-width="5" fill="none" />
+                
+                <!-- 牛肉 -->
+                <path d="M130,80 C130,70 140,65 150,60 C160,65 170,70 170,80 C170,90 160,95 150,100 C140,95 130,90 130,80 Z" fill="#8B0000" />
+                <path d="M135,80 C135,72 143,68 150,65 C157,68 165,72 165,80 C165,88 157,92 150,95 C143,92 135,88 135,80 Z" fill="#A52A2A" />
+                
+                <!-- 牛 -->
+                <ellipse cx="230" cy="90" rx="30" ry="20" fill="#8B4513" />
+                <circle cx="260" cy="80" r="15" fill="#A0522D" />
+                <path d="M267,70 Q275,65 272,60" stroke="#A0522D" stroke-width="5" fill="#A0522D" />
+                <path d="M253,70 Q245,65 248,60" stroke="#A0522D" stroke-width="5" fill="#A0522D" />
+                <circle cx="255" cy="77" r="3" fill="#000000" />
+                <circle cx="265" cy="77" r="3" fill="#000000" />
+                <ellipse cx="260" cy="85" rx="5" ry="3" fill="#FFA07A" />
+                <path d="M257,88 Q260,90 263,88" stroke="#000000" stroke-width="1" fill="none" />
+                <rect x="210" y="105" width="5" height="15" rx="2" fill="#8B4513" />
+                <rect x="220" y="105" width="5" height="15" rx="2" fill="#8B4513" />
+                <rect x="235" y="105" width="5" height="15" rx="2" fill="#8B4513" />
+                <rect x="245" y="105" width="5" height="15" rx="2" fill="#8B4513" />
+                <circle cx="215" cy="85" r="8" fill="#F5DEB3" />
+                <circle cx="235" cy="95" r="6" fill="#F5DEB3" />
+                <path d="M200,85 Q195,75 190,80 Q185,85 187,90" stroke="#8B4513" stroke-width="3" fill="none" />
+                
+                <!-- 食物 -->
+                <path d="M70,80 C70,70 75,65 80,60 C85,65 90,70 90,80 Z" fill="#228B22" />
+                <path d="M75,80 C75,72 77,68 80,65 C83,68 85,72 85,80" fill="#32CD32" />
+                <path d="M77,80 C77,75 79,70 80,67 C81,70 83,75 83,80" fill="#7CFC00" />
+                
+                <!-- 掉落效果 -->
+                <path d="M150,30 L150,50" stroke="#8B0000" stroke-width="2" stroke-dasharray="5,5" />
+                <path d="M140,40 L160,40" stroke="#8B0000" stroke-width="2" />
+                <path d="M145,35 L155,45" stroke="#8B0000" stroke-width="2" />
+                <path d="M145,45 L155,35" stroke="#8B0000" stroke-width="2" />
+                
+                <!-- 裝飾 -->
+                <circle cx="50" cy="50" r="15" fill="#FFD700" />
+                <g stroke="#FFD700" stroke-width="2">
+                    <line x1="50" y1="30" x2="50" y2="35" />
+                    <line x1="50" y1="65" x2="50" y2="70" />
+                    <line x1="30" y1="50" x2="35" y2="50" />
+                    <line x1="65" y1="50" x2="70" y2="50" />
+                    <line x1="37" y1="37" x2="42" y2="42" />
+                    <line x1="58" y1="58" x2="63" y2="63" />
+                    <line x1="37" y1="63" x2="42" y2="58" />
+                    <line x1="58" y1="42" x2="63" y2="37" />
+                </g>
+            </svg>
+        </div>
+        <h1 class="title">可愛接牛肉遊戲</h1>
+        <button class="start-btn" id="start-btn">開始遊戲</button>
+    </div>
+
+    <div id="game-container" style="display: none;">
+        <div class="sky-background"></div>
+        <div class="grass-background"></div>
+        
+        <div class="sun">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="30" fill="#FFD700" />
+                <g stroke="#FFD700" stroke-width="4">
+                    <line x1="50" y1="0" x2="50" y2="15" />
+                    <line x1="50" y1="85" x2="50" y2="100" />
+                    <line x1="0" y1="50" x2="15" y2="50" />
+                    <line x1="85" y1="50" x2="100" y2="50" />
+                    <line x1="15" y1="15" x2="25" y2="25" />
+                    <line x1="75" y1="75" x2="85" y2="85" />
+                    <line x1="15" y1="85" x2="25" y2="75" />
+                    <line x1="75" y1="25" x2="85" y2="15" />
+                </g>
+            </svg>
+        </div>
+        
+        <div class="clouds" id="clouds"></div>
+        <div id="score-display">重量: 0 kg</div>
+        <div id="timer-display">時間: 60 秒</div>
+        <div id="cow-counter">牛: 0 頭</div>
+        
+        <svg id="basket" viewBox="0 0 120 80">
+            <path d="M10,20 L110,20 L120,80 L0,80 Z" fill="#8B4513" />
+            <path d="M15,25 L105,25 L113,75 L7,75 Z" fill="#DEB887" />
+            <path d="M10,20 C10,10 30,0 60,0 C90,0 110,10 110,20" stroke="#8B4513" stroke-width="5" fill="none" />
+        </svg>
+    </div>
+
+    <script>
+        // 遊戲變數
+        const gameContainer = document.getElementById('game-container');
+        const startScreen = document.getElementById('start-screen');
+        const startBtn = document.getElementById('start-btn');
+        const basket = document.getElementById('basket');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const cowCounter = document.getElementById('cow-counter');
+        const cloudsContainer = document.getElementById('clouds');
+        
+        let score = 0;
+        let timeLeft = 60;
+        let cowCount = 0;
+        let gameInterval;
+        let timerInterval;
+        let fallingItems = [];
+        let gameMode = 'catching'; // catching 或 farming
+        let cowWeight = 0;
+        let cows = [];
+        let foodItems = [];
+        let cowThreshold = 20; // 需要多少kg才能獲得一頭牛
+        let gameActive = false; // 控制遊戲是否處於活動狀態
+        let createFoodInterval;
+        
+        // 開始按鈕事件
+        startBtn.addEventListener('click', function() {
+            startScreen.style.display = 'none';
+            gameContainer.style.display = 'block';
+            initGame();
+        });
+        
+        // 創建雲朵背景
+        function createClouds() {
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud float';
+                
+                const size = Math.random() * 100 + 50;
+                const top = Math.random() * 150;
+                const left = Math.random() * window.innerWidth;
+                const speed = Math.random() * 20 + 10;
+                
+                cloud.innerHTML = `
+                    <svg width="${size}" height="${size/2}" viewBox="0 0 100 50">
+                        <ellipse cx="30" cy="25" rx="20" ry="15" fill="white" />
+                        <ellipse cx="50" cy="20" rx="25" ry="18" fill="white" />
+                        <ellipse cx="70" cy="25" rx="20" ry="15" fill="white" />
+                    </svg>
+                `;
+                
+                cloud.style.top = top + 'px';
+                cloud.style.left = left + 'px';
+                cloud.style.animationDuration = speed + 's';
+                
+                cloudsContainer.appendChild(cloud);
+            }
+        }
+        
+        // 牛肉部位和食物類型 - 更真實版本，使用不規則曲線
+        const itemTypes = [
+            { 
+                type: 'beef', 
+                name: '牛腩', 
+                weight: 2, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M15,30 C15,20 20,15 30,10 C40,15 45,20 45,30 C45,40 40,45 30,50 C20,45 15,40 15,30 Z" fill="#8B0000" />
+                    <path d="M20,30 C20,22 24,18 30,15 C36,18 40,22 40,30 C40,38 36,42 30,45 C24,42 20,38 20,30 Z" fill="#A52A2A" />
+                    <path d="M25,30 C25,25 27,22 30,20 C33,22 35,25 35,30 C35,35 33,38 30,40 C27,38 25,35 25,30 Z" fill="#CD5C5C" />
+                    <path d="M25,30 L35,30" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                    <path d="M30,25 L30,35" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                </svg>`
+            },
+            { 
+                type: 'beef', 
+                name: '牛排', 
+                weight: 3, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M10,20 C15,15 25,15 30,17 C35,15 45,15 50,20 C55,25 55,35 50,40 C45,45 35,45 30,43 C25,45 15,45 10,40 C5,35 5,25 10,20 Z" fill="#8B0000" />
+                    <path d="M15,22 C19,18 25,18 30,20 C35,18 41,18 45,22 C49,26 49,34 45,38 C41,42 35,42 30,40 C25,42 19,42 15,38 C11,34 11,26 15,22 Z" fill="#A52A2A" />
+                    <path d="M15,25 L45,25" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                    <path d="M15,30 L45,30" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                    <path d="M15,35 L45,35" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                    <circle cx="20" cy="28" r="2" fill="#F0E68C" />
+                    <circle cx="40" cy="28" r="2" fill="#F0E68C" />
+                    <circle cx="30" cy="33" r="2" fill="#F0E68C" />
+                </svg>`
+            },
+            { 
+                type: 'beef', 
+                name: '牛腱', 
+                weight: 1.5, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M15,20 C20,18 40,18 45,20 C48,25 45,35 40,40 C35,42 25,42 20,40 C15,35 12,25 15,20 Z" fill="#8B0000" />
+                    <path d="M20,22 C24,20 36,20 40,22 C43,26 40,34 37,38 C33,40 27,40 23,38 C20,34 17,26 20,22 Z" fill="#A52A2A" />
+                    <path d="M25,24 C28,23 32,23 35,24 C37,27 35,33 33,36 C30,37 30,37 27,36 C25,33 23,27 25,24 Z" fill="#CD5C5C" />
+                    <path d="M20,25 L40,25" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                    <path d="M18,30 L42,30" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                    <path d="M20,35 L40,35" stroke="white" stroke-width="0.5" stroke-opacity="0.5" />
+                </svg>`
+            },
+            { 
+                type: 'beef', 
+                name: '牛肋條', 
+                weight: 2.5, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M10,15 C15,12 45,12 50,15 C53,20 53,40 50,45 C45,48 15,48 10,45 C7,40 7,20 10,15 Z" fill="#8B0000" />
+                    <path d="M13,17 C17,15 43,15 47,17 C50,21 50,39 47,43 C43,45 17,45 13,43 C10,39 10,21 13,17 Z" fill="#A52A2A" />
+                    <path d="M15,20 L15,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                    <path d="M20,20 L20,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                    <path d="M25,20 L25,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                    <path d="M30,20 L30,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                    <path d="M35,20 L35,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                    <path d="M40,20 L40,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                    <path d="M45,20 L45,40" stroke="white" stroke-width="1" stroke-opacity="0.7" />
+                </svg>`
+            },
+            { 
+                type: 'food', 
+                name: '牧草', 
+                weight: 0.5, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M15,50 C15,30 20,20 30,10 C40,20 45,30 45,50 Z" fill="#228B22" />
+                    <path d="M20,50 C20,35 25,25 30,15 C35,25 40,35 40,50" fill="#32CD32" />
+                    <path d="M25,50 C25,40 30,30 30,20 C30,30 35,40 35,50" fill="#7CFC00" />
+                    <path d="M17,30 L23,25" stroke="#228B22" stroke-width="1" />
+                    <path d="M37,30 L43,25" stroke="#228B22" stroke-width="1" />
+                    <path d="M20,40 L15,35" stroke="#228B22" stroke-width="1" />
+                    <path d="M40,40 L45,35" stroke="#228B22" stroke-width="1" />
+                </svg>`
+            },
+            { 
+                type: 'food', 
+                name: '玉米', 
+                weight: 0.8, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M30,10 L30,50" stroke="#8B4513" stroke-width="3" />
+                    <path d="M30,15 C20,15 15,25 15,35 C15,45 20,50 30,50 C40,50 45,45 45,35 C45,25 40,15 30,15 Z" fill="#F0E68C" />
+                    <path d="M30,20 C23,20 20,27 20,35 C20,43 23,45 30,45 C37,45 40,43 40,35 C40,27 37,20 30,20 Z" fill="#FFD700" />
+                    <ellipse cx="23" cy="25" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="30" cy="22" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="37" cy="25" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="22" cy="32" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="38" cy="32" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="23" cy="39" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="30" cy="42" rx="3" ry="4" fill="#F0E68C" />
+                    <ellipse cx="37" cy="39" rx="3" ry="4" fill="#F0E68C" />
+                </svg>`
+            },
+            { 
+                type: 'food', 
+                name: '紅蘿蔔', 
+                weight: 0.6, 
+                svg: `<svg viewBox="0 0 60 60">
+                    <path d="M30,15 L25,50 Q30,55 35,50 Z" fill="#FF4500" />
+                    <path d="M30,20 L27,50 Q30,53 33,50 Z" fill="#FF6347" />
+                    <path d="M30,10 Q25,15 30,15 Q35,15 30,10" fill="#228B22" />
+                    <path d="M30,10 L35,5" stroke="#228B22" stroke-width="2" />
+                    <path d="M30,10 L25,5" stroke="#228B22" stroke-width="2" />
+                    <path d="M30,10 L30,2" stroke="#228B22" stroke-width="2" />
+                    <path d="M30,25 L28,25" stroke="#FF8C00" stroke-width="0.5" />
+                    <path d="M30,30 L28,30" stroke="#FF8C00" stroke-width="0.5" />
+                    <path d="M30,35 L28,35" stroke="#FF8C00" stroke-width="0.5" />
+                    <path d="M30,40 L28,40" stroke="#FF8C00" stroke-width="0.5" />
+                    <path d="M30,45 L28,45" stroke="#FF8C00" stroke-width="0.5" />
+                </svg>`
+            }
+        ];
+        
+        // 初始化遊戲
+        function initGame() {
+            // 創建雲朵
+            createClouds();
+            
+            // 設置籃子初始位置
+            basket.style.left = (window.innerWidth / 2 - 60) + 'px';
+            
+            // 開始計時器
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // 開始生成掉落物品
+            gameInterval = setInterval(createFallingItem, 1000);
+            
+            // 添加滑鼠/觸控事件
+            document.addEventListener('mousemove', moveBasket);
+            document.addEventListener('touchmove', moveBasketTouch);
+            
+            // 更新顯示
+            updateDisplay();
+            
+            // 設置遊戲為活動狀態
+            gameActive = true;
+        }
+        
+        // 移動籃子 (滑鼠)
+        function moveBasket(e) {
+            if (gameMode !== 'catching' || !gameActive) return;
+            
+            const basketWidth = 120;
+            let newX = e.clientX - basketWidth / 2;
+            
+            // 限制籃子在遊戲區域內
+            newX = Math.max(0, Math.min(window.innerWidth - basketWidth, newX));
+            
+            basket.style.left = newX + 'px';
+        }
+        
+        // 移動籃子 (觸控)
+        function moveBasketTouch(e) {
+            if (gameMode !== 'catching' || !gameActive) return;
+            e.preventDefault();
+            
+            const basketWidth = 120;
+            let newX = e.touches[0].clientX - basketWidth / 2;
+            
+            // 限制籃子在遊戲區域內
+            newX = Math.max(0, Math.min(window.innerWidth - basketWidth, newX));
+            
+            basket.style.left = newX + 'px';
+        }
+        
+        // 創建掉落物品
+        function createFallingItem() {
+            if (!gameActive) return;
+            
+            const beefTypes = itemTypes.filter(item => item.type === 'beef');
+            const itemType = beefTypes[Math.floor(Math.random() * beefTypes.length)];
+            const item = document.createElement('div');
+            item.className = 'falling-item';
+            
+            // 隨機大小 (70% - 130% 的原始大小)
+            const sizeMultiplier = 0.7 + Math.random() * 0.6;
+            const itemWidth = 60 * sizeMultiplier;
+            const itemHeight = 60 * sizeMultiplier;
+            
+            // 隨機位置
+            const xPos = Math.random() * (window.innerWidth - itemWidth);
+            
+            item.style.left = xPos + 'px';
+            item.style.top = '-60px';
+            item.style.width = itemWidth + 'px';
+            item.style.height = itemHeight + 'px';
+            
+            // 設置SVG內容
+            item.innerHTML = itemType.svg;
+            
+            // 添加浮動動畫
+            item.classList.add('float');
+            
+            // 儲存物品資訊
+            item.dataset.type = itemType.type;
+            item.dataset.weight = itemType.weight * sizeMultiplier;
+            item.dataset.name = itemType.name;
+            
+            gameContainer.appendChild(item);
+            fallingItems.push({
+                element: item,
+                speed: Math.random() * 2 + 2,
+                x: xPos,
+                y: -60,
+                size: sizeMultiplier
+            });
+        }
+        
+        // 更新掉落物品位置
+        function updateFallingItems() {
+            if (!gameActive) return;
+            
+            const basketRect = basket.getBoundingClientRect();
+            
+            for (let i = fallingItems.length - 1; i >= 0; i--) {
+                const item = fallingItems[i];
+                item.y += item.speed;
+                item.element.style.top = item.y + 'px';
+                
+                const itemRect = item.element.getBoundingClientRect();
+                
+                // 檢查是否被籃子接住
+                if (
+                    itemRect.bottom >= basketRect.top &&
+                    itemRect.top <= basketRect.bottom &&
+                    itemRect.right >= basketRect.left &&
+                    itemRect.left <= basketRect.right &&
+                    itemRect.top >= basketRect.top
+                ) {
+                    // 接住了物品
+                    const weight = parseFloat(item.element.dataset.weight);
+                    score += weight;
+                    
+                    // 顯示得分動畫
+                    const scoreAnim = document.createElement('div');
+                    scoreAnim.textContent = `+${weight.toFixed(1)} kg`;
+                    scoreAnim.style.position = 'absolute';
+                    scoreAnim.style.left = itemRect.left + 'px';
+                    scoreAnim.style.top = itemRect.top + 'px';
+                    scoreAnim.style.color = '#FF9800';
+                    scoreAnim.style.fontWeight = 'bold';
+                    scoreAnim.style.fontSize = '20px';
+                    scoreAnim.style.zIndex = '30';
+                    gameContainer.appendChild(scoreAnim);
+                    
+                    // 動畫效果
+                    let opacity = 1;
+                    let animY = itemRect.top;
+                    const animInterval = setInterval(() => {
+                        opacity -= 0.05;
+                        animY -= 2;
+                        scoreAnim.style.opacity = opacity;
+                        scoreAnim.style.top = animY + 'px';
+                        
+                        if (opacity <= 0) {
+                            clearInterval(animInterval);
+                            gameContainer.removeChild(scoreAnim);
+                        }
+                    }, 50);
+                    
+                    // 籃子彈跳效果
+                    basket.classList.add('bounce');
+                    setTimeout(() => {
+                        basket.classList.remove('bounce');
+                    }, 500);
+                    
+                    // 視覺反饋
+                    showVisualFeedback(basketRect.left + basketRect.width / 2, basketRect.top);
+                    
+                    // 顯示聲音指示器
+                    showSoundIndicator(basketRect.left + basketRect.width / 2, basketRect.top);
+                    
+                    // 移除物品
+                    gameContainer.removeChild(item.element);
+                    fallingItems.splice(i, 1);
+                    
+                    // 檢查是否達到生成牛的條件
+                    if (score >= (cowCount + 1) * cowThreshold) {
+                        cowCount++;
+                        pauseGame();
+                        showCowModal();
+                    }
+                    
+                    updateDisplay();
+                    continue;
+                }
+                
+                // 檢查是否掉出畫面
+                if (item.y > window.innerHeight) {
+                    gameContainer.removeChild(item.element);
+                    fallingItems.splice(i, 1);
+                }
+            }
+        }
+        
+        // 暫停遊戲
+        function pauseGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+        }
+        
+        // 繼續遊戲
+        function resumeGame() {
+            gameActive = true;
+            gameInterval = setInterval(createFallingItem, 1000);
+        }
+        
+        // 顯示視覺反饋
+        function showVisualFeedback(x, y) {
+            const feedback = document.createElement('div');
+            feedback.className = 'visual-feedback';
+            feedback.textContent = '✓';
+            feedback.style.left = (x - 20) + 'px';
+            feedback.style.top = (y - 40) + 'px';
+            feedback.style.color = '#4CAF50';
+            
+            gameContainer.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+                feedback.style.transform = 'translateY(-30px) scale(1.5)';
+                
+                setTimeout(() => {
+                    gameContainer.removeChild(feedback);
+                }, 500);
+            }, 100);
+        }
+        
+        // 顯示聲音指示器
+        function showSoundIndicator(x, y) {
+            const indicator = document.createElement('div');
+            indicator.className = 'sound-indicator';
+            indicator.innerHTML = '🔔';
+            indicator.style.left = (x - 12) + 'px';
+            indicator.style.top = (y - 60) + 'px';
+            
+            gameContainer.appendChild(indicator);
+            
+            setTimeout(() => {
+                gameContainer.removeChild(indicator);
+            }, 500);
+        }
+        
+        // 更新計時器
+        function updateTimer() {
+            if (!gameActive) return;
+            
+            timeLeft--;
+            timerDisplay.textContent = `時間: ${timeLeft} 秒`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                clearInterval(gameInterval);
+                gameActive = false;
+                
+                if (gameMode === 'catching') {
+                    showGameOverModal();
+                } else {
+                    showFarmingResultModal();
+                }
+            }
+        }
+        
+        // 更新顯示
+        function updateDisplay() {
+            if (gameMode === 'catching') {
+                scoreDisplay.textContent = `重量: ${score.toFixed(1)} kg`;
+            } else {
+                scoreDisplay.textContent = `牛重量: ${cowWeight.toFixed(1)} kg`;
+            }
+            cowCounter.textContent = `牛: ${cowCount} 頭`;
+        }
+        
+        // 顯示生成牛的選擇視窗
+        function showCowModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'cow-modal';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            
+            const cowSvg = `<svg width="200" height="150" viewBox="0 0 200 150">
+                <!-- 身體 -->
+                <ellipse cx="100" cy="90" rx="60" ry="40" fill="#8B4513" />
+                
+                <!-- 頭 -->
+                <circle cx="160" cy="70" r="30" fill="#A0522D" />
+                
+                <!-- 耳朵 -->
+                <path d="M175,50 Q190,40 185,30" stroke="#A0522D" stroke-width="10" fill="#A0522D" />
+                <path d="M145,50 Q130,40 135,30" stroke="#A0522D" stroke-width="10" fill="#A0522D" />
+                
+                <!-- 眼睛 -->
+                <circle cx="150" cy="65" r="5" fill="#000000" />
+                <circle cx="170" cy="65" r="5" fill="#000000" />
+                <circle cx="152" cy="63" r="2" fill="white" />
+                <circle cx="172" cy="63" r="2" fill="white" />
+                
+                <!-- 鼻子 -->
+                <ellipse cx="160" cy="80" rx="10" ry="5" fill="#FFA07A" />
+                <circle cx="155" cy="78" r="2" fill="#000000" />
+                <circle cx="165" cy="78" r="2" fill="#000000" />
+                
+                <!-- 嘴巴 -->
+                <path d="M155,85 Q160,90 165,85" stroke="#000000" stroke-width="2" fill="none" />
+                
+                <!-- 腿 -->
+                <rect x="60" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                <rect x="85" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                <rect x="105" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                <rect x="130" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                
+                <!-- 斑點 -->
+                <circle cx="70" cy="80" r="15" fill="#F5DEB3" />
+                <circle cx="110" cy="100" r="12" fill="#F5DEB3" />
+                <circle cx="130" cy="75" r="10" fill="#F5DEB3" />
+                
+                <!-- 尾巴 -->
+                <path d="M40,80 Q30,60 20,70 Q10,80 15,90" stroke="#8B4513" stroke-width="5" fill="none" />
+                <circle cx="15" cy="90" r="5" fill="#A0522D" />
+            </svg>`;
+            
+            modalContent.innerHTML = `
+                <h2 style="font-size: 28px; margin-bottom: 20px; color: #6A3805;">哞！你獲得了一頭牛！</h2>
+                ${cowSvg}
+                <p style="margin: 20px 0; font-size: 20px; color: #6A3805;">你想要做什麼？</p>
+                <button id="continue-btn" class="btn">繼續接牛肉</button>
+                <button id="farm-btn" class="btn">去農場養牛</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 確保按鈕事件正確綁定
+            document.getElementById('continue-btn').addEventListener('click', function() {
+                if (document.getElementById('cow-modal')) {
+                    document.body.removeChild(document.getElementById('cow-modal'));
+                }
+                resumeGame();
+            });
+            
+            document.getElementById('farm-btn').addEventListener('click', function() {
+                if (document.getElementById('cow-modal')) {
+                    document.body.removeChild(document.getElementById('cow-modal'));
+                }
+                startFarmingMode();
+            });
+        }
+        
+        // 顯示遊戲結束視窗
+        function showGameOverModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'game-over-modal';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            
+            const cowSvg = `<svg width="100" height="80" viewBox="0 0 200 150">
+                <!-- 身體 -->
+                <ellipse cx="100" cy="90" rx="60" ry="40" fill="#8B4513" />
+                
+                <!-- 頭 -->
+                <circle cx="160" cy="70" r="30" fill="#A0522D" />
+                
+                <!-- 耳朵 -->
+                <path d="M175,50 Q190,40 185,30" stroke="#A0522D" stroke-width="10" fill="#A0522D" />
+                <path d="M145,50 Q130,40 135,30" stroke="#A0522D" stroke-width="10" fill="#A0522D" />
+                
+                <!-- 眼睛 -->
+                <circle cx="150" cy="65" r="5" fill="#000000" />
+                <circle cx="170" cy="65" r="5" fill="#000000" />
+                <circle cx="152" cy="63" r="2" fill="white" />
+                <circle cx="172" cy="63" r="2" fill="white" />
+                
+                <!-- 鼻子 -->
+                <ellipse cx="160" cy="80" rx="10" ry="5" fill="#FFA07A" />
+                <circle cx="155" cy="78" r="2" fill="#000000" />
+                <circle cx="165" cy="78" r="2" fill="#000000" />
+                
+                <!-- 嘴巴 -->
+                <path d="M155,85 Q160,90 165,85" stroke="#000000" stroke-width="2" fill="none" />
+                
+                <!-- 腿 -->
+                <rect x="60" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                <rect x="85" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                <rect x="105" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                <rect x="130" y="120" width="10" height="25" rx="5" fill="#8B4513" />
+                
+                <!-- 斑點 -->
+                <circle cx="70" cy="80" r="15" fill="#F5DEB3" />
+                <circle cx="110" cy="100" r="12" fill="#F5DEB3" />
+                <circle cx="130" cy="75" r="10" fill="#F5DEB3" />
+                
+                <!-- 尾巴 -->
+                <path d="M40,80 Q30,60 20,70 Q10,80 15,90" stroke="#8B4513" stroke-width="5" fill="none" />
+                <circle cx="15" cy="90" r="5" fill="#A0522D" />
+            </svg>`;
+            
+            modalContent.innerHTML = `
+                <h2 style="font-size: 28px; margin-bottom: 20px; color: #6A3805;">遊戲結束！</h2>
+                ${cowSvg}
+                <p style="margin: 15px 0; font-size: 22px; color: #6A3805;">你總共獲得了 ${cowCount} 頭牛！</p>
+                <p style="margin: 15px 0; font-size: 22px; color: #6A3805;">總重量: ${score.toFixed(1)} kg</p>
+                <button id="restart-btn" class="btn">重新開始</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            document.getElementById('restart-btn').addEventListener('click', function() {
+                if (document.getElementById('game-over-modal')) {
+                    document.body.removeChild(document.getElementById('game-over-modal'));
+                }
+                resetGame();
+            });
+        }
+        
+        // 顯示養牛結果視窗
+        function showFarmingResultModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'farming-result-modal';
+            
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            
+            const cowSvg = `<svg width="200" height="150" viewBox="0 0 200 150">
+                <!-- 身體 -->
+                <ellipse cx="100" cy="90" rx="${60 + cowWeight/2}" ry="${40 + cowWeight/3}" fill="#8B4513" />
+                
+                <!-- 頭 -->
+                <circle cx="160" cy="70" r="${30 + cowWeight/10}" fill="#A0522D" />
+                
+                <!-- 耳朵 -->
+                <path d="M${175 + cowWeight/10},${50 - cowWeight/10} Q${190 + cowWeight/5},${40 - cowWeight/5} ${185 + cowWeight/5},${30 - cowWeight/5}" stroke="#A0522D" stroke-width="${10 + cowWeight/20}" fill="#A0522D" />
+                <path d="M${145 - cowWeight/10},${50 - cowWeight/10} Q${130 - cowWeight/5},${40 - cowWeight/5} ${135 - cowWeight/5},${30 - cowWeight/5}" stroke="#A0522D" stroke-width="${10 + cowWeight/20}" fill="#A0522D" />
+                
+                <!-- 眼睛 -->
+                <circle cx="${150 - cowWeight/20}" cy="${65 - cowWeight/20}" r="${5 + cowWeight/20}" fill="#000000" />
+                <circle cx="${170 + cowWeight/20}" cy="${65 - cowWeight/20}" r="${5 + cowWeight/20}" fill="#000000" />
+                <circle cx="${152 - cowWeight/20}" cy="${63 - cowWeight/20}" r="${2 + cowWeight/40}" fill="white" />
+                <circle cx="${172 + cowWeight/20}" cy="${63 - cowWeight/20}" r="${2 + cowWeight/40}" fill="white" />
+                
+                <!-- 鼻子 -->
+                <ellipse cx="160" cy="${80 + cowWeight/20}" rx="${10 + cowWeight/20}" ry="${5 + cowWeight/40}" fill="#FFA07A" />
+                <circle cx="${155 - cowWeight/40}" cy="${78 + cowWeight/40}" r="${2 + cowWeight/40}" fill="#000000" />
+                <circle cx="${165 + cowWeight/40}" cy="${78 + cowWeight/40}" r="${2 + cowWeight/40}" fill="#000000" />
+                
+                <!-- 嘴巴 -->
+                <path d="M${155 - cowWeight/20},${85 + cowWeight/20} Q160,${90 + cowWeight/10} ${165 + cowWeight/20},${85 + cowWeight/20}" stroke="#000000" stroke-width="${2 + cowWeight/40}" fill="none" />
+                
+                <!-- 腿 -->
+                <rect x="${60 - cowWeight/5}" y="${120 + cowWeight/5}" width="${10 + cowWeight/20}" height="${25 + cowWeight/10}" rx="5" fill="#8B4513" />
+                <rect x="${85 - cowWeight/10}" y="${120 + cowWeight/5}" width="${10 + cowWeight/20}" height="${25 + cowWeight/10}" rx="5" fill="#8B4513" />
+                <rect x="${105 + cowWeight/10}" y="${120 + cowWeight/5}" width="${10 + cowWeight/20}" height="${25 + cowWeight/10}" rx="5" fill="#8B4513" />
+                <rect x="${130 + cowWeight/5}" y="${120 + cowWeight/5}" width="${10 + cowWeight/20}" height="${25 + cowWeight/10}" rx="5" fill="#8B4513" />
+                
+                <!-- 斑點 -->
+                <circle cx="${70 - cowWeight/10}" cy="${80 - cowWeight/10}" r="${15 + cowWeight/10}" fill="#F5DEB3" />
+                <circle cx="${110 + cowWeight/20}" cy="${100 + cowWeight/10}" r="${12 + cowWeight/10}" fill="#F5DEB3" />
+                <circle cx="${130 + cowWeight/10}" cy="${75 - cowWeight/20}" r="${10 + cowWeight/10}" fill="#F5DEB3" />
+                
+                <!-- 尾巴 -->
+                <path d="M${40 - cowWeight/5},80 Q${30 - cowWeight/5},60 ${20 - cowWeight/5},70 Q${10 - cowWeight/5},80 ${15 - cowWeight/5},90" stroke="#8B4513" stroke-width="${5 + cowWeight/20}" fill="none" />
+                <circle cx="${15 - cowWeight/5}" cy="90" r="${5 + cowWeight/20}" fill="#A0522D" />
+            </svg>`;
+            
+            modalContent.innerHTML = `
+                <h2 style="font-size: 28px; margin-bottom: 20px; color: #6A3805;">養牛結束！</h2>
+                ${cowSvg}
+                <p style="margin: 20px 0; font-size: 24px; color: #6A3805;">你的牛長到了 ${cowWeight.toFixed(1)} kg！</p>
+                <p style="margin: 10px 0; font-size: 18px; color: #8D6E63;">好大隻的牛哞～</p>
+                <button id="restart-btn" class="btn">重新開始遊戲</button>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            document.getElementById('restart-btn').addEventListener('click', function() {
+                if (document.getElementById('farming-result-modal')) {
+                    document.body.removeChild(document.getElementById('farming-result-modal'));
+                }
+                resetGame();
+            });
+        }
+        
+        // 開始養牛模式
+        function startFarmingMode() {
+            gameMode = 'farming';
+            gameActive = true;
+            
+            // 清除掉落物品
+            fallingItems.forEach(item => {
+                if (item.element.parentNode === gameContainer) {
+                    gameContainer.removeChild(item.element);
+                }
+            });
+            fallingItems = [];
+            
+            // 隱藏籃子
+            basket.style.display = 'none';
+            
+            // 重設計時器
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            timerDisplay.textContent = `時間: ${timeLeft} 秒`;
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // 更新顯示
+            scoreDisplay.textContent = `牛重量: 0 kg`;
+            cowCounter.style.display = 'none';
+            
+            // 創建多頭牛
+            createMultipleCows();
+            
+            // 開始生成食物 - 增加食物生成頻率和數量
+            cowWeight = 0;
+            createFoodInterval = setInterval(createFoodItem, 1000); // 每秒生成一個食物
+            
+            // 一開始就生成多個食物
+            for (let i = 0; i < 15; i++) {
+                createFoodItem();
+            }
+        }
+        
+        // 創建多頭牛
+        function createMultipleCows() {
+            // 清除現有的牛
+            cows.forEach(cow => {
+                if (cow.parentNode === gameContainer) {
+                    gameContainer.removeChild(cow);
+                }
+            });
+            cows = [];
+            
+            // 根據cowCount創建牛
+            for (let i = 0; i < cowCount; i++) {
+                const cow = document.createElement('div');
+                cow.className = 'cow';
+                cow.style.width = '200px';
+                cow.style.height = '150px';
+                
+                // 計算位置，讓牛均勻分布
+                const spacing = window.innerWidth / (cowCount + 1);
+                const xPos = spacing * (i + 1) - 100;
+                const yPos = window.innerHeight / 2 - 75 + (i % 2 === 0 ? -50 : 50);
+                
+                cow.style.left = xPos + 'px';
+                cow.style.top = yPos + 'px';
+                
+                // 隨機顏色變化
+                const colorShift = Math.floor(Math.random() * 30);
+                const baseColor = 139 - colorShift; // 8B4513 -> RGB(139, 69, 19)
+                const lightColor = 160 - colorShift; // A0522D -> RGB(160, 82, 45)
+                
+                cow.innerHTML = `<svg width="200" height="150" viewBox="0 0 200 150">
+                    <!-- 身體 -->
+                    <ellipse cx="100" cy="90" rx="60" ry="40" fill="rgb(${baseColor}, ${Math.floor(69 - colorShift/2)}, ${Math.floor(19 - colorShift/3)})" />
+                    
+                    <!-- 頭 -->
+                    <circle cx="160" cy="70" r="30" fill="rgb(${lightColor}, ${Math.floor(82 - colorShift/2)}, ${Math.floor(45 - colorShift/3)})" />
+                    
+                    <!-- 耳朵 -->
+                    <path d="M175,50 Q190,40 185,30" stroke="rgb(${lightColor}, ${Math.floor(82 - colorShift/2)}, ${Math.floor(45 - colorShift/3)})" stroke-width="10" fill="rgb(${lightColor}, ${Math.floor(82 - colorShift/2)}, ${Math.floor(45 - colorShift/3)})" />
+                    <path d="M145,50 Q130,40 135,30" stroke="rgb(${lightColor}, ${Math.floor(82 - colorShift/2)}, ${Math.floor(45 - colorShift/3)})" stroke-width="10" fill="rgb(${lightColor}, ${Math.floor(82 - colorShift/2)}, ${Math.floor(45 - colorShift/3)})" />
+                    
+                    <!-- 眼睛 -->
+                    <circle cx="150" cy="65" r="5" fill="#000000" />
+                    <circle cx="170" cy="65" r="5" fill="#000000" />
+                    <circle cx="152" cy="63" r="2" fill="white" />
+                    <circle cx="172" cy="63" r="2" fill="white" />
+                    
+                    <!-- 鼻子 -->
+                    <ellipse cx="160" cy="80" rx="10" ry="5" fill="#FFA07A" />
+                    <circle cx="155" cy="78" r="2" fill="#000000" />
+                    <circle cx="165" cy="78" r="2" fill="#000000" />
+                    
+                    <!-- 嘴巴 -->
+                    <path d="M155,85 Q160,90 165,85" stroke="#000000" stroke-width="2" fill="none" />
+                    
+                    <!-- 腿 -->
+                    <rect x="60" y="120" width="10" height="25" rx="5" fill="rgb(${baseColor}, ${Math.floor(69 - colorShift/2)}, ${Math.floor(19 - colorShift/3)})" />
+                    <rect x="85" y="120" width="10" height="25" rx="5" fill="rgb(${baseColor}, ${Math.floor(69 - colorShift/2)}, ${Math.floor(19 - colorShift/3)})" />
+                    <rect x="105" y="120" width="10" height="25" rx="5" fill="rgb(${baseColor}, ${Math.floor(69 - colorShift/2)}, ${Math.floor(19 - colorShift/3)})" />
+                    <rect x="130" y="120" width="10" height="25" rx="5" fill="rgb(${baseColor}, ${Math.floor(69 - colorShift/2)}, ${Math.floor(19 - colorShift/3)})" />
+                    
+                    <!-- 斑點 -->
+                    <circle cx="${70 + Math.random()*20-10}" cy="${80 + Math.random()*20-10}" r="${15 + Math.random()*5}" fill="#F5DEB3" />
+                    <circle cx="${110 + Math.random()*20-10}" cy="${100 + Math.random()*20-10}" r="${12 + Math.random()*5}" fill="#F5DEB3" />
+                    <circle cx="${130 + Math.random()*20-10}" cy="${75 + Math.random()*20-10}" r="${10 + Math.random()*5}" fill="#F5DEB3" />
+                    
+                    <!-- 尾巴 -->
+                    <path d="M40,80 Q30,60 20,70 Q10,80 15,90" stroke="rgb(${baseColor}, ${Math.floor(69 - colorShift/2)}, ${Math.floor(19 - colorShift/3)})" stroke-width="5" fill="none" />
+                    <circle cx="15" cy="90" r="5" fill="rgb(${lightColor}, ${Math.floor(82 - colorShift/2)}, ${Math.floor(45 - colorShift/3)})" />
+                </svg>`;
+                
+                gameContainer.appendChild(cow);
+                cows.push(cow);
+                
+                // 添加浮動動畫，每頭牛的動畫時間略有不同
+                cow.classList.add('float');
+                cow.style.animationDuration = (2 + Math.random() * 0.5) + 's';
+            }
+        }
+        
+        // 創建食物
+        function createFoodItem() {
+            if (gameMode !== 'farming' || !gameActive) return;
+            
+            // 限制食物數量，避免過多
+            if (foodItems.length > 30) return;
+            
+            const foodTypes = itemTypes.filter(item => item.type === 'food');
+            const foodType = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+            
+            const food = document.createElement('div');
+            food.className = 'food-item';
+            
+            // 隨機大小 (70% - 130% 的原始大小)
+            const sizeMultiplier = 0.7 + Math.random() * 0.6;
+            const foodWidth = 60 * sizeMultiplier;
+            const foodHeight = 60 * sizeMultiplier;
+            
+            // 隨機位置 - 避免食物生成在牛的位置上
+            let xPos, yPos;
+            let validPosition = false;
+            
+            while (!validPosition) {
+                xPos = Math.random() * (window.innerWidth - foodWidth);
+                yPos = Math.random() * (window.innerHeight - 200) + 100;
+                
+                validPosition = true;
+                
+                // 檢查是否與牛重疊
+                for (const cow of cows) {
+                    const cowRect = cow.getBoundingClientRect();
+                    
+                    if (
+                        xPos < cowRect.right &&
+                        xPos + foodWidth > cowRect.left &&
+                        yPos < cowRect.bottom &&
+                        yPos + foodHeight > cowRect.top
+                    ) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+                
+                // 檢查是否與其他食物重疊
+                for (const item of foodItems) {
+                    const itemRect = item.getBoundingClientRect();
+                    
+                    if (
+                        xPos < itemRect.right &&
+                        xPos + foodWidth > itemRect.left &&
+                        yPos < itemRect.bottom &&
+                        yPos + foodHeight > itemRect.top
+                    ) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+            }
+            
+            food.style.left = xPos + 'px';
+            food.style.top = yPos + 'px';
+            food.style.width = foodWidth + 'px';
+            food.style.height = foodHeight + 'px';
+            
+            // 設置SVG內容
+            food.innerHTML = foodType.svg;
+            
+            // 添加浮動動畫
+            food.classList.add('float');
+            
+            // 儲存食物資訊
+            food.dataset.weight = foodType.weight * sizeMultiplier;
+            food.dataset.name = foodType.name;
+            
+            // 添加點擊事件
+            food.addEventListener('click', function() {
+                feedCow(this, parseFloat(this.dataset.weight));
+            });
+            
+            gameContainer.appendChild(food);
+            foodItems.push(food);
+        }
+        
+        // 餵食牛
+        function feedCow(food, weight) {
+            if (!gameActive) return;
+            
+            // 移除食物
+            if (food.parentNode === gameContainer) {
+                gameContainer.removeChild(food);
+            }
+            foodItems = foodItems.filter(item => item !== food);
+            
+            // 增加牛的重量
+            cowWeight += weight;
+            scoreDisplay.textContent = `牛重量: ${cowWeight.toFixed(1)} kg`;
+            
+            // 顯示聲音指示器
+            const foodRect = food.getBoundingClientRect();
+            showSoundIndicator(foodRect.left + foodRect.width / 2, foodRect.top);
+            
+            // 隨機選擇一頭牛做動畫效果
+            if (cows.length > 0) {
+                const randomCow = cows[Math.floor(Math.random() * cows.length)];
+                randomCow.classList.remove('float');
+                randomCow.classList.add('bounce');
+                setTimeout(() => {
+                    randomCow.classList.remove('bounce');
+                    randomCow.classList.add('float');
+                }, 500);
+            }
+            
+            // 所有牛變大一點點
+            const scale = 1 + (cowWeight / (30 * cowCount));
+            cows.forEach(cow => {
+                cow.style.transform = `scale(${scale})`;
+            });
+            
+            // 顯示得分動畫
+            const scoreAnim = document.createElement('div');
+            scoreAnim.textContent = `+${weight.toFixed(1)} kg`;
+            scoreAnim.style.position = 'absolute';
+            scoreAnim.style.left = foodRect.left + 'px';
+            scoreAnim.style.top = foodRect.top + 'px';
+            scoreAnim.style.color = '#FF9800';
+            scoreAnim.style.fontWeight = 'bold';
+            scoreAnim.style.fontSize = '20px';
+            scoreAnim.style.zIndex = '30';
+            gameContainer.appendChild(scoreAnim);
+            
+            // 動畫效果
+            let opacity = 1;
+            let animY = foodRect.top;
+            const animInterval = setInterval(() => {
+                opacity -= 0.05;
+                animY -= 2;
+                scoreAnim.style.opacity = opacity;
+                scoreAnim.style.top = animY + 'px';
+                
+                if (opacity <= 0) {
+                    clearInterval(animInterval);
+                    if (scoreAnim.parentNode === gameContainer) {
+                        gameContainer.removeChild(scoreAnim);
+                    }
+                }
+            }, 50);
+            
+            // 視覺反饋
+            showVisualFeedback(foodRect.left + foodRect.width / 2, foodRect.top);
+            
+            // 添加表情符號
+            if (Math.random() > 0.5) {
+                const emoji = document.createElement('div');
+                emoji.textContent = ['❤️', '😋', '🥰', '😊'][Math.floor(Math.random() * 4)];
+                emoji.style.position = 'absolute';
+                
+                // 隨機選擇一頭牛顯示表情
+                if (cows.length > 0) {
+                    const randomCow = cows[Math.floor(Math.random() * cows.length)];
+                    const cowRect = randomCow.getBoundingClientRect();
+                    emoji.style.left = (cowRect.left + cowRect.width / 2 + Math.random() * 50 - 25) + 'px';
+                    emoji.style.top = (cowRect.top + Math.random() * 30) + 'px';
+                } else {
+                    emoji.style.left = (foodRect.left + foodRect.width / 2) + 'px';
+                    emoji.style.top = (foodRect.top - 30) + 'px';
+                }
+                
+                emoji.style.fontSize = '24px';
+                emoji.style.zIndex = '30';
+                gameContainer.appendChild(emoji);
+                
+                // 動畫效果
+                let emojiOpacity = 1;
+                let emojiY = parseInt(emoji.style.top);
+                const emojiInterval = setInterval(() => {
+                    emojiOpacity -= 0.05;
+                    emojiY -= 2;
+                    emoji.style.opacity = emojiOpacity;
+                    emoji.style.top = emojiY + 'px';
+                    
+                    if (emojiOpacity <= 0) {
+                        clearInterval(emojiInterval);
+                        if (emoji.parentNode === gameContainer) {
+                            gameContainer.removeChild(emoji);
+                        }
+                    }
+                }, 100);
+            }
+        }
+        
+        // 重置遊戲
+        function resetGame() {
+            // 清除所有物品
+            fallingItems.forEach(item => {
+                if (item.element.parentNode === gameContainer) {
+                    gameContainer.removeChild(item.element);
+                }
+            });
+            fallingItems = [];
+            
+            foodItems.forEach(food => {
+                if (food.parentNode === gameContainer) {
+                    gameContainer.removeChild(food);
+                }
+            });
+            foodItems = [];
+            
+            cows.forEach(cow => {
+                if (cow.parentNode === gameContainer) {
+                    gameContainer.removeChild(cow);
+                }
+            });
+            cows = [];
+            
+            // 清除雲朵
+            while (cloudsContainer.firstChild) {
+                cloudsContainer.removeChild(cloudsContainer.firstChild);
+            }
+            
+            // 清除所有計時器
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            clearInterval(createFoodInterval);
+            
+            // 重設變數
+            score = 0;
+            timeLeft = 60;
+            cowCount = 0;
+            gameMode = 'catching';
+            cowWeight = 0;
+            
+            // 重設UI
+            basket.style.display = 'block';
+            cowCounter.style.display = 'block';
+            
+            // 更新顯示
+            updateDisplay();
+            timerDisplay.textContent = `時間: ${timeLeft} 秒`;
+            
+            // 重新開始遊戲
+            initGame();
+        }
+        
+        // 遊戲循環
+        function gameLoop() {
+            if (gameMode === 'catching' && gameActive) {
+                updateFallingItems();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 開始遊戲循環
+        gameLoop();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95abd81e8381f1fd',t:'MTc1MTc3MDc0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
