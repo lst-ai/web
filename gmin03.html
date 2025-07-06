@@ -1,0 +1,732 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學應用題小遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Bubblegum+Sans&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #172c66;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .game-title {
+            font-family: 'Bubblegum Sans', cursive;
+        }
+        
+        .math-btn {
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .math-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .math-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .character {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+        
+        .correct-answer {
+            animation: celebrate 0.5s;
+        }
+        
+        @keyframes celebrate {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+        
+        .cloud {
+            position: absolute;
+            opacity: 0.8;
+            animation: drift linear infinite;
+        }
+        
+        @keyframes drift {
+            from {
+                transform: translateX(100vw);
+            }
+            to {
+                transform: translateX(-20vw);
+            }
+        }
+        
+        .floating-item {
+            position: absolute;
+            animation: float-around 15s ease-in-out infinite;
+        }
+        
+        @keyframes float-around {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(20px, -15px) rotate(5deg);
+            }
+            50% {
+                transform: translate(0, -30px) rotate(0deg);
+            }
+            75% {
+                transform: translate(-20px, -15px) rotate(-5deg);
+            }
+        }
+        
+        .question-container {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.85);
+            border: 3px solid #FFB6C1;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-container {
+            aspect-ratio: 16/9;
+            max-height: 95vh;
+            width: auto;
+            max-width: 98vw;
+        }
+        
+        .rainbow-border {
+            position: relative;
+            border-radius: 24px;
+            padding: 4px;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fad0c4, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        .option-btn {
+            background-color: #FF85A2;
+            color: white;
+            border-radius: 15px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 #FF5C8D;
+        }
+        
+        .option-btn:hover {
+            background-color: #FF5C8D;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #FF3377;
+        }
+        
+        .option-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #FF3377;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(500px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background elements -->
+    <div id="background-elements" class="fixed inset-0 z-0 overflow-hidden">
+        <!-- Clouds will be added here -->
+    </div>
+    
+    <!-- Floating items -->
+    <div id="floating-items" class="fixed inset-0 z-0 overflow-hidden">
+        <!-- Floating items will be added here -->
+    </div>
+    
+    <!-- Confetti container -->
+    <div id="confetti-container" class="fixed inset-0 z-20 pointer-events-none"></div>
+
+    <div class="flex items-center justify-center min-h-screen p-2">
+        <div class="rainbow-border z-10">
+            <div class="game-container bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl overflow-hidden flex flex-col">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-pink-400 to-purple-500 py-3 px-6 text-center shadow-lg">
+                    <h1 class="text-3xl font-bold text-white game-title">數學應用題小天才</h1>
+                    <p class="text-white opacity-90">來解決生活中的數學問題吧！</p>
+                </div>
+                
+                <!-- Game content - horizontal layout -->
+                <div class="flex-1 flex">
+                    <!-- Left side - Character and controls -->
+                    <div class="w-1/3 p-4 flex flex-col justify-between bg-gradient-to-b from-blue-50 to-purple-50 border-r-4 border-pink-200">
+                        <!-- Character -->
+                        <div class="flex justify-center items-center flex-1 relative">
+                            <div class="character w-48 h-48 relative z-10">
+                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Face -->
+                                    <circle cx="50" cy="50" r="40" fill="#FFD166" stroke="#FF9E44" stroke-width="2" />
+                                    <!-- Eyes -->
+                                    <circle cx="35" cy="40" r="8" fill="white" stroke="#172c66" stroke-width="1" />
+                                    <circle cx="65" cy="40" r="8" fill="white" stroke="#172c66" stroke-width="1" />
+                                    <circle cx="35" cy="40" r="4" fill="#172c66" />
+                                    <circle cx="65" cy="40" r="4" fill="#172c66" />
+                                    <!-- Blush -->
+                                    <circle cx="30" cy="55" r="6" fill="#FF9999" opacity="0.7" />
+                                    <circle cx="70" cy="55" r="6" fill="#FF9999" opacity="0.7" />
+                                    <!-- Mouth -->
+                                    <path id="mouth" d="M40,65 Q50,75 60,65" stroke="#172c66" stroke-width="3" fill="none" />
+                                </svg>
+                            </div>
+                            
+                            <!-- Decorative elements around character -->
+                            <div class="absolute top-0 left-1/4 w-8 h-8 text-3xl animate-bounce">✨</div>
+                            <div class="absolute bottom-1/4 right-1/4 w-8 h-8 text-3xl animate-pulse">🌟</div>
+                        </div>
+                        
+                        <!-- Score -->
+                        <div class="bg-white rounded-xl p-4 mb-4 shadow-md border-2 border-pink-200">
+                            <div class="flex justify-between items-center">
+                                <div class="text-xl font-bold text-pink-600">分數: <span id="score" class="text-2xl">0</span></div>
+                                <div class="text-xl font-bold text-purple-600">題數: <span id="questionCount" class="text-2xl">1</span>/10</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Controls -->
+                        <div class="flex flex-col space-y-3">
+                            <div class="text-center font-bold mb-1 text-lg text-purple-700">選擇題型</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button id="additionBtn" class="math-btn bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white py-3 px-2 rounded-xl text-lg font-bold">
+                                    加法 ➕
+                                </button>
+                                <button id="subtractionBtn" class="math-btn bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white py-3 px-2 rounded-xl text-lg font-bold">
+                                    減法 ➖
+                                </button>
+                                <button id="multiplicationBtn" class="math-btn bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white py-3 px-2 rounded-xl text-lg font-bold">
+                                    乘法 ✖️
+                                </button>
+                            </div>
+                            <button id="nextBtn" class="math-btn bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white py-3 px-4 rounded-xl text-lg font-bold hidden">
+                                下一題 ▶️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Right side - Question and options -->
+                    <div class="w-2/3 p-6 flex flex-col bg-gradient-to-br from-pink-50 to-purple-50">
+                        <!-- Question -->
+                        <div class="question-container p-6 mb-6 flex-1 flex flex-col justify-center">
+                            <div id="question" class="text-2xl font-bold mb-8 text-center text-purple-800">準備好了嗎？</div>
+                            <div id="options" class="grid grid-cols-2 gap-4">
+                                <button class="option-btn py-4 px-6 text-xl font-bold">開始遊戲</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Decoration -->
+                        <div class="flex justify-around">
+                            <div class="w-16 h-16">
+                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="50" r="45" fill="#FFD166" stroke="#172c66" stroke-width="2" />
+                                    <text x="50" y="65" font-size="50" text-anchor="middle" fill="#172c66">+</text>
+                                </svg>
+                            </div>
+                            <div class="w-16 h-16">
+                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="50" r="45" fill="#06D6A0" stroke="#172c66" stroke-width="2" />
+                                    <text x="50" y="65" font-size="50" text-anchor="middle" fill="#172c66">-</text>
+                                </svg>
+                            </div>
+                            <div class="w-16 h-16">
+                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="50" r="45" fill="#118AB2" stroke="#172c66" stroke-width="2" />
+                                    <text x="50" y="65" font-size="50" text-anchor="middle" fill="#172c66">×</text>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Result modal -->
+        <div id="resultModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 text-center border-4 border-pink-300 shadow-2xl">
+                <div id="resultEmoji" class="text-7xl mb-4">🎉</div>
+                <h2 class="text-3xl font-bold mb-2 text-purple-700 game-title">遊戲結束！</h2>
+                <p class="text-2xl mb-4">你的最終分數是: <span id="finalScore" class="font-bold text-pink-600">0</span></p>
+                <p id="resultMessage" class="mb-6 text-xl">太棒了！你是數學小天才！</p>
+                <button id="playAgainBtn" class="math-btn bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white py-4 px-8 rounded-xl text-xl font-bold">
+                    再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Game state
+        let score = 0;
+        let questionCount = 0;
+        let maxQuestions = 10;
+        let currentAnswer = null;
+        let gameStarted = false;
+        let currentMode = 'addition'; // Default mode
+        let usedQuestions = []; // Track used questions to avoid repetition
+        
+        // DOM elements
+        const scoreElement = document.getElementById('score');
+        const questionCountElement = document.getElementById('questionCount');
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const nextBtn = document.getElementById('nextBtn');
+        const resultModal = document.getElementById('resultModal');
+        const finalScoreElement = document.getElementById('finalScore');
+        const resultMessageElement = document.getElementById('resultMessage');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const additionBtn = document.getElementById('additionBtn');
+        const subtractionBtn = document.getElementById('subtractionBtn');
+        const multiplicationBtn = document.getElementById('multiplicationBtn');
+        const characterElement = document.querySelector('.character svg');
+        const mouthElement = document.getElementById('mouth');
+        const backgroundElements = document.getElementById('background-elements');
+        const floatingItems = document.getElementById('floating-items');
+        const confettiContainer = document.getElementById('confetti-container');
+        
+        // Names for word problems
+        const names = ['小明', '小華', '小美', '小強', '小芳', '小龍', '小雯', '小豪', '小琳', '小傑', 
+                      '小玲', '小俊', '小婷', '小宇', '小凱', '小萱', '小威', '小靜', '小勇', '小怡'];
+        
+        // Items for word problems
+        const items = {
+            fruits: ['蘋果', '香蕉', '橘子', '草莓', '西瓜', '葡萄', '鳳梨', '芒果', '梨子', '櫻桃'],
+            toys: ['玩具車', '積木', '玩偶', '氣球', '彈珠', '陀螺', '風箏', '泡泡水', '拼圖', '遙控車'],
+            stationery: ['鉛筆', '橡皮擦', '彩色筆', '貼紙', '筆記本', '尺', '剪刀', '膠水', '蠟筆', '書籤'],
+            snacks: ['餅乾', '糖果', '巧克力', '冰淇淋', '蛋糕', '棒棒糖', '果凍', '爆米花', '布丁', '甜甜圈'],
+            animals: ['小狗', '小貓', '小兔', '小鳥', '小魚', '小烏龜', '小松鼠', '小青蛙', '小蝴蝶', '小螞蟻']
+        };
+        
+        // Create clouds
+        function createClouds() {
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.classList.add('cloud');
+                
+                // Random cloud size
+                const size = 80 + Math.random() * 120;
+                cloud.style.width = `${size}px`;
+                cloud.style.height = `${size * 0.6}px`;
+                
+                // Random position
+                cloud.style.top = `${Math.random() * 40}%`;
+                
+                // Random speed
+                const duration = 60 + Math.random() * 60;
+                cloud.style.animationDuration = `${duration}s`;
+                
+                // Create cloud SVG
+                cloud.innerHTML = `
+                    <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M30,90 Q40,70 60,80 Q70,50 100,60 Q130,40 150,70 Q170,60 180,80 Q190,90 170,100 Q150,110 100,100 Q60,110 40,100 Q20,100 30,90" fill="white" stroke="#E6E6FA" stroke-width="2" />
+                    </svg>
+                `;
+                
+                backgroundElements.appendChild(cloud);
+            }
+        }
+        
+        // Create floating items
+        function createFloatingItems() {
+            const emojis = ['🍎', '🍌', '🍊', '🍓', '🍉', '🧸', '✏️', '🎈', '🍪', '🍭', '🧩', '📚'];
+            
+            for (let i = 0; i < 12; i++) {
+                const item = document.createElement('div');
+                item.classList.add('floating-item');
+                
+                // Random emoji
+                item.textContent = emojis[i % emojis.length];
+                item.style.fontSize = `${24 + Math.random() * 16}px`;
+                
+                // Random position
+                item.style.top = `${Math.random() * 80 + 10}%`;
+                item.style.left = `${Math.random() * 80 + 10}%`;
+                
+                // Random animation delay
+                item.style.animationDelay = `${Math.random() * 5}s`;
+                
+                floatingItems.appendChild(item);
+            }
+        }
+        
+        // Create confetti effect
+        function createConfetti() {
+            confettiContainer.innerHTML = '';
+            
+            const colors = ['#FF5C8D', '#FFD166', '#06D6A0', '#118AB2', '#073B4C', '#FF85A2'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random color
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Random position
+                confetti.style.left = `${Math.random() * 100}%`;
+                
+                // Random shape
+                const isCircle = Math.random() > 0.5;
+                if (isCircle) {
+                    confetti.style.borderRadius = '50%';
+                }
+                
+                // Random size
+                const size = 5 + Math.random() * 10;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                
+                // Random animation duration and delay
+                confetti.style.animationDuration = `${1 + Math.random() * 3}s`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                
+                confettiContainer.appendChild(confetti);
+            }
+        }
+        
+        // Generate random number within range
+        function getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        // Get random item from array
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        // Generate word problem based on mode
+        function generateWordProblem() {
+            const name = getRandomItem(names);
+            let question, answer, questionKey;
+            
+            do {
+                switch (currentMode) {
+                    case 'addition':
+                        // Single-digit or two-digit addition
+                        const useOneDigit = Math.random() > 0.5;
+                        let num1, num2;
+                        
+                        if (useOneDigit) {
+                            // Single-digit addition
+                            num1 = getRandomNumber(1, 9);
+                            num2 = getRandomNumber(1, 9);
+                        } else {
+                            // Two-digit addition
+                            num1 = getRandomNumber(10, 99);
+                            num2 = getRandomNumber(10, 99);
+                        }
+                        
+                        const itemCategory = Object.keys(items)[Math.floor(Math.random() * Object.keys(items).length)];
+                        const item = getRandomItem(items[itemCategory]);
+                        
+                        // Different addition scenarios
+                        const additionScenarios = [
+                            `${name}有${num1}個${item}，媽媽又給了${name}${num2}個${item}，現在${name}總共有幾個${item}？`,
+                            `${name}和好朋友一起去買${item}，${name}買了${num1}個，朋友買了${num2}個，他們總共買了幾個${item}？`,
+                            `教室裡有${num1}個${item}，老師又拿來${num2}個${item}，現在教室裡總共有幾個${item}？`,
+                            `${name}的抽屜裡有${num1}個${item}，書包裡有${num2}個${item}，${name}總共有幾個${item}？`,
+                            `${name}的爸爸買了${num1}個${item}，媽媽買了${num2}個${item}，家裡總共有幾個${item}？`,
+                            `學校舉辦活動，${name}班級帶來${num1}個${item}，另一個班級帶來${num2}個${item}，總共有幾個${item}？`
+                        ];
+                        
+                        question = getRandomItem(additionScenarios);
+                        answer = num1 + num2;
+                        questionKey = `add-${num1}-${num2}-${item}`;
+                        break;
+                        
+                    case 'subtraction':
+                        // All numbers less than 1000
+                        const minuend = getRandomNumber(100, 999);
+                        const subtrahend = getRandomNumber(1, minuend);
+                        
+                        const subItemCategory = Object.keys(items)[Math.floor(Math.random() * Object.keys(items).length)];
+                        const subItem = getRandomItem(items[subItemCategory]);
+                        
+                        // Different subtraction scenarios
+                        const subtractionScenarios = [
+                            `${name}有${minuend}個${subItem}，送給朋友${subtrahend}個${subItem}，還剩下幾個${subItem}？`,
+                            `學校有${minuend}本書，借出去${subtrahend}本，還剩下幾本書？`,
+                            `${name}有${minuend}元，買了一個${subItem}花了${subtrahend}元，還剩下幾元？`,
+                            `班上有${minuend}位同學，有${subtrahend}位同學請假了，今天到校的有幾位同學？`,
+                            `商店裡有${minuend}個${subItem}，賣出了${subtrahend}個，還剩下幾個${subItem}？`,
+                            `${name}的爸爸有${minuend}張貼紙，給了${name}${subtrahend}張，爸爸還剩下幾張貼紙？`
+                        ];
+                        
+                        question = getRandomItem(subtractionScenarios);
+                        answer = minuend - subtrahend;
+                        questionKey = `sub-${minuend}-${subtrahend}-${subItem}`;
+                        break;
+                        
+                    case 'multiplication':
+                        // Single-digit multiplication
+                        const factor1 = getRandomNumber(1, 9);
+                        const factor2 = getRandomNumber(1, 9);
+                        
+                        const multItemCategory = Object.keys(items)[Math.floor(Math.random() * Object.keys(items).length)];
+                        const multItem = getRandomItem(items[multItemCategory]);
+                        
+                        // Different multiplication scenarios
+                        const multiplicationScenarios = [
+                            `${name}有${factor1}盒${multItem}，每盒有${factor2}個，總共有幾個${multItem}？`,
+                            `教室裡有${factor1}排桌子，每排有${factor2}張，總共有幾張桌子？`,
+                            `${name}每天吃${factor2}個${multItem}，${factor1}天後總共吃了幾個${multItem}？`,
+                            `${factor1}個小朋友，每人有${factor2}個${multItem}，總共有幾個${multItem}？`,
+                            `學校有${factor1}個班級，每個班級有${factor2}位同學，學校總共有幾位同學？`,
+                            `${name}買了${factor1}包${multItem}，每包有${factor2}個，總共有幾個${multItem}？`
+                        ];
+                        
+                        question = getRandomItem(multiplicationScenarios);
+                        answer = factor1 * factor2;
+                        questionKey = `mult-${factor1}-${factor2}-${multItem}`;
+                        break;
+                }
+            } while (usedQuestions.includes(questionKey) && usedQuestions.length < 30);
+            
+            // Add to used questions
+            usedQuestions.push(questionKey);
+            
+            return { question, answer };
+        }
+        
+        // Generate options for multiple choice
+        function generateOptions(correctAnswer) {
+            const options = [correctAnswer];
+            
+            // Generate 3 wrong answers
+            while (options.length < 4) {
+                let wrongAnswer;
+                
+                if (currentMode === 'addition') {
+                    // For addition, create reasonable wrong answers
+                    const variance = Math.min(10, Math.floor(correctAnswer * 0.3) + 1);
+                    wrongAnswer = getRandomNumber(Math.max(1, correctAnswer - variance), correctAnswer + variance);
+                } else if (currentMode === 'multiplication') {
+                    wrongAnswer = getRandomNumber(Math.max(1, correctAnswer - 10), correctAnswer + 10);
+                } else {
+                    const variance = Math.floor(correctAnswer * 0.3) + 1;
+                    wrongAnswer = getRandomNumber(Math.max(1, correctAnswer - variance), correctAnswer + variance);
+                }
+                
+                if (!options.includes(wrongAnswer)) {
+                    options.push(wrongAnswer);
+                }
+            }
+            
+            // Shuffle options
+            return options.sort(() => Math.random() - 0.5);
+        }
+        
+        // Display new question
+        function displayQuestion() {
+            questionCount++;
+            questionCountElement.textContent = questionCount;
+            
+            const { question, answer } = generateWordProblem();
+            currentAnswer = answer;
+            
+            questionElement.textContent = question;
+            
+            const options = generateOptions(answer);
+            
+            optionsElement.innerHTML = '';
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn py-4 px-6 text-xl font-bold';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option));
+                optionsElement.appendChild(button);
+            });
+            
+            nextBtn.classList.add('hidden');
+            
+            // Reset character face
+            mouthElement.setAttribute('d', 'M40,65 Q50,75 60,65');
+        }
+        
+        // Check if answer is correct
+        function checkAnswer(selectedAnswer) {
+            const buttons = optionsElement.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                
+                if (parseInt(button.textContent) === currentAnswer) {
+                    button.classList.remove('bg-purple-500');
+                    button.style.backgroundColor = '#4CAF50';
+                    button.style.boxShadow = '0 4px 0 #388E3C';
+                } else if (parseInt(button.textContent) === selectedAnswer) {
+                    button.classList.remove('bg-purple-500');
+                    button.style.backgroundColor = '#F44336';
+                    button.style.boxShadow = '0 4px 0 #D32F2F';
+                }
+            });
+            
+            if (selectedAnswer === currentAnswer) {
+                score += 10;
+                scoreElement.textContent = score;
+                scoreElement.classList.add('correct-answer');
+                setTimeout(() => scoreElement.classList.remove('correct-answer'), 500);
+                
+                // Happy face
+                mouthElement.setAttribute('d', 'M40,65 Q50,75 60,65');
+                
+                // Create small confetti for correct answer
+                createConfetti();
+            } else {
+                // Sad face
+                mouthElement.setAttribute('d', 'M40,70 Q50,60 60,70');
+            }
+            
+            nextBtn.classList.remove('hidden');
+            
+            if (questionCount >= maxQuestions) {
+                nextBtn.textContent = '查看結果';
+            }
+        }
+        
+        // Show result modal
+        function showResult() {
+            finalScoreElement.textContent = score;
+            
+            // Set message based on score
+            if (score >= 80) {
+                resultMessageElement.textContent = '太棒了！你是數學小天才！';
+                document.getElementById('resultEmoji').textContent = '🎉';
+            } else if (score >= 50) {
+                resultMessageElement.textContent = '做得好！繼續加油！';
+                document.getElementById('resultEmoji').textContent = '👍';
+            } else {
+                resultMessageElement.textContent = '別灰心，再試一次吧！';
+                document.getElementById('resultEmoji').textContent = '💪';
+            }
+            
+            resultModal.classList.remove('hidden');
+            
+            // Create confetti for game end
+            createConfetti();
+        }
+        
+        // Reset game
+        function resetGame() {
+            score = 0;
+            questionCount = 0;
+            scoreElement.textContent = score;
+            questionCountElement.textContent = '1';
+            resultModal.classList.add('hidden');
+            usedQuestions = []; // Clear used questions
+            
+            // Reset character face
+            mouthElement.setAttribute('d', 'M40,65 Q50,75 60,65');
+            
+            displayQuestion();
+        }
+        
+        // Event listeners
+        optionsElement.querySelector('button').addEventListener('click', () => {
+            gameStarted = true;
+            displayQuestion();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (questionCount >= maxQuestions) {
+                showResult();
+            } else {
+                displayQuestion();
+            }
+        });
+        
+        playAgainBtn.addEventListener('click', resetGame);
+        
+        additionBtn.addEventListener('click', () => {
+            currentMode = 'addition';
+            highlightModeButton();
+            if (gameStarted) displayQuestion();
+        });
+        
+        subtractionBtn.addEventListener('click', () => {
+            currentMode = 'subtraction';
+            highlightModeButton();
+            if (gameStarted) displayQuestion();
+        });
+        
+        multiplicationBtn.addEventListener('click', () => {
+            currentMode = 'multiplication';
+            highlightModeButton();
+            if (gameStarted) displayQuestion();
+        });
+        
+        function highlightModeButton() {
+            // Reset all buttons
+            additionBtn.classList.remove('ring-4', 'ring-white');
+            subtractionBtn.classList.remove('ring-4', 'ring-white');
+            multiplicationBtn.classList.remove('ring-4', 'ring-white');
+            
+            // Highlight selected button
+            switch (currentMode) {
+                case 'addition':
+                    additionBtn.classList.add('ring-4', 'ring-white');
+                    break;
+                case 'subtraction':
+                    subtractionBtn.classList.add('ring-4', 'ring-white');
+                    break;
+                case 'multiplication':
+                    multiplicationBtn.classList.add('ring-4', 'ring-white');
+                    break;
+            }
+        }
+        
+        // Initialize
+        createClouds();
+        createFloatingItems();
+        highlightModeButton();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95abc5a46623f1d0',t:'MTc1MTc2OTk5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
