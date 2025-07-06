@@ -1,0 +1,754 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-認識文章三段｜鳳頭｜象肚｜豹尾</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8f9ff;
+            overflow-x: hidden;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(120deg, rgba(255,236,210,0.7) 0%, rgba(252,251,255,0.7) 100%);
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .animate-spin-slow {
+            animation: spin 15s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .quiz-option {
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            transform: translateX(10px);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+            animation: confetti-fall 5s ease-in-out infinite;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+        }
+        
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .help-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .help-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .card-title {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="pattern">
+    <div class="relative min-h-screen">
+        <!-- Decorative Elements -->
+        <div class="absolute top-20 left-10 w-20 h-20 bg-orange-200 rounded-full opacity-50 animate-float"></div>
+        <div class="absolute top-40 right-20 w-16 h-16 bg-blue-200 rounded-full opacity-50 animate-float" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-40 left-20 w-24 h-24 bg-green-200 rounded-full opacity-50 animate-float" style="animation-delay: 2s;"></div>
+        
+        <div class="absolute top-60 right-40 animate-spin-slow opacity-20">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 0L61 39H100L69 63L80 100L50 77L20 100L31 63L0 39H39L50 0Z" fill="#FFB800"/>
+            </svg>
+        </div>
+        
+        <!-- Scroll to Top Button -->
+        <button id="scroll-to-top" class="scroll-to-top btn w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+        </button>
+        
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-12 relative z-10">
+            <!-- Header -->
+            <header class="text-center mb-12 reveal">
+                <div class="inline-block relative">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 relative z-10">
+                        LST遊戲室-認識文章三段
+                    </h1>
+                    <div class="absolute -bottom-2 left-0 w-full h-4 bg-yellow-300 opacity-50 -z-10 transform -rotate-1"></div>
+                </div>
+                <div class="flex justify-center items-center space-x-4 mt-4">
+                    <div class="px-4 py-2 bg-orange-500 text-white rounded-full">鳳頭</div>
+                    <div class="px-4 py-2 bg-blue-500 text-white rounded-full">象肚</div>
+                    <div class="px-4 py-2 bg-green-500 text-white rounded-full">豹尾</div>
+                </div>
+            </header>
+            
+            <!-- Knowledge Cards -->
+            <div id="knowledge-cards" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <!-- Card 1 -->
+                <div id="card-1" class="card bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-t-4 border-orange-500 reveal">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center mr-3">
+                            🟠
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800 card-title">
+                            <span>1｜</span>
+                            <span>什麼是「鳳頭」？</span>
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="flex items-start">
+                            <span class="inline-block mr-2">📌</span>
+                            <span><strong>簡單說：</strong><br>文章的開頭段落，要吸引讀者注意，並點出你要寫什麼。</span>
+                        </p>
+                        <p class="flex items-start">
+                            <span class="inline-block mr-2">🧠</span>
+                            <span><strong>常見開頭方式：</strong><br>問問題、寫場景、說原因</span>
+                        </p>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="flex items-start">
+                                <span class="inline-block mr-2">🌟</span>
+                                <span><strong>例子 1：</strong><br>「你曾經在全班面前說話嗎？我有過，而且超緊張的！」</span>
+                            </p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="flex items-start">
+                                <span class="inline-block mr-2">🌟</span>
+                                <span><strong>例子 2：</strong><br>「那天早上，天空烏雲密布，我的心情也一樣低落。」</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 2 -->
+                <div id="card-2" class="card bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-t-4 border-blue-500 reveal">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">
+                            🔵
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800 card-title">
+                            <span>2｜</span>
+                            <span>什麼是「象肚」？</span>
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="flex items-start">
+                            <span class="inline-block mr-2">📌</span>
+                            <span><strong>簡單說：</strong><br>文章的中間段落，是內容最豐富的地方，要清楚說出事情的經過與你的感受。</span>
+                        </p>
+                        <p class="flex items-start">
+                            <span class="inline-block mr-2">🧠</span>
+                            <span><strong>常見內容方式：</strong><br>按順序描述事件、加上細節與心情</span>
+                        </p>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="flex items-start">
+                                <span class="inline-block mr-2">🌟</span>
+                                <span><strong>例子 1：</strong><br>「我走上講台，雙腳發抖，還差點忘詞。台下的同學靜靜看著我，我只能深吸一口氣繼續講下去。」</span>
+                            </p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="flex items-start">
+                                <span class="inline-block mr-2">🌟</span>
+                                <span><strong>例子 2：</strong><br>「我撿起地上的錢包，裡面有好多鈔票。我猶豫了一下，最後還是交給老師。」</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 3 -->
+                <div id="card-3" class="card bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-t-4 border-green-500 reveal">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center mr-3">
+                            🟢
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800 card-title">
+                            <span>3｜</span>
+                            <span>什麼是「豹尾」？</span>
+                        </h2>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="flex items-start">
+                            <span class="inline-block mr-2">📌</span>
+                            <span><strong>簡單說：</strong><br>文章的結尾段落，要收尾、表達感想或讓讀者留下印象。</span>
+                        </p>
+                        <p class="flex items-start">
+                            <span class="inline-block mr-2">🧠</span>
+                            <span><strong>常見結尾方式：</strong><br>說心得、學到的事、回到開頭</span>
+                        </p>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="flex items-start">
+                                <span class="inline-block mr-2">🌟</span>
+                                <span><strong>例子 1：</strong><br>「雖然當時很害怕，但我學會了，只要勇敢，就能突破自己。」</span>
+                            </p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="flex items-start">
+                                <span class="inline-block mr-2">🌟</span>
+                                <span><strong>例子 2：</strong><br>「這次做好事讓我很開心，以後我也想繼續幫助別人。」</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quiz Section -->
+            <div class="max-w-3xl mx-auto mb-16">
+                <div class="text-center mb-8 reveal">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">挑戰時間！</h2>
+                    <p class="text-gray-600">完成以下關卡，成為文章結構小達人！</p>
+                </div>
+                
+                <div id="quiz-container" class="bg-white rounded-xl shadow-lg p-8 gradient-bg reveal relative">
+                    <!-- Level 1 -->
+                    <div id="level-1" class="quiz-level active">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center mr-4 text-xl">
+                                🚪
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">關卡一：找段落功能王🔍</h3>
+                        </div>
+                        <p class="text-gray-600 mb-2">🎯 目標：辨認段落功能：鳳頭／象肚／豹尾</p>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-lg font-medium">「你有沒有試過站上講台講話？我第一次發表演講時，緊張得手心都在流汗。」</p>
+                            <p class="mt-4 font-medium">請問這段文字是：</p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="quiz-option flex items-center p-3 bg-orange-100 rounded-lg cursor-pointer hover:bg-orange-200" data-correct="true">
+                                <div class="w-6 h-6 border-2 border-orange-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>鳳頭（開頭段）</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-blue-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>象肚（中間段）</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-green-100 rounded-lg cursor-pointer hover:bg-green-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-green-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>豹尾（結尾段）</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 hidden" id="feedback-1">
+                            <div class="p-4 bg-red-100 text-red-700 rounded-lg hidden" id="error-1">
+                                <p>❌ 這段是在一開始吸引讀者注意喔！</p>
+                                <button class="check-knowledge mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="1">查看「鳳頭」知識卡</button>
+                            </div>
+                            <div class="p-4 bg-green-100 text-green-700 rounded-lg hidden" id="success-1">
+                                <p>✅ 正確！這是文章的開頭，用問題吸引讀者注意。</p>
+                            </div>
+                        </div>
+                        
+                        <button class="help-btn px-3 py-1 bg-yellow-500 text-white rounded-full text-sm shadow-md">
+                            需要幫助？
+                        </button>
+                    </div>
+                    
+                    <!-- Level 2 -->
+                    <div id="level-2" class="quiz-level hidden">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center mr-4 text-xl">
+                                🚪
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">關卡二：段落配對任務 🧩</h3>
+                        </div>
+                        <p class="text-gray-600 mb-2">🎯 目標：將段落配對正確角色</p>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-lg font-medium">「我走上講台，心跳加快，開始演講。剛開始聲音很小，但講到後來我越來越有自信。」</p>
+                            <p class="mt-4 font-medium">請問這段是：</p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="quiz-option flex items-center p-3 bg-orange-100 rounded-lg cursor-pointer hover:bg-orange-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-orange-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>鳳頭</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200" data-correct="true">
+                                <div class="w-6 h-6 border-2 border-blue-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>象肚</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-green-100 rounded-lg cursor-pointer hover:bg-green-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-green-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>豹尾</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 hidden" id="feedback-2">
+                            <div class="p-4 bg-red-100 text-red-700 rounded-lg hidden" id="error-2">
+                                <p>❌ 這段是在說整件事的過程和感受，是文章的『身體』喔！</p>
+                                <button class="check-knowledge mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="2">查看「象肚」知識卡</button>
+                            </div>
+                            <div class="p-4 bg-green-100 text-green-700 rounded-lg hidden" id="success-2">
+                                <p>✅ 正確！這段描述了事件的經過和細節，是象肚部分。</p>
+                            </div>
+                        </div>
+                        
+                        <button class="help-btn px-3 py-1 bg-yellow-500 text-white rounded-full text-sm shadow-md">
+                            需要幫助？
+                        </button>
+                    </div>
+                    
+                    <!-- Level 3 -->
+                    <div id="level-3" class="quiz-level hidden">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center mr-4 text-xl">
+                                🚪
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">關卡三：三段順序大考驗 🔄</h3>
+                        </div>
+                        <p class="text-gray-600 mb-2">🎯 目標：排出鳳頭→象肚→豹尾正確順序</p>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-lg font-medium">請選出正確的文章段落順序：</p>
+                            <p class="mt-2">A.「從那次經驗後，我變得更勇敢，也更相信自己了。」</p>
+                            <p>B.「那天老師宣布，我要參加比賽，全班都看著我。」</p>
+                            <p>C.「你有曾經害怕過嗎？我就要面對我最怕的事了！」</p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="quiz-option flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" data-correct="true">
+                                <div class="w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>C→B→A</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>A→B→C</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>B→A→C</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 hidden" id="feedback-3">
+                            <div class="p-4 bg-red-100 text-red-700 rounded-lg hidden" id="error-3">
+                                <p>❌ 試著找出哪一句在開場吸引人，哪一句在收尾說感想喔！</p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button class="check-knowledge px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="1">查看「鳳頭」知識卡</button>
+                                    <button class="check-knowledge px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="2">查看「象肚」知識卡</button>
+                                    <button class="check-knowledge px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="3">查看「豹尾」知識卡</button>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-green-100 text-green-700 rounded-lg hidden" id="success-3">
+                                <p>✅ 正確！C是開頭吸引讀者，B是中間描述事件，A是結尾說感想。</p>
+                            </div>
+                        </div>
+                        
+                        <button class="help-btn px-3 py-1 bg-yellow-500 text-white rounded-full text-sm shadow-md">
+                            需要幫助？
+                        </button>
+                    </div>
+                    
+                    <!-- Level 4 -->
+                    <div id="level-4" class="quiz-level hidden">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center mr-4 text-xl">
+                                🚪
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">關卡四：補上正確結尾 🧠</h3>
+                        </div>
+                        <p class="text-gray-600 mb-2">🎯 目標：辨識適合的豹尾句子</p>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-lg font-medium">已知文章開頭是：「我從小最怕發表，但有一次，我被選上參加校內朗讀比賽。」</p>
+                            <p class="mt-4 font-medium">請選出最適合當結尾的句子：</p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="quiz-option flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>「朗讀比賽的選手很多，我不認識他們。」</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" data-correct="true">
+                                <div class="w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>「從那天起，我發現，只要勇敢踏出一步，就會看見不一樣的自己。」</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>「我們那天在禮堂集合。」</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 hidden" id="feedback-4">
+                            <div class="p-4 bg-red-100 text-red-700 rounded-lg hidden" id="error-4">
+                                <p>❌ 結尾要說出心得或呼應開頭喔～</p>
+                                <button class="check-knowledge mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="3">查看「豹尾」知識卡</button>
+                            </div>
+                            <div class="p-4 bg-green-100 text-green-700 rounded-lg hidden" id="success-4">
+                                <p>✅ 正確！這句話表達了心得和學到的事，是很好的結尾。</p>
+                            </div>
+                        </div>
+                        
+                        <button class="help-btn px-3 py-1 bg-yellow-500 text-white rounded-full text-sm shadow-md">
+                            需要幫助？
+                        </button>
+                    </div>
+                    
+                    <!-- Level 5 -->
+                    <div id="level-5" class="quiz-level hidden">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-yellow-500 text-white rounded-full flex items-center justify-center mr-4 text-xl">
+                                🚪
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">關卡五：段落判斷王 👑</h3>
+                        </div>
+                        <p class="text-gray-600 mb-2">🎯 目標：綜合分析三段段落特徵</p>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-lg font-medium">以下哪一段最適合放在文章「中間段」象肚位置？</p>
+                            <p class="mt-2">「我站上台的那一刻，全場鴉雀無聲。我深吸一口氣，努力讓聲音不顫抖。當我講完時，台下響起掌聲。」</p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="quiz-option flex items-center p-3 bg-orange-100 rounded-lg cursor-pointer hover:bg-orange-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-orange-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>鳳頭</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200" data-correct="true">
+                                <div class="w-6 h-6 border-2 border-blue-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>象肚</span>
+                            </div>
+                            <div class="quiz-option flex items-center p-3 bg-green-100 rounded-lg cursor-pointer hover:bg-green-200" data-correct="false">
+                                <div class="w-6 h-6 border-2 border-green-500 rounded-full mr-3 flex-shrink-0"></div>
+                                <span>豹尾</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 hidden" id="feedback-5">
+                            <div class="p-4 bg-red-100 text-red-700 rounded-lg hidden" id="error-5">
+                                <p>❌ 中間段會說整件事情的經過與感受唷～</p>
+                                <button class="check-knowledge mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-card="2">查看「象肚」知識卡</button>
+                            </div>
+                            <div class="p-4 bg-green-100 text-green-700 rounded-lg hidden" id="success-5">
+                                <p>✅ 正確！這段詳細描述了事件的經過和感受，是象肚部分。</p>
+                            </div>
+                        </div>
+                        
+                        <button class="help-btn px-3 py-1 bg-yellow-500 text-white rounded-full text-sm shadow-md">
+                            需要幫助？
+                        </button>
+                    </div>
+                    
+                    <!-- Completion Screen -->
+                    <div id="completion" class="quiz-level hidden text-center">
+                        <div class="confetti-container"></div>
+                        <div class="py-8">
+                            <div class="w-24 h-24 bg-yellow-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-4xl animate-bounce">
+                                🎉
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-800 mb-4">恭喜你完成三段任務，升級為寫作結構小達人！</h3>
+                            <p class="text-gray-600 mb-8">你已經掌握了文章三段「鳳頭、象肚、豹尾」的結構！</p>
+                            <button id="restart-btn" class="btn px-8 py-3 bg-yellow-500 text-white rounded-full font-bold hover:bg-yellow-600 transition-all">
+                                再玩一次
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Help Modal -->
+                    <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">需要幫助嗎？</h3>
+                                <button id="close-help" class="text-gray-500 hover:text-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="space-y-4">
+                                <p>你可以回到上方的知識卡查看相關資訊：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="check-knowledge px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600" data-card="1">查看「鳳頭」知識卡</button>
+                                    <button class="check-knowledge px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-card="2">查看「象肚」知識卡</button>
+                                    <button class="check-knowledge px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600" data-card="3">查看「豹尾」知識卡</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <footer class="text-center py-6 text-gray-600 reveal">
+                <p>設計與製作：🔍 FB｜呂舒婷｜📧 luuyobi@gmail.com</p>
+            </footer>
+        </div>
+    </div>
+    
+    <script>
+        // Reveal animation on scroll
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+        
+        // Quiz functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentLevel = 1;
+            const totalLevels = 5;
+            
+            // Scroll to top button
+            const scrollToTopBtn = document.getElementById('scroll-to-top');
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    scrollToTopBtn.classList.add('visible');
+                } else {
+                    scrollToTopBtn.classList.remove('visible');
+                }
+            });
+            
+            scrollToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Help button functionality
+            const helpBtns = document.querySelectorAll('.help-btn');
+            const helpModal = document.getElementById('help-modal');
+            const closeHelp = document.getElementById('close-help');
+            
+            helpBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    helpModal.classList.remove('hidden');
+                });
+            });
+            
+            closeHelp.addEventListener('click', function() {
+                helpModal.classList.add('hidden');
+            });
+            
+            // Check knowledge card buttons
+            document.querySelectorAll('.check-knowledge').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const cardId = this.getAttribute('data-card');
+                    const card = document.getElementById(`card-${cardId}`);
+                    
+                    // Close help modal if open
+                    helpModal.classList.add('hidden');
+                    
+                    // Scroll to the card
+                    card.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Highlight the card
+                    card.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-75');
+                    
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => {
+                        card.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-75');
+                    }, 2000);
+                });
+            });
+            
+            // Handle option selection
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const isCorrect = this.getAttribute('data-correct') === 'true';
+                    const currentLevelElement = document.getElementById(`level-${currentLevel}`);
+                    const feedbackElement = document.getElementById(`feedback-${currentLevel}`);
+                    const successElement = document.getElementById(`success-${currentLevel}`);
+                    const errorElement = document.getElementById(`error-${currentLevel}`);
+                    
+                    // Show feedback
+                    feedbackElement.classList.remove('hidden');
+                    
+                    if (isCorrect) {
+                        successElement.classList.remove('hidden');
+                        errorElement.classList.add('hidden');
+                        
+                        // Move to next level after a delay
+                        setTimeout(() => {
+                            currentLevelElement.classList.add('hidden');
+                            
+                            if (currentLevel < totalLevels) {
+                                currentLevel++;
+                                document.getElementById(`level-${currentLevel}`).classList.remove('hidden');
+                                
+                                // Scroll to quiz container
+                                document.getElementById('quiz-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } else {
+                                // Show completion screen
+                                document.getElementById('completion').classList.remove('hidden');
+                                createConfetti();
+                            }
+                        }, 1500);
+                    } else {
+                        errorElement.classList.remove('hidden');
+                        successElement.classList.add('hidden');
+                    }
+                    
+                    // Update selected state visually
+                    currentLevelElement.querySelectorAll('.quiz-option').forEach(opt => {
+                        const optionCircle = opt.querySelector('div');
+                        if (opt === this) {
+                            if (isCorrect) {
+                                optionCircle.innerHTML = '✓';
+                                optionCircle.classList.add('bg-green-500', 'text-white', 'flex', 'items-center', 'justify-center');
+                                optionCircle.classList.remove('border-2');
+                            } else {
+                                optionCircle.innerHTML = '✗';
+                                optionCircle.classList.add('bg-red-500', 'text-white', 'flex', 'items-center', 'justify-center');
+                                optionCircle.classList.remove('border-2');
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Restart quiz
+            document.getElementById('restart-btn').addEventListener('click', function() {
+                currentLevel = 1;
+                
+                // Hide all levels and show level 1
+                document.querySelectorAll('.quiz-level').forEach(level => {
+                    level.classList.add('hidden');
+                });
+                document.getElementById('level-1').classList.remove('hidden');
+                
+                // Reset all feedback
+                document.querySelectorAll('[id^="feedback-"]').forEach(feedback => {
+                    feedback.classList.add('hidden');
+                });
+                
+                document.querySelectorAll('[id^="success-"], [id^="error-"]').forEach(element => {
+                    element.classList.add('hidden');
+                });
+                
+                // Reset all options
+                document.querySelectorAll('.quiz-option div').forEach(circle => {
+                    circle.innerHTML = '';
+                    circle.className = 'w-6 h-6 border-2 border-gray-500 rounded-full mr-3 flex-shrink-0';
+                    
+                    // Restore original border colors
+                    const parent = circle.closest('.quiz-option');
+                    if (parent.classList.contains('bg-orange-100')) {
+                        circle.classList.remove('border-gray-500');
+                        circle.classList.add('border-orange-500');
+                    } else if (parent.classList.contains('bg-blue-100')) {
+                        circle.classList.remove('border-gray-500');
+                        circle.classList.add('border-blue-500');
+                    } else if (parent.classList.contains('bg-green-100')) {
+                        circle.classList.remove('border-gray-500');
+                        circle.classList.add('border-green-500');
+                    }
+                });
+                
+                // Scroll to quiz top
+                document.getElementById('quiz-container').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Create confetti effect
+            function createConfetti() {
+                const confettiContainer = document.querySelector('.confetti-container');
+                confettiContainer.innerHTML = '';
+                
+                const colors = ['#FF5252', '#FFD740', '#64FFDA', '#448AFF', '#E040FB', '#69F0AE'];
+                
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                    confetti.style.animationDelay = Math.random() * 2 + 's';
+                    
+                    confettiContainer.appendChild(confetti);
+                }
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'95ae2428600df244',t:'MTc1MTc5NDgzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
