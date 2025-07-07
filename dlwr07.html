@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文動詞大富翁</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        /* Custom font for better Chinese character display */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', 'BiauKai', 'DFKai-SB', 'KaiTi', 'serif';
+            display: flex;
+            flex-direction: column; /* Allow vertical stacking for footer */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Board layout using CSS Grid */
+        .board {
+            display: grid;
+            /* 11x11 grid for 40 spaces (10 per side + corners) */
+            grid-template-columns: repeat(11, 1fr);
+            grid-template-rows: repeat(11, 1fr);
+            width: 100%;
+            max-width: 900px; /* Max width for the board */
+            aspect-ratio: 1 / 1; /* Keep it square */
+            background-color: #e0f2f7; /* Light cyan background for board */
+            border: 8px solid #64b5f6; /* Light blue border */
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative; /* For player token absolute positioning */
+            padding: 10px; /* Inner padding for spaces */
+        }
+
+        /* Styling for each board space (card) */
+        .board-space {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5deb3; /* Light brown for unvisited spaces */
+            border: 2px solid #d2b48c; /* Darker brown border */
+            border-radius: 10px;
+            font-size: 1.8rem; /* Increased font size for clarity */
+            font-weight: bold;
+            color: #333;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            text-align: center;
+            padding: 5px; /* Add padding for verb text */
+            word-break: keep-all; /* Prevent breaking single Chinese characters */
+        }
+
+        .board-space.current {
+            background-color: #ffe0b2; /* Light orange for current space */
+            border-color: #ff9800; /* Orange border */
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.6);
+        }
+
+        .board-space.visited {
+            background-color: #a7d9f7; /* Light blue for visited spaces */
+            border-color: #64b5f6; /* Darker blue border */
+        }
+
+        /* Player token styling */
+        .player-token {
+            position: absolute;
+            border-radius: 50%;
+            width: 35px; /* Slightly larger token */
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem; /* Smaller font for token ID */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Springy movement */
+            z-index: 10;
+        }
+
+        /* Center area for controls and verb display */
+        #centerArea {
+            grid-column: 2 / span 9; /* Spans 9 columns for 11x11 grid */
+            grid-row: 2 / span 9; /* Spans 9 rows for 11x11 grid */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            z-index: 5; /* Ensure it's above board spaces but below token */
+        }
+
+        /* Slot Machine Display */
+        #slotMachineDisplay {
+            width: 120px; /* Fixed size for the display */
+            height: 120px;
+            border-radius: 15px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            background-color: #f0f0f0; /* Light background */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem; /* Large font for numbers */
+            font-weight: bold;
+            color: #2c3e50; /* Dark blue-gray for numbers */
+            overflow: hidden; /* Hide spinning numbers outside */
+            position: relative;
+        }
+
+        /* Footer styling */
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #555;
+            text-align: center;
+        }
+        .footer a {
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Player selection and initial screen */
+        #playerSetup {
+            margin-bottom: 20px;
+            padding: 25px; /* Increased padding */
+            background-color: #e0f7fa; /* Light blue background */
+            border-radius: 15px; /* More rounded */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* Stronger shadow */
+            width: 100%;
+            max-width: 500px; /* Wider for titles */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* More space between elements */
+        }
+        #playerSetup h1 {
+            font-size: 2.5rem; /* Larger main title */
+            font-weight: bold;
+            color: #2c3e50; /* Darker blue-gray */
+            margin-bottom: 10px;
+            line-height: 1.2; /* Adjust line height for two lines */
+        }
+        #playerSetup p {
+            font-size: 1.2rem; /* Larger subtitle */
+            color: #34495e; /* Medium blue-gray */
+            margin-bottom: 20px;
+        }
+
+        /* Celebration Overlay */
+        #celebrationOverlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+        }
+        #celebrationOverlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        #celebrationOverlay > div {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: bounceIn 0.8s ease-out forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .board {
+                max-width: 95%;
+                height: auto; /* Allow height to adjust */
+            }
+            .board-space {
+                font-size: 1.2rem; /* Adjusted for smaller screens */
+                border-radius: 8px;
+            }
+            .player-token {
+                width: 25px;
+                height: 25px;
+                font-size: 0.7rem;
+            }
+            #slotMachineDisplay {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 15px;
+                font-size: 4rem;
+            }
+            #rollDiceBtn {
+                padding: 10px 20px;
+                font-size: 1.1rem;
+            }
+            #verbDisplay {
+                font-size: 3rem;
+            }
+            #instructions {
+                font-size: 0.9rem;
+            }
+            #gameTitle {
+                font-size: 2rem;
+            }
+            .footer {
+                font-size: 0.8rem;
+            }
+            #playerSetup {
+                padding: 15px;
+            }
+            #playerSetup h1 {
+                font-size: 2rem;
+            }
+            #playerSetup p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .board-space {
+                font-size: 1rem; /* Further adjusted for smallest screens */
+                border-radius: 6px;
+                padding: 2px;
+            }
+            .player-token {
+                width: 20px;
+                height: 20px;
+                font-size: 0.6rem;
+            }
+            #slotMachineDisplay {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 10px;
+                font-size: 3rem;
+            }
+            #rollDiceBtn {
+                padding: 8px 16px;
+                font-size: 1rem;
+            }
+            #verbDisplay {
+                font-size: 2.5rem;
+            }
+            #instructions {
+                font-size: 0.8rem;
+            }
+            #gameTitle {
+                font-size: 1.5rem;
+            }
+            .footer {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="playerSetup" class="flex flex-col items-center gap-4">
+        <h1 class="text-4xl font-extrabold text-gray-800">
+            <span>LST遊戲室-</span><br>
+            <span>中文動詞大富翁遊戲</span>
+        </h1>
+        <p class="text-xl text-gray-600">遊戲中學習動詞，一起來感受語文的樂趣！</p>
+        <label for="numPlayers" class="text-lg font-semibold text-gray-800">選擇組別數量:</label>
+        <select id="numPlayers" class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            <option value="1">1 組</option>
+            <option value="2">2 組</option>
+            <option value="3">3 組</option>
+            <option value="4">4 組</option>
+        </select>
+        <button id="startGameBtn" class="px-6 py-2 bg-blue-500 text-white font-bold rounded-full shadow-lg hover:bg-blue-600 transition duration-300">
+            開始遊戲
+        </button>
+    </div>
+
+    <div class="board hidden">
+        <div id="centerArea">
+            <h1 id="gameTitle" class="text-4xl font-extrabold text-blue-800 mb-6">中文動詞大富翁遊戲</h1>
+            <div id="slotMachineDisplay">?</div>
+            <button id="rollDiceBtn" class="px-8 py-4 bg-green-500 text-white text-2xl font-bold rounded-full shadow-lg hover:bg-green-600 transition duration-300 transform hover:scale-105">
+                擲骰子
+            </button>
+            <div id="verbDisplay" class="mt-8 text-7xl font-extrabold text-purple-700 text-center"></div>
+            <div id="instructions" class="mt-4 text-xl text-gray-700 text-center">
+                請表演這個動詞！
+            </div>
+        </div>
+        <div id="playerTokensContainer">
+            </div>
+    </div>
+
+    <div class="footer">
+        <p>遊戲設計：劉宏龍｜製作：呂舒婷｜
+            <a href="https://www.facebook.com/yobi.lu" target="_blank">🔍 FB</a>｜
+            📧 <a href="mailto:luuyobi@gmail.com">luuyobi@gmail.com</a>
+        </p>
+    </div>
+
+    <div id="celebrationOverlay" class="hidden">
+        <div>
+            <h2 class="text-5xl font-extrabold text-yellow-500">恭喜完成一圈！</h2>
+            <p class="text-2xl text-gray-700 mt-4">繼續努力！</p>
+        </div>
+    </div>
+
+    <script>
+        // 確保在 DOM 完全載入後執行腳本
+        window.onload = function() {
+            // 中文單字動詞列表 (確保有足夠的動詞給40張卡片，且可表演)
+            let chineseVerbs = [
+                "走", "跑", "跳", "坐", "站", "躺", "說", "聽", "看", "吃",
+                "喝", "寫", "讀", "畫", "唱", "舞", "笑", "哭", "睡", "醒",
+                "開", "關", "拿", "放", "給", "收", "買", "賣", "做", "用",
+                "學", "教", "問", "答", "找", "丟", "撿", "穿", "脫", "玩",
+                "想", "記", "摸", "推", "拉", "拍", "踢", "抱",
+                "追", "躲", "飛", "游", "爬", "剪", "縫", "煮", "炒", "烤",
+                "洗", "擦", "掃", "拖", "搬", "送", "接", "借", "還",
+                "種", "摘", "挖", "埋", "蓋", "堆", "疊", "拆", "修", "建",
+                "點", "按", "滑", "敲", "舉", "捲", "鋪", "撕", "貼", "跺"
+            ];
+
+            // 遊戲板格子的座標映射 (row, col) for an 11x11 grid
+            // 總共 40 個格子 (10 per side)
+            const boardPositions = [
+                // Top row (11 spaces: 0-10)
+                [1,1], [1,2], [1,3], [1,4], [1,5], [1,6], [1,7], [1,8], [1,9], [1,10], [1,11],
+                // Right column (10 spaces: 11-20, excluding top-right corner)
+                [2,11], [3,11], [4,11], [5,11], [6,11], [7,11], [8,11], [9,11], [10,11], [11,11],
+                // Bottom row (10 spaces: 21-30, excluding bottom-right corner)
+                [11,10], [11,9], [11,8], [11,7], [11,6], [11,5], [11,4], [11,3], [11,2], [11,1],
+                // Left column (9 spaces: 31-39, excluding bottom-left and top-left corners)
+                [10,1], [9,1], [8,1], [7,1], [6,1], [5,1], [4,1], [3,1], [2,1]
+            ];
+
+            // 遊戲狀態變數
+            let players = []; // Array of { id: string, position: number, color: string, tokenElement: HTMLElement, hasCompletedRound: boolean }
+            let currentPlayerIndex = 0;
+            const numSpaces = boardPositions.length;
+            const visitedSpaces = new Array(numSpaces).fill(false); // 追蹤卡片是否被訪問過
+
+            // DOM 元素引用
+            const playerSetupDiv = document.getElementById('playerSetup');
+            const numPlayersSelect = document.getElementById('numPlayers');
+            const startGameBtn = document.getElementById('startGameBtn');
+            const boardElement = document.querySelector('.board');
+            const playerTokensContainer = document.getElementById('playerTokensContainer');
+            const rollDiceBtn = document.getElementById('rollDiceBtn');
+            const verbDisplay = document.getElementById('verbDisplay');
+            const instructionsDisplay = document.getElementById('instructions');
+            const slotMachineDisplay = document.getElementById('slotMachineDisplay');
+            const celebrationOverlay = document.getElementById('celebrationOverlay');
+
+            let boardSpaces = []; // 儲存所有格子元素的陣列
+            let assignedVerbs = []; // 儲存分配給每個格子的動詞
+
+            // 玩家棋子顏色列表
+            const playerColors = ['#ef4444', '#3b82f6', '#10b981', '#f97316']; // Red, Blue, Green, Orange
+
+            // --- Tone.js Sound Effects ---
+            const slotRollSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "sawtooth" },
+                envelope: { attack: 0.01, decay: 0.05, sustain: 0.05, release: 0.1 }
+            }).toDestination();
+
+            const landSoundSynth = new Tone.Synth({
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.02, decay: 0.2, sustain: 0.1, release: 0.3 }
+            }).toDestination();
+
+            const celebrationSynth = new Tone.Synth().toDestination();
+            const celebrationMelody = [
+                { note: "C5", time: 0, duration: "8n" },
+                { note: "E5", time: "8n", duration: "8n" },
+                { note: "G5", time: "4n", duration: "4n" },
+                { note: "C6", time: "2n", duration: "2n" }
+            ];
+
+            /**
+             * 播放慶祝音樂
+             */
+            function playCelebrationMusic() {
+                const now = Tone.now();
+                celebrationMelody.forEach(note => {
+                    celebrationSynth.triggerAttackRelease(note.note, note.duration, now + note.time);
+                });
+            }
+
+            /**
+             * Fisher-Yates (Knuth) shuffle algorithm to randomize verbs
+             * @param {Array} array - The array to shuffle
+             * @returns {Array} - The shuffled array
+             */
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+                }
+                return array;
+            }
+
+            /**
+             * 創建遊戲板上的所有格子並分配動詞
+             */
+            function createBoardSpaces() {
+                // 確保動詞列表足夠且隨機
+                const shuffledVerbs = shuffleArray([...chineseVerbs]);
+                assignedVerbs = shuffledVerbs.slice(0, numSpaces); // 取前 numSpaces 個動詞
+
+                for (let i = 0; i < numSpaces; i++) {
+                    const space = document.createElement('div');
+                    space.classList.add('board-space');
+                    space.id = `space-${i}`;
+
+                    if (i === 0) {
+                        // First space: directional arrow
+                        space.innerHTML = `
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        `;
+                    } else {
+                        space.textContent = assignedVerbs[i]; // Directly display verb on card
+                    }
+
+                    // Set grid-area properties for positioning
+                    space.style.gridRowStart = boardPositions[i][0];
+                    space.style.gridColumnStart = boardPositions[i][1];
+                    boardElement.appendChild(space);
+                    boardSpaces.push(space);
+                }
+            }
+
+            /**
+             * 初始化玩家組別和棋子
+             * @param {number} count - 玩家組別數量
+             */
+            function initializePlayers(count) {
+                players = [];
+                playerTokensContainer.innerHTML = ''; // Clear existing tokens
+
+                for (let i = 0; i < count; i++) {
+                    const tokenElement = document.createElement('div');
+                    tokenElement.classList.add('player-token');
+                    tokenElement.style.backgroundColor = playerColors[i % playerColors.length];
+                    tokenElement.id = `player-token-${i}`;
+                    playerTokensContainer.appendChild(tokenElement);
+
+                    players.push({
+                        id: `組別 ${i + 1}`,
+                        position: 0,
+                        color: playerColors[i % playerColors.length],
+                        tokenElement: tokenElement,
+                        hasCompletedRound: false // Track if this player has completed a full round
+                    });
+                }
+                updatePlayerTokenPositions(); // Initial placement
+                updateInstructionsDisplay(); // Show initial turn
+            }
+
+            /**
+             * 更新所有玩家棋子的位置
+             */
+            function updatePlayerTokenPositions() {
+                players.forEach(player => {
+                    const targetSpace = boardSpaces[player.position];
+                    if (targetSpace) {
+                        const spaceRect = targetSpace.getBoundingClientRect();
+                        const boardRect = boardElement.getBoundingClientRect();
+
+                        // Calculate token position relative to the board
+                        // Offset tokens slightly if multiple players are on the same space
+                        const offset = players.indexOf(player) * 5; // Small offset for visibility
+                        player.tokenElement.style.left = `${spaceRect.left - boardRect.left + (spaceRect.width / 2) - (player.tokenElement.offsetWidth / 2) + offset}px`;
+                        player.tokenElement.style.top = `${spaceRect.top - boardRect.top + (spaceRect.height / 2) - (player.tokenElement.offsetHeight / 2) + offset}px`;
+                    }
+                });
+            }
+
+            /**
+             * 更新指示顯示，包括當前玩家回合
+             */
+            function updateInstructionsDisplay(message = "請擲骰子！") {
+                const currentPlayer = players[currentPlayerIndex];
+                instructionsDisplay.innerHTML = `現在是 <span style="color: ${currentPlayer.color}; font-size: 1.2em; font-weight: bold;">${currentPlayer.id}</span> 的回合，${message}`;
+            }
+
+            /**
+             * 根據 visitedSpaces 陣列更新卡片顏色
+             */
+            function updateSpaceColors() {
+                boardSpaces.forEach((space, index) => {
+                    if (visitedSpaces[index]) {
+                        space.classList.add('visited');
+                    } else {
+                        space.classList.remove('visited');
+                    }
+                });
+                // Ensure current player's space is highlighted
+                boardSpaces.forEach((space, index) => {
+                    space.classList.remove('current');
+                });
+                boardSpaces[players[currentPlayerIndex].position].classList.add('current');
+            }
+
+            /**
+             * 生成帶有權重的隨機數字 (1-7, 數字越小機率越高)
+             * @returns {number} - 隨機生成的數字
+             */
+            function getWeightedRandomNumber() {
+                const weightedNumbers = [
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 10 times for 1
+                    2, 2, 2, 2, 2, 2, 2, 2,       // 8 times for 2
+                    3, 3, 3, 3, 3, 3,             // 6 times for 3
+                    4, 4, 4, 4,                   // 4 times for 4
+                    5, 5,                         // 2 times for 5
+                    6,                            // 1 time for 6
+                    7                             // 1 time for 7
+                ];
+                const randomIndex = Math.floor(Math.random() * weightedNumbers.length);
+                return weightedNumbers[randomIndex];
+            }
+
+            let slotMachineInterval;
+            /**
+             * 模擬拉霸機轉動並顯示最終結果
+             * @param {number} finalResult - 拉霸機的最終結果
+             * @returns {Promise<void>} - Promise that resolves when slot machine animation is complete
+             */
+            function rollSlotMachineAnimation(finalResult) {
+                return new Promise(resolve => {
+                    let spinCount = 0;
+                    const totalSpins = 20; // Number of times the number will change rapidly
+                    const spinDuration = 50; // Milliseconds per spin change
+
+                    slotMachineInterval = setInterval(() => {
+                        if (spinCount < totalSpins) {
+                            slotMachineDisplay.textContent = Math.floor(Math.random() * 7) + 1; // Random number 1-7
+                            slotRollSynth.triggerAttackRelease("C3", "32n"); // Short sound for each spin
+                            spinCount++;
+                        } else {
+                            clearInterval(slotMachineInterval);
+                            slotMachineDisplay.textContent = finalResult; // Display final result
+                            resolve(); // Animation complete
+                        }
+                    }, spinDuration);
+                });
+            }
+
+
+            /**
+             * 擲骰子 (現在是拉霸機) 並移動玩家
+             */
+            async function rollDice() {
+                // 禁用按鈕防止重複點擊
+                rollDiceBtn.disabled = true;
+                rollDiceBtn.textContent = "移動中...";
+                verbDisplay.textContent = ""; // 清空動詞顯示
+                instructionsDisplay.textContent = ""; // 清空說明
+
+                const slotResult = getWeightedRandomNumber(); // Get weighted random number
+
+                // 執行拉霸機動畫
+                await rollSlotMachineAnimation(slotResult);
+
+                let stepsMoved = 0;
+                const currentPlayer = players[currentPlayerIndex];
+                const oldPosition = currentPlayer.position;
+
+                const moveInterval = setInterval(() => {
+                    if (stepsMoved < slotResult) {
+                        // 每次移動一步並更新棋子位置
+                        currentPlayer.position = (currentPlayer.position + 1);
+                        // Check if player crossed the start line
+                        if (currentPlayer.position >= numSpaces) {
+                            currentPlayer.hasCompletedRound = true;
+                            currentPlayer.position %= numSpaces; // Wrap around
+                        }
+                        updatePlayerTokenPositions(); // Update all tokens
+                        stepsMoved++;
+                    } else {
+                        clearInterval(moveInterval);
+                        // 移動完成後，執行動詞表演
+                        landSoundSynth.triggerAttackRelease("G4", "8n"); // Play land sound
+
+                        // Check for celebration if landed on start after completing a round
+                        if (currentPlayer.position === 0 && currentPlayer.hasCompletedRound) {
+                            playCelebrationMusic();
+                            celebrationOverlay.classList.remove('hidden');
+                            celebrationOverlay.classList.add('show');
+                            setTimeout(() => {
+                                celebrationOverlay.classList.remove('show');
+                                celebrationOverlay.classList.add('hidden');
+                            }, 3000); // Hide celebration after 3 seconds
+                            currentPlayer.hasCompletedRound = false; // Reset for next round
+                        }
+
+                        performVerbAction();
+                        // Mark space as visited only if it's the first time
+                        if (!visitedSpaces[currentPlayer.position]) {
+                            visitedSpaces[currentPlayer.position] = true;
+                        }
+                        updateSpaceColors(); // Update card colors
+
+                        // 切換到下一位玩家
+                        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                        updateInstructionsDisplay(); // Update instructions for next turn
+
+                        // 重新啟用按鈕
+                        rollDiceBtn.disabled = false;
+                        rollDiceBtn.textContent = "擲骰子";
+                    }
+                }, 300); // 每 300 毫秒移動一步
+            }
+
+            /**
+             * 選擇當前位置的動詞並顯示
+             */
+            function performVerbAction() {
+                const currentPlayer = players[currentPlayerIndex];
+                const selectedVerb = assignedVerbs[currentPlayer.position];
+
+                if (currentPlayer.position === 0) { // If on the start space
+                    verbDisplay.textContent = "起點";
+                    updateInstructionsDisplay("請擲骰子！");
+                } else if (visitedSpaces[currentPlayer.position]) {
+                    // If the space has been visited by any team
+                    verbDisplay.textContent = "此動詞已表演過";
+                    updateInstructionsDisplay("此動詞已表演過，請等待下一回合！");
+                } else {
+                    verbDisplay.textContent = selectedVerb;
+                    updateInstructionsDisplay(`請表演 "${selectedVerb}" 這個動詞！`);
+                }
+            }
+
+            // Start Game Button Event Listener
+            startGameBtn.addEventListener('click', () => {
+                const selectedNumPlayers = parseInt(numPlayersSelect.value);
+                // Remove player setup div completely
+                playerSetupDiv.remove();
+                boardElement.classList.remove('hidden'); // Show board
+
+                createBoardSpaces(); // Create board spaces with verbs
+                initializePlayers(selectedNumPlayers); // Initialize players and tokens
+            });
+
+            // 綁定擲骰子按鈕事件
+            rollDiceBtn.addEventListener('click', rollDice);
+
+            // 確保視窗大小改變時棋子位置正確
+            window.addEventListener('resize', () => {
+                // Update player token positions
+                updatePlayerTokenPositions();
+            });
+        };
+    </script>
+</body>
+</html>
