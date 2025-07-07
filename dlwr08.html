@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-語文修辭拉霸機✨</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+            /* Stronger, warmer background - Darker red/maroon */
+            background: linear-gradient(135deg, #8B0000 0%, #B22222 100%); /* DarkRed to FireBrick */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            width: 100%;
+            max-width: 900px; /* Max width for larger screens */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden; /* For coin animations */
+            border: 8px solid #8B0000; /* Darker, more saturated red border */
+        }
+
+        .slot-machine-top {
+            /* Orange/yellow gradient for top banner */
+            background: linear-gradient(to bottom, #FF8C00, #FF4500); /* DarkOrange to OrangeRed */
+            border-radius: 15px 15px 0 0;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.2);
+            width: calc(100% - 40px);
+            text-align: center;
+            position: relative;
+            top: -30px; /* Overlap with container */
+            z-index: 10;
+        }
+
+        .slot-machine-top h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #FFFFFF; /* Changed to white */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+
+        .subtitle { /* New style for subtitle */
+            font-size: 1.1rem;
+            color: #F5F5DC; /* Beige color */
+            margin-top: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .slot-reels-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            perspective: 1000px; /* For 3D effect */
+            width: 100%;
+            justify-content: center;
+            position: relative; /* For lever positioning */
+            padding-right: 100px; /* Add padding to make space for lever */
+        }
+
+        .slot-reel-wrapper { /* New wrapper to contain scrolling content */
+            /* Light yellow/cream background for reels */
+            background-color: #FFFACD; /* LemonChiffon */
+            border: 3px solid #FFD700; /* Gold border */
+            border-radius: 10px;
+            width: 30%; /* Adjust width for 3 reels */
+            max-width: 180px; /* Max width for each reel */
+            height: 150px; /* Changed height to match lever */
+            overflow: hidden; /* Hide overflowing items */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .slot-reel { /* This will be the moving part */
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            transition: transform 0.5s ease-out; /* Smooth transition for stopping */
+            will-change: transform; /* Optimize for animation */
+        }
+
+        .slot-reel-item {
+            height: 150px; /* Changed height to match wrapper and show one item */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem; /* Increased font size for larger item */
+            font-weight: bold;
+            /* Dark brown text for reels */
+            color: #8B4513; /* SaddleBrown */
+            background-color: #FFFACD; /* LemonChiffon */
+            border-bottom: 1px solid #FFD700; /* Gold */
+            box-sizing: border-box;
+        }
+
+        .slot-reel.spinning {
+            animation: spinReel 0.1s infinite linear; /* Faster animation for continuous scroll */
+        }
+
+        @keyframes spinReel {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-150px); } /* Move one item height up */
+        }
+
+        .slot-lever {
+            position: absolute;
+            right: 20px; /* Adjusted position to be visible */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 150px;
+            /* Bright red lever */
+            background-color: #DC143C; /* Crimson */
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+            border: 3px solid #8B0000; /* DarkRed */
+            z-index: 15; /* Ensure lever is above reels */
+        }
+
+        .slot-lever.pulling {
+            transform: translateY(-50%) translateY(30px); /* Move down */
+            box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .slot-lever.pulled {
+            transform: translateY(-50%) translateY(30px); /* Stay down briefly */
+        }
+
+        .task-display {
+            /* Light blue/teal for task display */
+            background-color: #E0FFFF; /* LightCyan */
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+            /* Dark blue text for task display */
+            color: #008B8B; /* DarkCyan */
+            font-weight: bold;
+            border: 2px dashed #00CED1; /* DarkTurquoise dashed border */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .input-area textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            /* Grayish brown border for input */
+            border: 2px solid #8B4513; /* SaddleBrown */
+            border-radius: 10px;
+            font-size: 1.1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .game-button {
+            padding: 12px 25px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: none;
+            color: #fff;
+            flex-grow: 1; /* Allow buttons to grow */
+            max-width: 200px; /* Max width for each button */
+        }
+
+        .game-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Stronger button colors */
+        .check-button {
+            background: linear-gradient(to right, #FF8C00, #FF4500); /* DarkOrange to OrangeRed */
+        }
+        .copy-button {
+            background: linear-gradient(to right, #8A2BE2, #9400D3); /* BlueViolet to DarkViolet */
+        }
+        .publish-button {
+            background: linear-gradient(to right, #228B22, #3CB371); /* ForestGreen to MediumSeaGreen */
+        }
+        .hint-button {
+            background: linear-gradient(to right, #BA55D3, #9932CC); /* MediumOrchid to DarkOrchid */
+        }
+        .reset-button {
+            background: linear-gradient(to right, #708090, #A9A9A9); /* SlateGray to DarkGray */
+        }
+
+        .message-box {
+            /* Warmer yellow for messages */
+            background-color: #FFFACD; /* LemonChiffon */
+            border: 2px solid #FFD700; /* Gold */
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            /* DarkGoldenrod for message text */
+            color: #B8860B; /* DarkGoldenrod */
+            font-weight: bold;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .message-box.win {
+            /* Stronger green for win messages */
+            background-color: #90EE90; /* LightGreen */
+            border-color: #32CD32; /* LimeGreen */
+            color: #228B22; /* ForestGreen */
+        }
+
+        .message-box.error {
+            /* Stronger red for error messages */
+            background-color: #FFC0CB; /* Pink */
+            border-color: #FF6347; /* Tomato */
+            color: #B22222; /* FireBrick */
+        }
+
+        /* Coin animation */
+        @keyframes coinFall {
+            0% { transform: translateY(-100px) rotate(0deg) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(calc(100vh - 100px)) rotate(720deg) scale(1); opacity: 0; }
+        }
+
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #FFD700; /* Gold */
+            border-radius: 50%;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3), 0 0 10px rgba(255,215,0,0.5);
+            animation: coinFall 2s ease-out forwards;
+            pointer-events: none; /* Allow clicks to pass through */
+            z-index: 20;
+        }
+
+        /* Flash animation for copy button */
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .flash-animation {
+            animation: flash 0.5s ease-in-out 3; /* Flash 3 times */
+        }
+
+        .footer-info {
+            font-size: 0.9rem;
+            color: #6b7280; /* Tailwind gray-500 */
+            margin-top: 2rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .footer-info a {
+            color: #3b82f6; /* Tailwind blue-500 */
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .game-container {
+                padding: 20px;
+            }
+            .slot-machine-top h1 {
+                font-size: 2rem;
+            }
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            .slot-reels-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                padding-right: 0; /* Remove padding on small screens */
+            }
+            .slot-reel-wrapper {
+                width: 80%; /* Wider reels on small screens */
+                max-width: 250px;
+                height: 150px; /* Keep height consistent */
+            }
+            .slot-reel-item {
+                font-size: 1.8rem; /* Adjusted font size for smaller screens */
+                height: 150px; /* Ensure item height matches wrapper */
+            }
+            .slot-lever {
+                position: static; /* Move lever below reels */
+                transform: none;
+                margin-top: 20px;
+                height: 100px;
+                width: 50px;
+            }
+            .lever-handle {
+                width: 35px;
+                height: 35px;
+            }
+            .task-display {
+                font-size: 1.1rem;
+            }
+            .input-area textarea {
+                font-size: 1rem;
+            }
+            .game-button {
+                width: 100%; /* Full width buttons on small screens */
+                max-width: none;
+            }
+            .button-group { /* Adjusted for single group on small screens */
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="slot-machine-top">
+            <h1>LST遊戲室-語文修辭拉霸機✨</h1>
+            <p class="subtitle">透過遊戲練習語文修辭，用AI協助我們學得更快、更好！</p>
+        </div>
+
+        <div class="slot-reels-container">
+            <div class="slot-reel-wrapper"><div id="reel1" class="slot-reel"></div></div>
+            <div class="slot-reel-wrapper"><div id="reel2" class="slot-reel"></div></div>
+            <div class="slot-reel-wrapper"><div id="reel3" class="slot-reel"></div></div>
+            <div id="lever" class="slot-lever">
+                <div class="lever-handle"></div>
+            </div>
+        </div>
+
+        <div id="taskDisplay" class="task-display">
+            點擊拉桿開始遊戲！
+        </div>
+
+        <div class="input-area w-full">
+            <textarea id="sentenceInput" placeholder="在這裡寫下你的造句，例如：朋友像陽光一樣溫暖我。"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button id="checkSentenceBtn" class="game-button check-button">檢查</button>
+            <button id="copySentenceBtn" class="game-button copy-button hidden">複製</button>
+            <button id="hintBtn" class="game-button hint-button">提示</button>
+            <button id="resetBtn" class="game-button reset-button">再玩一次</button>
+            <button id="publishBtn" class="game-button publish-button hidden">發表</button>
+        </div>
+
+        <div id="messageBox" class="message-box">
+            準備好開始造句了嗎？
+        </div>
+
+        <div class="footer-info">
+            <p>遊戲設計與製作：呂舒婷｜<a href="https://www.facebook.com/yobi.lu" target="_blank">🔍 FB</a>｜</p>
+            <p>📧 <a href="mailto:luuyobi@gmail.com">luuyobi@gmail.com</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲數據：修辭法、主題、關鍵字及範例句子
+        const examples = [
+            { device: "比喻法", topic: "朋友", keyword: "陽光", example: "朋友像陽光一樣溫暖我。" },
+            { device: "比喻法", topic: "動物", keyword: "翅膀", example: "夢想像翅膀，帶我飛向天空。" },
+            { device: "比喻法", topic: "學校", keyword: "星星", example: "學校像星星一樣亮晶晶。" },
+
+            { device: "擬人法", topic: "太陽", keyword: "微笑", example: "太陽笑著照亮大地。" },
+            { device: "擬人法", topic: "風", keyword: "跑步", example: "風跑進我的袖子裡玩耍。" },
+            { device: "擬人法", topic: "書包", keyword: "哭泣", example: "我的書包快被功課壓哭了！" },
+
+            { device: "誇飾法", topic: "笑聲", keyword: "彩虹", example: "她的笑聲像彩虹一樣跑滿教室。" },
+            { device: "誇飾法", topic: "背包", keyword: "山", example: "我的背包重得像一座山。" },
+            { device: "誇飾法", topic: "腳步", keyword: "地震", example: "他走路的腳步聲大得像地震！" },
+
+            { device: "排比法", topic: "學習", keyword: "掌聲", example: "我想努力，我想成長，我想得到掌聲。" },
+            { device: "排比法", topic: "友情", keyword: "雲朵", example: "友情像雲朵、像風、像像太陽。" },
+            { device: "排比法", topic: "遊戲", keyword: "歡笑", example: "我們玩跳繩，我們玩捉迷藏，我們玩紙飛機。" },
+
+            { device: "設問法", topic: "希望", keyword: "星星", example: "什麼會讓我開心？是星星，是歌聲，是希望！" },
+            { device: "設問法", topic: "朋友", keyword: "微笑", example: "誰最會讓我笑？是我的朋友！" },
+            { device: "設問法", topic: "動物", keyword: "雨滴", example: "下雨了，是誰最開心？是池塘裡的小青蛙！" },
+        ];
+
+        // 獲取所有修辭法、主題和關鍵字的唯一值
+        const devices = [...new Set(examples.map(e => e.device))];
+        const topics = [...new Set(examples.map(e => e.topic))];
+        const keywords = [...new Set(examples.map(e => e.keyword))];
+
+        // 獲取 DOM 元素
+        const reel1 = document.getElementById('reel1');
+        const reel2 = document.getElementById('reel2');
+        const reel3 = document.getElementById('reel3');
+        const lever = document.getElementById('lever');
+        const taskDisplay = document.getElementById('taskDisplay');
+        const sentenceInput = document.getElementById('sentenceInput');
+        // const exampleBtn = document.getElementById('exampleBtn'); // Removed from HTML
+        const hintBtn = document.getElementById('hintBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const checkSentenceBtn = document.getElementById('checkSentenceBtn');
+        const copySentenceBtn = document.getElementById('copySentenceBtn');
+        const publishBtn = document.getElementById('publishBtn');
+        const messageBox = document.getElementById('messageBox');
+        const gameContainer = document.querySelector('.game-container');
+
+        let currentDevice = '';
+        let currentTopic = '';
+        let currentKeyword = '';
+        let isSpinning = false;
+        const ITEM_HEIGHT = 150; // Defined height of each slot-reel-item in px, adjusted to match wrapper height
+
+        // Tone.js setup for sound effects
+        const spinSynth = new Tone.Synth({
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+        }).toDestination();
+
+        const winSynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.05, decay: 0.2, sustain: 0.1, release: 0.5 }
+        }).toDestination();
+
+        const errorSynth = new Tone.Synth({
+            oscillator: { type: "sawtooth" },
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 }
+        }).toDestination();
+
+        // 填充拉霸機轉輪內容
+        function populateReel(reelElement, items) {
+            reelElement.innerHTML = ''; // Clear existing content
+            // 為實現平滑滾動效果，將項目重複多次
+            // 確保有足夠的項目可以滾動，並在中間停止
+            const numRepeats = 10; // 增加重複次數以提供更長的滾動視覺
+            const bufferItems = 2; // 前後緩衝項目數量，確保視覺平滑
+
+            // 添加開頭緩衝項目 (從末尾取)
+            for (let i = 0; i < bufferItems; i++) {
+                const div = document.createElement('div');
+                div.className = 'slot-reel-item';
+                div.textContent = items[items.length - bufferItems + i];
+                reelElement.appendChild(div);
+            }
+
+            // 重複主要項目
+            for (let r = 0; r < numRepeats; r++) {
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'slot-reel-item';
+                    div.textContent = item;
+                    reelElement.appendChild(div);
+                });
+            }
+
+            // 添加結尾緩衝項目 (從開頭取)
+            for (let i = 0; i < bufferItems; i++) {
+                const div = document.createElement('div');
+                div.className = 'slot-reel-item';
+                div.textContent = items[i];
+                reelElement.appendChild(div);
+            }
+        }
+
+        // 初始化拉霸機
+        function initializeReels() {
+            populateReel(reel1, devices);
+            populateReel(reel2, topics);
+            populateReel(reel3, keywords);
+            // Reset reel positions to show the first item (or a buffer item)
+            reel1.style.transform = 'translateY(0px)';
+            reel2.style.transform = 'translateY(0px)';
+            reel3.style.transform = 'translateY(0px)';
+            reel1.style.transition = 'none';
+            reel2.style.transition = 'none';
+            reel3.style.transition = 'none';
+        }
+
+        // 顯示訊息
+        function showMessage(msg, type = 'info') {
+            messageBox.textContent = msg;
+            messageBox.className = 'message-box'; // Reset classes
+            if (type === 'win') {
+                messageBox.classList.add('win');
+            } else if (type === 'error') {
+                messageBox.classList.add('error');
+            }
+        }
+
+        // 模擬拉霸機轉動並停止
+        async function spinReels() {
+            if (isSpinning) return; // 防止重複點擊
+            isSpinning = true;
+            showMessage('拉霸機轉動中...', 'info');
+            sentenceInput.value = ''; // 清空輸入框
+            messageBox.classList.remove('win', 'error'); // 移除成功/失敗樣式
+            copySentenceBtn.classList.add('hidden'); // 隱藏複製按鈕
+            copySentenceBtn.classList.remove('flash-animation'); // 移除閃爍動畫
+            publishBtn.classList.add('hidden'); // 隱藏發表按鈕
+
+            // Ensure audio context is started on user gesture
+            await Tone.start();
+
+            // Lever animation
+            lever.classList.add('pulling');
+            spinSynth.triggerAttackRelease("C4", "8n"); // Play initial lever pull sound
+
+            setTimeout(() => {
+                lever.classList.remove('pulling');
+                lever.classList.add('pulled');
+            }, 100); // Pull down quickly
+
+            setTimeout(() => {
+                lever.classList.remove('pulled');
+                // Start reel spins after lever is visually "pulled"
+                startReelSpins();
+            }, 300); // Release quickly
+        }
+
+        function startReelSpins() {
+            const reelElements = [reel1, reel2, reel3];
+            const allItems = [devices, topics, keywords];
+            const selectedItems = [];
+            const numRepeatsInPopulate = 10; // Must match populateReel's numRepeats
+            const bufferItemsAtStart = 2; // Must match populateReel's bufferItems
+
+            let completedSpins = 0;
+
+            reelElements.forEach((reel, index) => {
+                // Reset position for smooth start of spin
+                reel.style.transition = 'none';
+                reel.style.transform = 'translateY(0px)';
+                reel.classList.add('spinning');
+
+                // Play a continuous spin sound for each reel
+                const spinInterval = setInterval(() => {
+                    spinSynth.triggerAttackRelease("C3", "32n"); // Play a short note rapidly
+                }, 100);
+
+                // Randomly select an item
+                const randomIndex = Math.floor(Math.random() * allItems[index].length);
+                selectedItems[index] = allItems[index][randomIndex];
+
+                // Calculate target Y position to stop on the selected item.
+                // We aim for an item in the middle repetition for a smoother visual stop.
+                const targetItemIndexInFullList = (bufferItemsAtStart + (numRepeatsInPopulate / 2) * allItems[index].length + randomIndex);
+                const targetY = -(targetItemIndexInFullList * ITEM_HEIGHT);
+
+                // Stop reel after a delay
+                const stopDelay = 2000 + index * 500; // Staggered stop
+
+                setTimeout(() => {
+                    clearInterval(spinInterval); // Stop continuous spin sound for this reel
+                    reel.classList.remove('spinning');
+                    reel.style.transition = 'transform 1.5s ease-out'; // Smooth stop transition
+                    reel.style.transform = `translateY(${targetY}px)`;
+
+                    // After the transition, reset the reel's content and position for the next spin
+                    // This creates the illusion of infinite scrolling without massive translateY values
+                    setTimeout(() => {
+                        reel.style.transition = 'none'; // Disable transition for instant reset
+                        // Now, replace the content with just the selected item for clear display
+                        reel.innerHTML = `<div class="slot-reel-item">${selectedItems[index]}</div>`;
+                        reel.style.transform = `translateY(0px)`; // Position it at the top of its wrapper
+                        completedSpins++;
+                        if (completedSpins === reelElements.length) {
+                            // All reels stopped, display task
+                            currentDevice = selectedItems[0];
+                            currentTopic = selectedItems[1];
+                            currentKeyword = selectedItems[2];
+                            taskDisplay.textContent = `請用「${currentDevice}」，以「${currentTopic}」為內容，並加入「${currentKeyword}」來造一個句子！`;
+                            showMessage('請在下方輸入你的造句。', 'info');
+                            isSpinning = false;
+                        }
+                    }, 1500); // Wait for stop transition to complete
+                }, stopDelay);
+            });
+        }
+
+        // 獲取範例句子 (Removed from HTML, but still here if needed by AI or other logic)
+        function getExampleSentence(device, topic, keyword) {
+            const match = examples.find(e =>
+                e.device === device && e.topic === topic && e.keyword === keyword
+            );
+            if (match) {
+                return match.example;
+            } else {
+                return "這組組合還沒有範例，請試著自己寫一寫看喔！";
+            }
+        }
+
+        // 檢查造句是否符合要求並呼叫 AI 老師
+        async function checkSentence() { // Make it async
+            const sentence = sentenceInput.value.trim();
+            if (!sentence) {
+                showMessage('請先輸入你的造句喔！', 'error');
+                errorSynth.triggerAttackRelease("C3", "8n");
+                copySentenceBtn.classList.add('hidden'); // Hide copy button
+                copySentenceBtn.classList.remove('flash-animation'); // Ensure no flashing
+                publishBtn.classList.add('hidden'); // Hide publish button
+                return false;
+            }
+            if (!currentDevice || !currentTopic || !currentKeyword) {
+                showMessage('請先點擊拉桿開始遊戲！', 'error');
+                errorSynth.triggerAttackRelease("C3", "8n");
+                copySentenceBtn.classList.add('hidden'); // Hide copy button
+                copySentenceBtn.classList.remove('flash-animation');
+                publishBtn.classList.add('hidden'); // Hide publish button
+                return false;
+            }
+
+            let isKeywordPresent = sentence.includes(currentKeyword);
+
+            // Show AI thinking message
+            showMessage('AI老師思考中...', 'info');
+            // Hide copy/publish buttons while AI is thinking
+            copySentenceBtn.classList.add('hidden');
+            copySentenceBtn.classList.remove('flash-animation');
+            publishBtn.classList.add('hidden');
+
+            try {
+                // Construct AI prompt - ask for praise then suggestion, within 100 characters
+                const prompt = `我寫了一個句子：'${sentence}'。這個句子應該使用「${currentDevice}」，主題是「${currentTopic}」，關鍵字是「${currentKeyword}」。請你作為一位語文老師，首先讚美這個句子的優點（即使有小缺點也要找出優點），然後再根據修辭法和關鍵字的使用情況，給予具體的指導或改進建議。請確保你的評語鼓勵性強，內容適合國小學生，並控制在100字以內。請用繁體中文回答。`;
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will provide this
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const aiFeedback = result.candidates[0].content.parts[0].text;
+                    showMessage(`AI老師說：\n${aiFeedback}`, isKeywordPresent ? 'win' : 'error'); // Display AI feedback, type depends on keyword presence
+
+                    if (isKeywordPresent) { // If keyword is present, enable copy and publish
+                        winSynth.triggerAttackRelease(["C5", "E5", "G5"], "4n"); // Play win sound
+                        dropCoins(); // Drop coins
+                        copySentenceBtn.classList.remove('hidden'); // Show copy button
+                        copySentenceBtn.classList.add('flash-animation'); // Flash copy button
+                        publishBtn.classList.remove('hidden'); // Show publish button
+                    } else { // If keyword is missing, it's an error
+                        errorSynth.triggerAttackRelease("C3", "8n");
+                    }
+                    return isKeywordPresent; // Indicate success for UI if keyword present
+                } else {
+                    showMessage('AI老師暫時無法給予評語，請再試一次。', 'error');
+                    errorSynth.triggerAttackRelease("C3", "8n");
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error fetching AI feedback:", error);
+                showMessage('AI老師連線失敗，請檢查網路或稍後再試。', 'error');
+                errorSynth.triggerAttackRelease("C3", "8n");
+                return false;
+            }
+        }
+
+        // 顯示修辭法提示
+        function showHint() {
+            if (!currentDevice) {
+                showMessage('請先點擊拉桿開始遊戲！', 'error');
+                return;
+            }
+
+            let hintText = '';
+            switch (currentDevice) {
+                case "比喻法":
+                    hintText = "比喻法：把一樣東西比喻成另一樣東西，讓句子更生動。例如：朋友像陽光一樣溫暖我。";
+                    break;
+                case "擬人法":
+                    hintText = "擬人法：把沒有生命的東西，寫得好像人一樣有動作或感情。例如：太陽笑著照亮大地。";
+                    break;
+                case "誇飾法":
+                    hintText = "誇飾法：把事情說得很誇張，讓人印象深刻。例如：我的背包重得像一座山。";
+                    break;
+                case "排比法":
+                    hintText = "排比法：用三個或更多相同或相似的句型或詞語，排在一起，讓句子有力量。例如：我想努力，我想成長，我想得到掌聲。";
+                    break;
+                case "設問法":
+                    hintText = "設問法：句子裡先問一個問題，然後自己回答，讓內容更吸引人。例如：誰最會讓我笑？是我的朋友！";
+                    break;
+                default:
+                    hintText = "請先點擊拉桿開始遊戲！";
+            }
+            showMessage(hintText, 'info');
+        }
+
+        // 掉落金幣動畫
+        function dropCoins() {
+            const numCoins = 10;
+            for (let i = 0; i < numCoins; i++) {
+                const coin = document.createElement('div');
+                coin.className = 'coin';
+                // 隨機起始位置
+                coin.style.left = `${Math.random() * 100}%`;
+                coin.style.animationDelay = `${i * 0.1}s`; // 錯開動畫
+                gameContainer.appendChild(coin);
+
+                // 動畫結束後移除金幣
+                coin.addEventListener('animationend', () => {
+                    coin.remove();
+                });
+            }
+        }
+
+        // 重置遊戲
+        function resetGame() {
+            currentDevice = '';
+            currentTopic = '';
+            currentKeyword = '';
+            taskDisplay.textContent = '點擊拉桿開始遊戲！';
+            sentenceInput.value = '';
+            showMessage('準備好開始造句了嗎？', 'info');
+            messageBox.classList.remove('win', 'error');
+            copySentenceBtn.classList.add('hidden'); // 隱藏複製按鈕
+            copySentenceBtn.classList.remove('flash-animation'); // 移除閃爍動畫
+            publishBtn.classList.add('hidden'); // 隱藏發表按鈕
+            initializeReels(); // 重新填充轉輪內容
+        }
+
+        // 事件監聽器
+        lever.addEventListener('click', spinReels);
+        checkSentenceBtn.addEventListener('click', checkSentence);
+        copySentenceBtn.addEventListener('click', () => {
+            sentenceInput.select();
+            document.execCommand('copy');
+            showMessage('造句已複製到剪貼簿！', 'info');
+            copySentenceBtn.classList.remove('flash-animation'); // Stop flashing after copy
+        });
+
+        // Publish button always redirects
+        publishBtn.addEventListener('click', () => {
+            window.open('https://ylcdo.padlet.org/Lu/padlet-fxeb2uhrxzftiddn', '_blank'); // Use window.open with _blank to open in new tab
+        });
+
+        // Removed exampleBtn.addEventListener as it's removed from HTML
+        // exampleBtn.addEventListener('click', () => {
+        //     if (!currentDevice) {
+        //         showMessage('請先點擊拉桿開始遊戲！', 'error');
+        //         return;
+        //     }
+        //     const example = getExampleSentence(currentDevice, currentTopic, currentKeyword);
+        //     showMessage(`範例：${example}`, 'info');
+        // });
+        hintBtn.addEventListener('click', showHint);
+        resetBtn.addEventListener('click', resetGame);
+
+        // 頁面載入時初始化
+        window.onload = initializeReels;
+
+    </script>
+</body>
+</html>
