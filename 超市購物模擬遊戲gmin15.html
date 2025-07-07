@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-超市購物模擬遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right, #89cff0, #a8dadc, #f0f8ff); /* Lively blue gradient background */
+            display: flex;
+            flex-direction: column; /* Stack elements vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .header-area {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column; /* Stack title and subtitle */
+            align-items: center;
+            margin-bottom: 40px; /* Adjusted margin for header area from game container */
+            position: relative; /* For positioning language toggle */
+        }
+        .main-title {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 2.0rem; /* Adjusted font size for mobile (default) to allow wrapping */
+            text-align: center;
+            margin-bottom: 10px; /* Adjusted space below main title */
+            width: 100%;
+            white-space: normal; /* Allow text to wrap on multiple lines for mobile */
+            overflow: visible; /* Ensure content is visible */
+            text-overflow: clip; /* No ellipsis for wrapping content */
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 1.1rem; /* Subtitle font size */
+            color: #555;
+            width: 100%;
+        }
+        #language-toggle {
+            position: absolute; /* Fixed position relative to header-area */
+            top: 70px; /* Adjusted top position for mobile to avoid overlap with potentially two-line title */
+            right: 10px; /* Adjusted right position */
+            background-color: #3498db; /* Blue button */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #language-toggle:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        #language-toggle:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 1000px; /* Slightly wider max-width */
+            display: flex; /* Use flexbox for main sections */
+            flex-direction: column; /* Stack vertically on mobile */
+            gap: 30px; /* More space between sections */
+        }
+        @media (min-width: 768px) {
+            .game-container {
+                flex-direction: row; /* Side-by-side on larger screens */
+                justify-content: space-between;
+                align-items: flex-start; /* Align items to the top */
+            }
+            .shopping-area {
+                flex: 2; /* Shopping area takes more space */
+            }
+            .checkout-area {
+                flex: 1; /* Checkout area takes less space */
+            }
+            /* Adjust header for larger screens */
+            .header-area {
+                flex-direction: column; /* Still column for title/subtitle stacking */
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 40px; /* Keep consistent for larger screens */
+            }
+            .main-title {
+                font-size: 3.2rem; /* Larger font size for tablets/desktops */
+                margin-bottom: 10px; /* Keep consistent for larger screens */
+                white-space: nowrap; /* Prevent wrapping for desktop */
+                overflow: hidden; /* Hide overflow if it's too long */
+                text-overflow: ellipsis; /* Add ellipsis if it's too long (fallback) */
+            }
+            .subtitle {
+                /* No absolute positioning needed here, it will naturally stack */
+                position: static;
+                top: auto;
+                left: auto;
+                transform: none;
+                width: 100%;
+                white-space: normal; /* Allow wrapping if needed */
+            }
+            #language-toggle {
+                position: absolute; /* Keep it absolute relative to header-area */
+                top: 60px; /* Keep consistent for larger screens */
+                right: 10px; /* Keep consistent for larger screens */
+            }
+        }
+        h2 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        .product-item {
+            background-color: #f0f8ff; /* Lighter blue for product cards */
+            border: 2px solid #a7d9ed;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 150px;
+        }
+        .product-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+        .product-item .emoji {
+            font-size: 4rem; /* Larger emoji size */
+            margin-bottom: 5px;
+        }
+        .product-item .name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+        .product-item .price {
+            color: #e67e22; /* Orange for price */
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        /* Style for locked products */
+        .product-item.locked {
+            opacity: 0.5;
+            filter: grayscale(80%);
+            cursor: not-allowed;
+            background-color: #e9ecef; /* Lighter grey for locked items */
+            border-color: #ced4da;
+        }
+        .product-item.locked:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        /* Style for sold out products */
+        .product-item.sold-out {
+            background-color: #f8d7da; /* Light red for sold out */
+            border-color: #dc3545;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .product-item.sold-out .emoji {
+            filter: grayscale(100%);
+        }
+        .product-item.sold-out .name,
+        .product-item.sold-out .price {
+            color: #dc3545;
+        }
+        .product-item.sold-out:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ecf0f1;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-item .name {
+            font-weight: 500;
+            color: #34495e;
+        }
+        .cart-item .price {
+            color: #e67e22;
+            font-weight: 600;
+        }
+        .total-amount {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #27ae60; /* Green for total */
+            margin-top: 15px;
+            text-align: right;
+        }
+        .checkout-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .action-button {
+            background-color: #4CAF50; /* Vibrant green button */
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .action-button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        .action-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .reset-button {
+            background-color: #FF5722; /* Vibrant orange-red for reset */
+        }
+        .reset-button:hover {
+            background-color: #E64A19;
+        }
+        .message-box {
+            background-color: #fdf6e3; /* Light yellow for messages */
+            border: 2px solid #f39c12;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #d35400; /* Dark orange for message text */
+            text-align: center;
+            font-weight: 600;
+        }
+        .success-message {
+            background-color: #e8f8f5; /* Light green for success */
+            border-color: #2ecc71;
+            color: #27ae60;
+        }
+        .error-message {
+            background-color: #fbecec; /* Light red for error */
+            border-color: #e74c3c;
+            color: #c0392b;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .math-challenge-section {
+            background-color: #f8fcfd;
+            border: 2px solid #b3e0ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .math-challenge-section p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #34495e;
+            font-weight: 600;
+        }
+        .footer-info {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            font-size: 0.9rem;
+            color: #34495e; /* Darker color for footer text */
+            width: 100%;
+            max-width: 900px;
+        }
+        .footer-info a {
+            color: #2980b9; /* Darker blue for footer links */
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .footer-info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Celebration Screen Styles */
+        #celebration-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* More vibrant gradient */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            z-index: 1000; /* Ensure it's on top */
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .supermarket-tycoon-text {
+            font-size: 3rem; /* Larger font size */
+            font-weight: 900; /* Extra bold */
+            color: #FFD700; /* Gold color */
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.7); /* Glowing effect */
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-area">
+        <h1 class="main-title" data-i18n="mainTitle">LST遊戲室-超市購物模擬遊戲</h1>
+        <button id="language-toggle" data-i18n="languageToggle">English</button>
+    </div>
+    <p class="subtitle" data-i18n="subtitle">每次至少三樣商品，正確計算找零後，就會解鎖一個新的商品！</p>
+
+    <div class="game-container">
+        <div class="shopping-area">
+            <h2 class="section-title" data-i18n="shoppingAreaTitle">🛒 商品區</h2>
+            <div id="product-grid" class="product-grid">
+                </div>
+        </div>
+
+        <div class="checkout-area">
+            <h2 class="section-title" data-i18n="cartTitle">🛍️ 購物車</h2>
+            <div id="cart-items" class="mb-4">
+                <p class="text-gray-500 text-center" id="empty-cart-message" data-i18n="emptyCartMessage">購物車是空的喔！</p>
+            </div>
+            <h2 class="section-title mt-6" data-i18n="checkoutTitle">💰 結帳</h2>
+
+            <div id="payment-section">
+                <input type="number" id="payment-input" class="checkout-input" data-i18n-placeholder="paymentPlaceholder" placeholder="請輸入付款金額 (例如: 1000)" min="0">
+                <button id="checkout-button" class="action-button mb-3" data-i18n="confirmPaymentButton">確認付款</button>
+            </div>
+
+            <div id="math-challenge-section" class="math-challenge-section hidden">
+                <p id="math-question"></p>
+                <input type="number" id="change-input" class="checkout-input" data-i18n-placeholder="changeInputPlaceholder" placeholder="請輸入找零金額" min="0">
+                <button id="confirm-change-button" class="action-button mb-3" data-i18n="confirmChangeButton">確認找零</button>
+                <button id="hint-button" class="action-button reset-button" data-i18n="hintButton">提示</button>
+            </div>
+
+            <button id="reset-button" class="action-button reset-button" data-i18n="resetButton">重新開始</button>
+
+            <div id="message-box" class="message-box hidden">
+                </div>
+        </div>
+    </div>
+
+    <div id="celebration-screen" class="hidden">
+        <div class="text-8xl mb-6 animate-bounce">🎉</div>
+        <h2 class="text-4xl font-bold mb-4" data-i18n="celebrationTitle">恭喜你！</h2>
+        <p class="text-2xl mb-8" data-i18n="celebrationMessageStart">你解鎖了所有商品，成為<br><span class="supermarket-tycoon-text" data-i18n="supermarketTycoon">超市大亨</span>！</p>
+        <button id="celebration-reset-button" class="bg-white text-purple-600 px-8 py-4 rounded-full text-xl font-bold shadow-lg hover:bg-gray-100 transition-all duration-300" data-i18n="celebrationResetButton">
+            重新開始遊戲
+        </button>
+    </div>
+
+    <div class="footer-info">
+        </div>
+
+    <script>
+        // Original product data (immutable)
+        const originalProducts = [
+            { id: 1, name_zh: '牛奶', name_en: 'Milk', price: 50, emoji: '🥛' },
+            { id: 2, name_zh: '麵包', name_en: 'Bread', price: 35, emoji: '🍞' },
+            { id: 3, name_zh: '蘋果', name_en: 'Apple', price: 15, emoji: '🍎' },
+            { id: 4, name_zh: '香蕉', name_en: 'Banana', price: 20, emoji: '🍌' },
+            { id: 5, name_zh: '餅乾', name_en: 'Cookies', price: 80, emoji: '🍪' },
+            { id: 6, name_zh: '果汁', name_en: 'Juice', price: 60, emoji: '🥤' },
+            { id: 7, name_zh: '鉛筆', name_en: 'Pencil', price: 10, emoji: '✏️' },
+            { id: 8, name_zh: '筆記本', name_en: 'Notebook', price: 25, emoji: '📓' },
+            { id: 9, name_zh: '玩具車', name_en: 'Toy Car', price: 150, emoji: '🚗' },
+            { id: 10, name_zh: '貼紙', name_en: 'Stickers', price: 45, emoji: '✨' },
+            { id: 11, name_zh: '冰淇淋', name_en: 'Ice Cream', price: 90, emoji: '🍦' },
+            { id: 12, name_zh: '糖果', name_en: 'Candy', price: 20, emoji: '🍬' },
+            { id: 13, name_zh: '足球', name_en: 'Football', price: 180, emoji: '⚽' },
+            { id: 14, name_zh: '水壺', name_en: 'Water Bottle', price: 120, emoji: '🧃' },
+            { id: 15, name_en: 'Eraser', name_zh: '橡皮擦', price: 5, emoji: '🧽' },
+            { id: 16, name_en: 'Book', name_zh: '書本', price: 70, emoji: '📚' },
+        ];
+
+        let currentProducts = []; // This will be the mutable array with stock info
+        let cart = [];
+        let total = 0;
+        let currentPaymentAmount = 0; // Stores the amount paid by the user
+        let revealedProductCount = 4; // Start with 4 products revealed
+
+        // Get DOM elements
+        const gameContainer = document.querySelector('.game-container');
+        const productGrid = document.getElementById('product-grid');
+        const cartItemsDisplay = document.getElementById('cart-items');
+        const paymentSection = document.getElementById('payment-section');
+        const paymentInput = document.getElementById('payment-input');
+        const checkoutButton = document.getElementById('checkout-button');
+        const mathChallengeSection = document.getElementById('math-challenge-section');
+        const mathQuestion = document.getElementById('math-question');
+        const changeInput = document.getElementById('change-input');
+        const confirmChangeButton = document.getElementById('confirm-change-button');
+        const hintButton = document.getElementById('hint-button');
+        const resetButton = document.getElementById('reset-button');
+        const messageBox = document.getElementById('message-box');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const celebrationScreen = document.getElementById('celebration-screen');
+        const celebrationResetButton = document.getElementById('celebration-reset-button');
+        const languageToggle = document.getElementById('language-toggle');
+
+
+        // Tone.js sound effects setup
+        const synth = new Tone.Synth().toDestination();
+        const correctSound = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" },
+            envelope: {
+                attack: 0.005,
+                decay: 0.1,
+                sustain: 0.05,
+                release: 0.1
+            }
+        }).toDestination();
+        const wrongSound = new Tone.NoiseSynth({
+            noise: { type: "pink" },
+            envelope: {
+                attack: 0.005,
+                decay: 0.1,
+                sustain: 0.05,
+                release: 0.1
+            }
+        }).toDestination();
+
+        /**
+         * Plays the add to cart sound effect.
+         */
+        function playAddToCartSound() {
+            synth.triggerAttackRelease("C5", "8n");
+        }
+
+        /**
+         * Plays the correct answer sound effect.
+         */
+        function playCorrectSound() {
+            correctSound.triggerAttackRelease(["C4", "E4", "G4"], "8n");
+        }
+
+        /**
+         * Plays the wrong answer sound effect.
+         */
+        function playWrongSound() {
+            wrongSound.triggerAttackRelease("16n");
+        }
+
+        // Translation data
+        const translations = {
+            'zh-TW': {
+                mainTitle: 'LST遊戲室-超市購物模擬遊戲',
+                subtitle: '每次至少三樣商品，正確計算找零後，就會解鎖一個新的商品！',
+                languageToggle: 'English',
+                shoppingAreaTitle: '🛒 商品區',
+                cartTitle: '🛍️ 購物車',
+                emptyCartMessage: '購物車是空的喔！',
+                checkoutTitle: '💰 結帳',
+                paymentPlaceholder: '請輸入付款金額 (例如: 1000)',
+                confirmPaymentButton: '確認付款',
+                mathQuestionPrefix: '你付了 $',
+                mathQuestionMid: '，購物車總共是 $',
+                mathQuestionSuffix: '。請問要找回多少錢？',
+                changeInputPlaceholder: '請輸入找零金額',
+                confirmChangeButton: '確認找零',
+                hintButton: '提示',
+                resetButton: '重新開始',
+                addToCartSuccess: '已將 {productName} 加入購物車！',
+                soldOutError: '此商品已售完！',
+                emptyCartError: '購物車是空的，請先選擇商品！',
+                invalidPaymentError: '請輸入有效的付款金額！',
+                insufficientFundsError: '錢不夠喔！你還差 $',
+                perfectPaymentSuccess: '結帳成功！完美付款！歡迎下次再來！', // New message
+                unlockProductSuccessPerfectPayment: '結帳成功！完美付款！恭喜！你解鎖了一個新商品！', // New message
+                correctChangeSuccess: '結帳成功！找你 ${change}。你算對了！歡迎下次再來！',
+                unlockProductSuccess: '結帳成功！找你 ${change}。你算對了！恭喜！你解鎖了一個新商品！',
+                wrongChangeError: '找錯錢囉！你輸入的是 ${userChange}，正確找零是 ${expectedChange}。請再試一次！',
+                hintMessage: '提示：正確找零是 $',
+                celebrationTitle: '恭喜你！',
+                celebrationMessageStart: '你解鎖了所有商品，成為',
+                supermarketTycoon: '超市大亨',
+                celebrationMessageEnd: '！',
+                celebrationResetButton: '重新開始遊戲',
+                lockedProductEmoji: '🔒',
+                lockedProductName: '???',
+                soldOutName: '售完',
+                footerText: '遊戲設計與製作：呂舒婷｜',
+                footerFB: '🔍 FB',
+                footerEmail: '📧 luuyobi@gmail.com',
+                invalidChangeError: '請輸入找零金額！',
+                minimumItemsError: '結帳至少需要 3 樣商品喔！',
+            },
+            'en-US': {
+                mainTitle: 'Supermarket Shopping Simulator',
+                subtitle: 'At least 3 items per checkout. Unlock a new product after each correct calculation!',
+                languageToggle: '中文',
+                shoppingAreaTitle: '🛒 Products',
+                cartTitle: '🛍️ Shopping Cart',
+                emptyCartMessage: 'Your cart is empty!',
+                checkoutTitle: '💰 Checkout',
+                paymentPlaceholder: 'Enter payment amount (e.g., 1000)',
+                confirmPaymentButton: 'Confirm Payment',
+                mathQuestionPrefix: 'You paid $',
+                mathQuestionMid: ', total is $',
+                mathQuestionSuffix: '. How much change should you get back?',
+                changeInputPlaceholder: 'Enter change amount',
+                confirmChangeButton: 'Confirm Change',
+                hintButton: 'Hint',
+                resetButton: 'Restart Game',
+                addToCartSuccess: 'Added {productName} to cart!',
+                soldOutError: 'This item is sold out!',
+                emptyCartError: 'Your cart is empty, please select items first!',
+                invalidPaymentError: 'Please enter a valid payment amount!',
+                insufficientFundsError: 'Not enough money! You still need $',
+                perfectPaymentSuccess: 'Checkout successful! Perfect payment! Welcome again!', // New message
+                unlockProductSuccessPerfectPayment: 'Checkout successful! Perfect payment! Congratulations! You unlocked a new product!', // New message
+                correctChangeSuccess: 'Checkout successful! Your change is ${change}. You got it right! Welcome again!',
+                unlockProductSuccess: 'Checkout successful! Your change is ${change}. You got it right! Congratulations! You unlocked a new product!',
+                wrongChangeError: 'Wrong change! You entered ${userChange}, correct change is ${expectedChange}. Please try again!',
+                hintMessage: 'Hint: Correct change is $',
+                celebrationTitle: 'Congratulations!',
+                celebrationMessageStart: 'You unlocked all products and became a ',
+                supermarketTycoon: 'Supermarket Tycoon',
+                celebrationMessageEnd: '!',
+                celebrationResetButton: 'Restart Game',
+                lockedProductEmoji: '🔒',
+                lockedProductName: '???',
+                soldOutName: 'Sold Out',
+                footerText: 'Game Design & Development: Lu Shu-Ting｜',
+                footerFB: '🔍 FB',
+                footerEmail: '📧 luuyobi@gmail.com',
+                invalidChangeError: 'Please enter change amount!',
+                minimumItemsError: 'You need at least 3 items to checkout!',
+            }
+        };
+
+        let currentLang = 'zh-TW'; // Default language
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} messageKey - The key for the message in the translations object.
+         * @param {string} type - The type of message ('success' or 'error').
+         * @param {object} params - Optional parameters for message interpolation.
+         */
+        function showMessage(messageKey, type, params = {}) {
+            let message = translations[currentLang][messageKey];
+            for (const key in params) {
+                // Use a more robust replacement for template literals
+                message = message.replace(new RegExp('\\$\\{' + key + '\\}', 'g'), params[key]);
+            }
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'success-message', 'error-message');
+            if (type === 'success') {
+                messageBox.classList.add('success-message');
+            } else if (type === 'error') {
+                messageBox.classList.add('error-message');
+            }
+        }
+
+        /**
+         * Hides the message box.
+         */
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+            messageBox.classList.remove('success-message', 'error-message');
+        }
+
+        /**
+         * Updates UI text based on the current language.
+         */
+        function updateUI() {
+            const langData = translations[currentLang];
+
+            // Update elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (langData[key]) {
+                    element.textContent = langData[key];
+                }
+            });
+
+            // Update specific celebration message parts
+            const celebrationMessageStartElement = document.querySelector('[data-i18n="celebrationMessageStart"]');
+            const supermarketTycoonElement = document.querySelector('[data-i18n="supermarketTycoon"]');
+            const celebrationMessageEndElement = document.querySelector('[data-i18n="celebrationMessageEnd"]');
+
+            if (celebrationMessageStartElement && supermarketTycoonElement) {
+                celebrationMessageStartElement.textContent = langData.celebrationMessageStart;
+                supermarketTycoonElement.textContent = langData.supermarketTycoon;
+                // Append the end part if it exists
+                if (langData.celebrationMessageEnd) {
+                    supermarketTycoonElement.insertAdjacentText('afterend', langData.celebrationMessageEnd);
+                }
+            }
+
+
+            // Update elements with data-i18n-placeholder attribute
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element = element.getAttribute('data-i18n-placeholder');
+                if (langData[key]) {
+                    element.placeholder = langData[key];
+                }
+            });
+
+            // Update footer
+            const footerDiv = document.querySelector('.footer-info');
+            footerDiv.innerHTML = `
+                ${langData.footerText}
+                <a href="https://www.facebook.com/yobi.lu" target="_blank" rel="noopener noreferrer">${langData.footerFB}</a>｜
+                📧 ${langData.footerEmail}
+            `;
+
+            // Re-render products to update locked/sold-out names
+            renderProducts();
+        }
+
+        // Language toggle event listener
+        languageToggle.addEventListener('click', () => {
+            currentLang = (currentLang === 'zh-TW') ? 'en-US' : 'zh-TW';
+            updateUI();
+        });
+
+        /**
+         * Initializes currentProducts array with stock information.
+         */
+        function initializeProducts() {
+            currentProducts = originalProducts.map(p => ({ ...p, stock: 7 })); // Each product starts with 7 stock
+        }
+
+        /**
+         * Renders products on the page.
+         */
+        function renderProducts() {
+            productGrid.innerHTML = ''; // Clear existing products
+            currentProducts.forEach((product, index) => {
+                const productItem = document.createElement('div');
+                productItem.classList.add('product-item');
+
+                const productName = currentLang === 'zh-TW' ? product.name_zh : product.name_en;
+
+                if (product.stock === 0) {
+                    // If product is sold out
+                    productItem.classList.add('sold-out');
+                    productItem.innerHTML = `
+                        <span class="emoji">${product.emoji}</span>
+                        <div class="name">${translations[currentLang].soldOutName}</div>
+                        <div class="price">---</div>
+                    `;
+                    // No click listener for sold out items
+                } else if (index < revealedProductCount) {
+                    // If product is revealed and in stock
+                    productItem.innerHTML = `
+                        <span class="emoji">${product.emoji}</span>
+                        <div class="name">${productName}</div>
+                        <div class="price">$${product.price}</div>
+                    `;
+                    productItem.addEventListener('click', () => addToCart(product));
+                } else {
+                    // If product is locked
+                    productItem.classList.add('locked');
+                    productItem.innerHTML = `
+                        <span class="emoji">${translations[currentLang].lockedProductEmoji}</span>
+                        <div class="name">${translations[currentLang].lockedProductName}</div>
+                        <div class="price">???</div>
+                    `;
+                    // No event listener for locked items
+                }
+                productGrid.appendChild(productItem);
+            });
+        }
+
+        /**
+         * Adds a product to the cart.
+         * @param {object} product - The product object to add to the cart.
+         */
+        function addToCart(product) {
+            // Find the actual product object in currentProducts to modify its stock
+            const productInStock = currentProducts.find(p => p.id === product.id);
+            const productName = currentLang === 'zh-TW' ? product.name_zh : product.name_en;
+
+            if (productInStock && productInStock.stock > 0) {
+                cart.push(product);
+                productInStock.stock--; // Decrement stock
+                renderCart();
+                calculateTotal(); // Still need to calculate total for internal logic
+                showMessage('addToCartSuccess', 'success', { productName: productName });
+                playAddToCartSound(); // Play add to cart sound
+                renderProducts(); // Re-render products to update stock display (e.g., sold out)
+            } else {
+                showMessage('soldOutError', 'error');
+                playWrongSound(); // Play error sound
+            }
+        }
+
+        /**
+         * Renders the cart content.
+         */
+        function renderCart() {
+            cartItemsDisplay.innerHTML = ''; // Clear existing cart content
+            if (cart.length === 0) {
+                emptyCartMessage.classList.remove('hidden');
+            } else {
+                emptyCartMessage.classList.add('hidden');
+                cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.classList.add('cart-item');
+                    const itemName = currentLang === 'zh-TW' ? item.name_zh : item.name_en;
+                    cartItem.innerHTML = `
+                        <span class="name">${itemName}</span>
+                        <span class="price">$${item.price}</span>
+                    `;
+                    cartItemsDisplay.appendChild(cartItem);
+                });
+            }
+        }
+
+        /**
+         * Calculates the total amount of items in the cart (for internal logic only, not displayed).
+         */
+        function calculateTotal() {
+            total = cart.reduce((sum, item) => sum + item.price, 0);
+        }
+
+        /**
+         * Handles the payment confirmation logic.
+         */
+        function handlePayment() {
+            currentPaymentAmount = parseInt(paymentInput.value);
+
+            if (cart.length < 3) { // New check for minimum items
+                showMessage('minimumItemsError', 'error');
+                playWrongSound();
+                return;
+            }
+
+            if (cart.length === 0) {
+                showMessage('emptyCartError', 'error');
+                playWrongSound();
+                return;
+            }
+
+            if (isNaN(currentPaymentAmount) || currentPaymentAmount <= 0) {
+                showMessage('invalidPaymentError', 'error');
+                playWrongSound();
+                return;
+            }
+
+            if (currentPaymentAmount < total) {
+                showMessage('insufficientFundsError', 'error', { amount: total - currentPaymentAmount });
+                playWrongSound();
+            } else if (currentPaymentAmount === total) {
+                // Exact payment: Skip math challenge, directly proceed
+                hideMessage();
+                if (revealedProductCount < originalProducts.length) {
+                    revealedProductCount++;
+                    showMessage('unlockProductSuccessPerfectPayment', 'success'); // New message for perfect payment + unlock
+                } else {
+                    showMessage('perfectPaymentSuccess', 'success'); // New message for perfect payment
+                }
+                playCorrectSound();
+                setTimeout(prepareNextRound, 2000); // Shorter delay for perfect payment
+            }
+            else { // currentPaymentAmount > total
+                // Overpayment: Proceed with math challenge
+                hideMessage();
+                paymentSection.classList.add('hidden');
+                mathChallengeSection.classList.remove('hidden');
+                mathQuestion.textContent = `${translations[currentLang].mathQuestionPrefix}${currentPaymentAmount}${translations[currentLang].mathQuestionMid}${total}${translations[currentLang].mathQuestionSuffix}`;
+                changeInput.value = '';
+                changeInput.focus();
+            }
+        }
+
+        /**
+         * Handles the change confirmation logic.
+         */
+        function confirmChange() {
+            const userChange = parseInt(changeInput.value);
+            const expectedChange = currentPaymentAmount - total;
+
+            if (isNaN(userChange)) {
+                showMessage('invalidChangeError', 'error');
+                playWrongSound();
+                return;
+            }
+
+            if (userChange === expectedChange) {
+                if (revealedProductCount < originalProducts.length) {
+                    revealedProductCount++;
+                    showMessage('unlockProductSuccess', 'success', { change: expectedChange });
+                } else {
+                    showMessage('correctChangeSuccess', 'success', { change: expectedChange });
+                }
+                playCorrectSound();
+
+                if (revealedProductCount === originalProducts.length) {
+                    setTimeout(showCelebration, 1500);
+                } else {
+                    setTimeout(prepareNextRound, 3000);
+                }
+            } else {
+                showMessage('wrongChangeError', 'error', { userChange: userChange, expectedChange: expectedChange });
+                playWrongSound();
+            }
+        }
+
+        /**
+         * Displays a hint for the change amount.
+         */
+        function showHint() {
+            const expectedChange = currentPaymentAmount - total;
+            showMessage('hintMessage', 'success', { change: expectedChange });
+        }
+
+        /**
+         * Prepares the game for the next round without resetting progress.
+         */
+        function prepareNextRound() {
+            cart = [];
+            total = 0;
+            currentPaymentAmount = 0;
+            renderCart();
+            calculateTotal();
+            paymentInput.value = '';
+            changeInput.value = '';
+            hideMessage();
+            paymentSection.classList.remove('hidden');
+            mathChallengeSection.classList.add('hidden');
+            renderProducts();
+        }
+
+        /**
+         * Displays the celebration screen.
+         */
+        function showCelebration() {
+            gameContainer.classList.add('hidden');
+            celebrationScreen.classList.remove('hidden');
+            playCorrectSound();
+        }
+
+        /**
+         * Resets the game state completely, including unlocked products and stock.
+         */
+        function resetGame() {
+            initializeProducts();
+            cart = [];
+            total = 0;
+            currentPaymentAmount = 0;
+            revealedProductCount = 4;
+            renderCart();
+            calculateTotal();
+            paymentInput.value = '';
+            changeInput.value = '';
+            hideMessage();
+            paymentSection.classList.remove('hidden');
+            mathChallengeSection.classList.add('hidden');
+            renderProducts();
+            celebrationScreen.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            updateUI();
+        }
+
+        // Event Listeners
+        checkoutButton.addEventListener('click', handlePayment);
+        confirmChangeButton.addEventListener('click', confirmChange);
+        hintButton.addEventListener('click', showHint);
+        resetButton.addEventListener('click', resetGame);
+        celebrationResetButton.addEventListener('click', resetGame);
+
+        // Game Initialization
+        window.onload = function() {
+            initializeProducts();
+            updateUI();
+            renderCart();
+            calculateTotal();
+            document.documentElement.addEventListener('mousedown', () => {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
