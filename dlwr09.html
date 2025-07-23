@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>造句練習</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
+        }
+        textarea {
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 100px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>造句練習</h1>
+        <form id="sentenceForm">
+            <div class="form-group">
+                <label for="name">姓名:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="sentence">造句內容:</label>
+                <textarea id="sentence" name="sentence" required></textarea>
+            </div>
+            <button type="submit">送出</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        document.getElementById('sentenceForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // 防止表單預設提交行為
+
+            const name = document.getElementById('name').value;
+            const sentence = document.getElementById('sentence').value;
+            const messageDiv = document.getElementById('message');
+
+            messageDiv.textContent = '提交中...';
+            messageDiv.className = ''; // 清除之前的樣式
+
+            // 替換為您從 Google Apps Script 部署取得的網路應用程式 URL
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyt3qAbxnvL1WGC0CLdFCCNgz9zYkBRnOqILkakekwV/dev';
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: name, sentence: sentence })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    messageDiv.textContent = '造句已成功送出！';
+                    messageDiv.className = 'success';
+                    // 清空表單
+                    document.getElementById('name').value = '';
+                    document.getElementById('sentence').value = '';
+                } else {
+                    messageDiv.textContent = '送出失敗：' + result.message;
+                    messageDiv.className = 'error';
+                }
+            } catch (error) {
+                console.error('錯誤:', error);
+                messageDiv.textContent = '提交過程中發生錯誤，請稍後再試。';
+                messageDiv.className = 'error';
+            }
+        });
+    </script>
+</body>
+</html>
