@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味造句機</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* For animation effects */
+        }
+        .header-title {
+            background: linear-gradient(135deg, #6dd5ed, #2193b0);
+            color: white;
+            padding: 20px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            text-align: center;
+        }
+        .spinner-section {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .spinner-item {
+            background-color: white;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: #343a40;
+        }
+        .pull-lever {
+            font-size: 3rem;
+            cursor: pointer;
+            color: #dc3545; /* Red */
+            transition: transform 0.2s ease-in-out;
+        }
+        .pull-lever:active {
+            transform: translateY(5px);
+        }
+        .input-section {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .btn-submit {
+            background-color: #28a745; /* Green */
+            border-color: #28a745;
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+        }
+        .btn-submit:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .alert-message {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+            border-radius: 15px; /* Match card border-radius */
+        }
+        .settings-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.8rem;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .settings-btn:hover {
+            opacity: 1;
+        }
+        /* Modal specific styles */
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: calc(0.5rem - 1px);
+            border-top-right-radius: calc(0.5rem - 1px);
+        }
+        .modal-body .form-group {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container my-5" style="max-width: 600px; position: relative;">
+        <div class="card">
+            <transition name="fade">
+                <div v-if="isLoading" class="loading-overlay animate__animated animate__fadeIn">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span>{{ loadingMessage }}</span>
+                </div>
+            </transition>
+
+            <div class="header-title">
+                <h1 class="mb-0"><i class="bi bi-card-text"></i> 趣味造句機</h1>
+                <i class="bi bi-gear-fill settings-btn" @click="openSettingsModal"></i>
+            </div>
+
+            <div class="spinner-section">
+                <div class="row w-100">
+                    <div class="col-4" v-for="(item, index) in spinnerItems" :key="index">
+                        <div :class="['spinner-item', { 'animate__animated': isSpinning[index], 'animate__bounceIn': isSpinning[index] }]"
+                             @animationend="isSpinning[index] = false">
+                            {{ item }}
+                        </div>
+                    </div>
+                </div>
+                <i class="bi bi-arrow-down-circle-fill pull-lever" @click="pullLever"></i>
+            </div>
+
+            <div class="input-section">
+                <div class="mb-3">
+                    <label for="userName" class="form-label">您的姓名</label>
+                    <input type="text" class="form-control" id="userName" v-model="userName" placeholder="請輸入您的姓名">
+                </div>
+                <div class="mb-3">
+                    <label for="sentence" class="form-label">您的造句</label>
+                    <textarea class="form-control" id="sentence" rows="3" v-model="userSentence" placeholder="請使用上方提供的詞語造句..."></textarea>
+                </div>
+                <button type="button" class="btn btn-primary btn-submit" @click="submitSentence">
+                    <i class="bi bi-send-fill me-2"></i>送出造句
+                </button>
+                <div v-if="message" :class="['alert', messageType, 'alert-message', 'animate__animated', messageAnimation]"
+                     @animationend="messageAnimation = ''" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="settingsModalLabel"><i class="bi bi-gear-fill me-2"></i>設定拉霸欄位</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted">請選擇三個用於拉霸的詞語類型。</p>
+                        <div class="form-group mb-3">
+                            <label for="slot1" class="form-label">欄位 1:</label>
+                            <select id="slot1" class="form-select" v-model="tempSettings.slot1">
+                                <option v-for="col in availableColumns" :value="col">{{ col }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="slot2" class="form-label">欄位 2:</label>
+                            <select id="slot2" class="form-select" v-model="tempSettings.slot2">
+                                <option v-for="col in availableColumns" :value="col">{{ col }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="slot3" class="form-label">欄位 3:</label>
+                            <select id="slot3" class="form-select" v-model="tempSettings.slot3">
+                                <option v-for="col in availableColumns" :value="col">{{ col }}</option>
+                            </select>
+                        </div>
+                        <div v-if="settingsMessage" class="alert alert-danger mt-3" role="alert">
+                            {{ settingsMessage }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" @click="saveSettings">儲存設定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1KbbFUarXkCJSKCKVw/sQe9BfKx" crossorigin="anonymous"></script>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    spinnerItems: ['點擊下拉', '拉霸桿子', '開始造句'],
+                    userName: '',
+                    userSentence: '',
+                    message: '',
+                    messageType: '',
+                    messageAnimation: '',
+                    isLoading: false,
+                    loadingMessage: '載入中...',
+                    isSpinning: [false, false, false], // 控制每個 spinner-item 的動畫
+                    // 設定相關資料
+                    settingsModal: null, // Bootstrap Modal instance
+                    availableColumns: [], // 從 Google Apps Script 獲取的所有可用欄位
+                    currentSettings: { // 實際生效的設定
+                        slot1: '名詞(人物)',
+                        slot2: '動詞',
+                        slot3: '修辭'
+                    },
+                    tempSettings: { // 暫存使用者在設定 Modal 中選擇的設定
+                        slot1: '名詞(人物)',
+                        slot2: '動詞',
+                        slot3: '修辭'
+                    },
+                    settingsMessage: '' // 設定 Modal 中的錯誤訊息
+                };
+            },
+            mounted() {
+                this.settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+                this.loadSettingsFromLocalStorage();
+                this.fetchAvailableColumns(); // 頁面載入時獲取可用欄位
+            },
+            methods: {
+                // --- Google Apps Script 互動 ---
+                async callGAS(functionName, params = {}) {
+                    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHqfMnW_Z6qVMBOwXkql30xwsazGQbGueEdgW68eLu1uV452zpiO7kSN1yHNb41PPP/exec'; // **請替換為您的 Google Apps Script Web App URL**
+
+                    try {
+                        const url = new URL(SCRIPT_URL);
+                        url.searchParams.append('function', functionName);
+                        for (const key in params) {
+                            url.searchParams.append(key, JSON.stringify(params[key]));
+                        }
+
+                        const response = await fetch(url.toString(), {
+                            method: 'GET', // Apps Script Web App 通常透過 GET 接收參數
+                            mode: 'cors'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+                        if (result.error) {
+                            throw new Error(result.error);
+                        }
+                        return result;
+                    } catch (error) {
+                        console.error('GAS Call Error:', error);
+                        this.showMessage(`操作失敗：${error.message || '請檢查網路連線或後台設定。'}`, 'alert-danger');
+                        return null;
+                    }
+                },
+
+                // --- 主要功能 ---
+                async pullLever() {
+                    if (this.isLoading) return; // 避免重複點擊
+
+                    this.isLoading = true;
+                    this.loadingMessage = '拉霸中...';
+                    this.message = ''; // 清除之前的訊息
+
+                    // 觸發動畫
+                    this.isSpinning = [true, true, true];
+
+                    try {
+                        const result = await this.callGAS('getSpinnerData', { columns: Object.values(this.currentSettings) });
+                        if (result && result.data) {
+                            this.spinnerItems = result.data.map(item => item || '無資料'); // 如果回傳空值，顯示「無資料」
+                        } else {
+                            this.spinnerItems = ['取得失敗', '取得失敗', '取得失敗'];
+                            this.showMessage('未能取得拉霸資料。', 'alert-warning');
+                        }
+                    } finally {
+                        this.isLoading = false;
+                        this.loadingMessage = '載入中...';
+                    }
+                },
+
+                async submitSentence() {
+                    if (this.isLoading) return;
+
+                    // 驗證輸入
+                    if (!this.userName.trim()) {
+                        this.showMessage('請輸入您的姓名！', 'alert-warning', 'animate__headShake');
+                        return;
+                    }
+                    if (!this.userSentence.trim()) {
+                        this.showMessage('請輸入您的造句！', 'alert-warning', 'animate__headShake');
+                        return;
+                    }
+
+                    this.isLoading = true;
+                    this.loadingMessage = '送出中...';
+                    this.message = ''; // 清除之前的訊息
+
+                    const payload = {
+                        spinner1: this.spinnerItems[0],
+                        spinner2: this.spinnerItems[1],
+                        spinner3: this.spinnerItems[2],
+                        name: this.userName,
+                        sentence: this.userSentence
+                    };
+
+                    try {
+                        const result = await this.callGAS('submitSentence', payload);
+                        if (result && result.success) {
+                            this.showMessage('造句成功送出！', 'alert-success', 'animate__bounceIn');
+                            this.userName = '';
+                            this.userSentence = '';
+                        } else {
+                            this.showMessage(`送出失敗：${result.error || '未知錯誤。'}`, 'alert-danger');
+                        }
+                    } finally {
+                        this.isLoading = false;
+                        this.loadingMessage = '載入中...';
+                    }
+                },
+
+                // --- 設定功能 ---
+                async fetchAvailableColumns() {
+                    this.isLoading = true;
+                    this.loadingMessage = '獲取設定選項...';
+                    try {
+                        const result = await this.callGAS('getAvailableColumns');
+                        if (result && result.columns) {
+                            this.availableColumns = result.columns;
+                            // 檢查當前設定是否還在可用欄位中，如果不在，則重設為預設值
+                            const defaultSettings = { slot1: '名詞(人物)', slot2: '動詞', slot3: '修辭' };
+                            ['slot1', 'slot2', 'slot3'].forEach(slot => {
+                                if (!this.availableColumns.includes(this.currentSettings[slot])) {
+                                    this.currentSettings[slot] = defaultSettings[slot];
+                                    this.saveSettingsToLocalStorage(); // 更新 localStorage
+                                }
+                            });
+                            // 同步 tempSettings
+                            this.tempSettings = { ...this.currentSettings };
+                        } else {
+                            this.showMessage('無法獲取可用欄位列表。', 'alert-danger');
+                        }
+                    } finally {
+                        this.isLoading = false;
+                        this.loadingMessage = '載入中...';
+                    }
+                },
+
+                openSettingsModal() {
+                    this.settingsMessage = ''; // 清除舊的錯誤訊息
+                    this.tempSettings = { ...this.currentSettings }; // 打開時同步到當前生效設定
+                    this.settingsModal.show();
+                },
+
+                saveSettings() {
+                    // 檢查是否有重複選擇的欄位
+                    const selected = Object.values(this.tempSettings);
+                    const uniqueSelected = new Set(selected);
+                    if (uniqueSelected.size !== selected.length) {
+                        this.settingsMessage = '三個欄位不能選擇相同的類型！';
+                        return;
+                    }
+
+                    this.currentSettings = { ...this.tempSettings };
+                    this.saveSettingsToLocalStorage();
+                    this.settingsModal.hide();
+                    this.showMessage('設定已儲存！', 'alert-success');
+                },
+
+                loadSettingsFromLocalStorage() {
+                    try {
+                        const savedSettings = localStorage.getItem('spinnerSettings');
+                        if (savedSettings) {
+                            this.currentSettings = JSON.parse(savedSettings);
+                            // 確保載入的設定有所有三個欄位，如果缺少則補上預設值
+                            const defaultSettings = { slot1: '名詞(人物)', slot2: '動詞', slot3: '修辭' };
+                            for (const key in defaultSettings) {
+                                if (!this.currentSettings.hasOwnProperty(key)) {
+                                    this.currentSettings[key] = defaultSettings[key];
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Failed to load settings from localStorage:", e);
+                        // 如果解析失敗，使用預設值
+                        this.currentSettings = { slot1: '名詞(人物)', slot2: '動詞', slot3: '修辭' };
+                    }
+                    this.tempSettings = { ...this.currentSettings }; // 初始化 tempSettings
+                },
+
+                saveSettingsToLocalStorage() {
+                    try {
+                        localStorage.setItem('spinnerSettings', JSON.stringify(this.currentSettings));
+                    } catch (e) {
+                        console.error("Failed to save settings to localStorage:", e);
+                        this.showMessage('設定儲存失敗！', 'alert-danger');
+                    }
+                },
+
+                // --- 訊息提示 ---
+                showMessage(msg, type, animation = 'animate__fadeIn') {
+                    this.message = msg;
+                    this.messageType = type;
+                    this.messageAnimation = animation;
+                    setTimeout(() => {
+                        this.messageAnimation = 'animate__fadeOut'; // 讓訊息淡出
+                        setTimeout(() => this.message = '', 500); // 動畫結束後清除訊息
+                    }, 3000); // 訊息顯示 3 秒後開始淡出
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>
