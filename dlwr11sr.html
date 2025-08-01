@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LST遊戲室-趣味造句機</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Animate.css for animations -->
@@ -22,7 +22,7 @@
         .card {
             border-radius: 15px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            overflow: hidden; /* For animation effects */
+            overflow: hidden;
         }
         .header-title {
             background: linear-gradient(135deg, #6dd5ed, #2193b0);
@@ -31,7 +31,7 @@
             border-top-left-radius: 15px;
             border-top-right-radius: 15px;
             text-align: center;
-            position: relative; /* For settings button positioning */
+            position: relative;
         }
         .spinner-section {
             background-color: #e9ecef;
@@ -60,7 +60,7 @@
         .pull-lever {
             font-size: 3rem;
             cursor: pointer;
-            color: #dc3545; /* Red */
+            color: #dc3545;
             transition: transform 0.2s ease-in-out;
         }
         .pull-lever:active {
@@ -71,7 +71,7 @@
             background-color: #f8f9fa;
         }
         .btn-submit {
-            background-color: #28a745; /* Green */
+            background-color: #28a745;
             border-color: #28a745;
             width: 100%;
             padding: 12px;
@@ -99,7 +99,7 @@
             flex-direction: column;
             gap: 15px;
             z-index: 1000;
-            border-radius: 15px; /* Match card border-radius */
+            border-radius: 15px;
         }
         .settings-btn {
             position: absolute;
@@ -115,7 +115,6 @@
         .settings-btn:hover {
             opacity: 1;
         }
-        /* Modal specific styles */
         .modal-header {
             background-color: #007bff;
             color: white;
@@ -124,6 +123,15 @@
         }
         .modal-body .form-group {
             margin-bottom: 1rem;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -174,6 +182,15 @@
                 <div v-if="message" :class="['alert', messageType, 'alert-message', 'animate__animated', messageAnimation]"
                      @animationend="messageAnimation = ''" role="alert">
                     {{ message }}
+                </div>
+
+                <!-- Debug Information -->
+                <div v-if="debugMode" class="debug-info">
+                    <strong>除錯資訊:</strong><br>
+                    GAS URL: {{ SCRIPT_URL }}<br>
+                    連線狀態: {{ connectionStatus }}<br>
+                    最後錯誤: {{ lastError }}<br>
+                    <button class="btn btn-sm btn-secondary mt-2" @click="testConnection">測試連線</button>
                 </div>
             </div>
         </div>
@@ -265,13 +282,16 @@
     <!-- Vue.js -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1KbbFUarXkCJSKCKVw/sQe9BfKx" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
         const app = Vue.createApp({
             data() {
                 return {
-                    spinnerItems: ['載入中...', '載入中...', '載入中...'], // 初始顯示載入中
+                    // **重要：請將此處更換為您最新部署的 GAS Web App URL**
+                    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzHqfMnW_Z6qVMBOwXkql30xwsazGQbGueEdgW68eLu1uV452zpiO7kSN1yHNb41PPP/exec',
+                    
+                    spinnerItems: ['載入中...', '載入中...', '載入中...'],
                     userName: '',
                     userSentence: '',
                     message: '',
@@ -279,36 +299,45 @@
                     messageAnimation: '',
                     isLoading: false,
                     loadingMessage: '載入中...',
-                    isSpinning: [false, false, false], // 控制每個 spinner-item 的動畫
+                    isSpinning: [false, false, false],
 
                     // 密碼相關資料
-                    passwordModal: null, // Bootstrap Modal instance for password
+                    passwordModal: null,
                     adminPasswordInput: '',
                     passwordError: '',
 
                     // 設定相關資料
-                    settingsModal: null, // Bootstrap Modal instance for settings
-                    availableColumns: [], // 從 Google Apps Script 獲取的所有可用欄位
-                    currentSettings: { // 實際生效的設定，從 Apps Script 讀取
+                    settingsModal: null,
+                    availableColumns: [],
+                    currentSettings: {
                         slot1: '名詞(人物)',
                         slot2: '動詞',
                         slot3: '修辭'
                     },
-                    tempSettings: { // 暫存使用者在設定 Modal 中選擇的設定
+                    tempSettings: {
                         slot1: '名詞(人物)',
                         slot2: '動詞',
                         slot3: '修辭'
                     },
-                    settingsMessage: '', // 設定 Modal 中的錯誤訊息
+                    settingsMessage: '',
 
                     // 修改密碼相關資料
                     newPassword: '',
                     confirmNewPassword: '',
                     passwordChangeMessage: '',
-                    passwordChangeMessageType: ''
+                    passwordChangeMessageType: '',
+
+                    // 除錯相關
+                    debugMode: false,
+                    connectionStatus: '未測試',
+                    lastError: '無'
                 };
             },
             mounted() {
+                // 檢查 URL 參數以啟用除錯模式
+                const urlParams = new URLSearchParams(window.location.search);
+                this.debugMode = urlParams.get('debug') === 'true';
+
                 // 檢查 Bootstrap 是否已載入
                 if (typeof bootstrap !== 'undefined') {
                     console.log("Bootstrap is loaded successfully!");
@@ -316,18 +345,14 @@
                     const passwordModalElement = document.getElementById('passwordModal');
                     if (passwordModalElement) {
                         this.passwordModal = new bootstrap.Modal(passwordModalElement);
-                    } else {
-                        console.error("Error: passwordModal element not found for Bootstrap Modal initialization.");
                     }
 
                     const settingsModalElement = document.getElementById('settingsModal');
                     if (settingsModalElement) {
                         this.settingsModal = new bootstrap.Modal(settingsModalElement);
-                    } else {
-                        console.error("Error: settingsModal element not found for Bootstrap Modal initialization.");
                     }
                 } else {
-                    console.error("Error: Bootstrap is NOT loaded. Check script integrity or network issues.");
+                    console.error("Error: Bootstrap is NOT loaded.");
                 }
                 
                 // 頁面載入時獲取初始設定和可用欄位
@@ -344,37 +369,99 @@
                     return hashedPassword;
                 },
 
-                // --- Google Apps Script 互動 ---
+                // --- 改進的 Google Apps Script 互動 ---
                 async callGAS(functionName, params = {}) {
-                    // **請確保這是您最新部署的 Google Apps Script Web App URL**
-                    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHqfMnW_Z6qVMBOwXkql30xwsazGQbGueEdgW68eLu1uV452zpiO7kSN1yHNb41PPP/exec'; 
-
                     try {
-                        const url = new URL(SCRIPT_URL);
+                        console.log(`呼叫 GAS 函數: ${functionName}`, params);
+                        
+                        const url = new URL(this.SCRIPT_URL);
                         url.searchParams.append('function', functionName);
+                        
+                        // 添加時間戳避免快取問題
+                        url.searchParams.append('_t', Date.now().toString());
+                        
                         for (const key in params) {
-                            // 確保參數被正確地 JSON 序列化
                             url.searchParams.append(key, JSON.stringify(params[key]));
                         }
 
+                        console.log(`請求 URL: ${url.toString()}`);
+
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超時
+
                         const response = await fetch(url.toString(), {
                             method: 'GET',
-                            mode: 'cors'
+                            mode: 'cors',
+                            cache: 'no-cache',
+                            signal: controller.signal,
+                            headers: {
+                                'Accept': 'application/json',
+                            }
                         });
 
+                        clearTimeout(timeoutId);
+
+                        console.log(`回應狀態: ${response.status}`);
+                        console.log(`回應標頭:`, Object.fromEntries(response.headers.entries()));
+
                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
                         }
 
-                        const result = await response.json();
+                        const responseText = await response.text();
+                        console.log(`回應內容: ${responseText}`);
+
+                        let result;
+                        try {
+                            result = JSON.parse(responseText);
+                        } catch (parseError) {
+                            console.error('JSON 解析錯誤:', parseError);
+                            console.error('原始回應:', responseText);
+                            throw new Error(`無法解析回應為 JSON: ${parseError.message}`);
+                        }
+
                         if (result.error) {
                             throw new Error(result.error);
                         }
+
+                        this.connectionStatus = '連線成功';
+                        this.lastError = '無';
                         return result;
+
                     } catch (error) {
                         console.error('GAS Call Error:', error);
-                        this.showMessage(`操作失敗：${error.message || '請檢查網路連線或後台設定。'}`, 'alert-danger');
+                        this.connectionStatus = '連線失敗';
+                        this.lastError = error.message;
+                        
+                        let errorMessage = '操作失敗：';
+                        if (error.name === 'AbortError') {
+                            errorMessage += '請求超時，請檢查網路連線。';
+                        } else if (error.message.includes('status: 0')) {
+                            errorMessage += 'CORS 錯誤或網路問題。請確認 GAS 部署設定。';
+                        } else if (error.message.includes('Failed to fetch')) {
+                            errorMessage += '網路連線失敗，請檢查網際網路連線。';
+                        } else {
+                            errorMessage += error.message;
+                        }
+                        
+                        this.showMessage(errorMessage, 'alert-danger');
                         return null;
+                    }
+                },
+
+                // --- 測試連線功能 ---
+                async testConnection() {
+                    this.isLoading = true;
+                    this.loadingMessage = '測試連線中...';
+                    try {
+                        const result = await this.callGAS('getInitialConfigAndColumns');
+                        if (result) {
+                            this.showMessage('連線測試成功！', 'alert-success');
+                        } else {
+                            this.showMessage('連線測試失敗。', 'alert-danger');
+                        }
+                    } finally {
+                        this.isLoading = false;
                     }
                 },
 
@@ -387,13 +474,16 @@
                         if (result && result.settings && result.columns) {
                             this.currentSettings = result.settings;
                             this.availableColumns = result.columns;
-                            this.tempSettings = { ...this.currentSettings }; // 同步到暫存設定
+                            this.tempSettings = { ...this.currentSettings };
                             // 首次載入時，如果拉霸項目還是預設值，則觸發一次拉霸
                             if (this.spinnerItems[0] === '載入中...') {
-                                this.pullLever();
+                                setTimeout(() => this.pullLever(), 500); // 延遲執行避免過快
                             }
                         } else {
-                            this.showMessage('無法獲取初始設定或可用欄位列表。', 'alert-danger');
+                            this.showMessage('無法獲取初始設定或可用欄位列表。請檢查 GAS 部署狀態。', 'alert-danger');
+                            // 設定預設值以便離線測試
+                            this.availableColumns = ['名詞(人物)', '動詞', '修辭', '形容詞', '地點'];
+                            this.spinnerItems = ['測試詞1', '測試詞2', '測試詞3'];
                         }
                     } finally {
                         this.isLoading = false;
@@ -403,20 +493,19 @@
 
                 // --- 主要功能 ---
                 async pullLever() {
-                    if (this.isLoading) return; // 避免重複點擊
+                    if (this.isLoading) return;
 
                     this.isLoading = true;
                     this.loadingMessage = '拉霸中...';
-                    this.message = ''; // 清除之前的訊息
+                    this.message = '';
 
                     // 觸發動畫
                     this.isSpinning = [true, true, true];
 
                     try {
-                        // Apps Script 會直接從「設定檔」讀取要拉霸的欄位
                         const result = await this.callGAS('getSpinnerData');
                         if (result && result.data) {
-                            this.spinnerItems = result.data.map(item => item || '無資料'); // 如果回傳空值，顯示「無資料」
+                            this.spinnerItems = result.data.map(item => item || '無資料');
                         } else {
                             this.spinnerItems = ['取得失敗', '取得失敗', '取得失敗'];
                             this.showMessage('未能取得拉霸資料。', 'alert-warning');
@@ -442,7 +531,7 @@
 
                     this.isLoading = true;
                     this.loadingMessage = '送出中...';
-                    this.message = ''; // 清除之前的訊息
+                    this.message = '';
 
                     const payload = {
                         spinner1: this.spinnerItems[0],
@@ -459,7 +548,7 @@
                             this.userName = '';
                             this.userSentence = '';
                         } else {
-                            this.showMessage(`送出失敗：${result.error || '未知錯誤。'}`, 'alert-danger');
+                            this.showMessage(`送出失敗：${result?.error || '未知錯誤。'}`, 'alert-danger');
                         }
                     } finally {
                         this.isLoading = false;
@@ -469,8 +558,8 @@
 
                 // --- 密碼保護功能 ---
                 openPasswordModal() {
-                    this.adminPasswordInput = ''; // 清空密碼輸入框
-                    this.passwordError = ''; // 清空錯誤訊息
+                    this.adminPasswordInput = '';
+                    this.passwordError = '';
                     if (this.passwordModal) {
                         this.passwordModal.show();
                     } else {
@@ -496,10 +585,10 @@
                         if (result && result.success) {
                             if (this.passwordModal) this.passwordModal.hide();
                             if (this.settingsModal) this.settingsModal.show();
-                            this.settingsMessage = ''; // 清空設定視窗的錯誤訊息
-                            this.newPassword = ''; // 清空修改密碼欄位
+                            this.settingsMessage = '';
+                            this.newPassword = '';
                             this.confirmNewPassword = '';
-                            this.passwordChangeMessage = ''; // 清空修改密碼訊息
+                            this.passwordChangeMessage = '';
                         } else {
                             this.passwordError = '密碼錯誤，請重新輸入。';
                         }
@@ -527,11 +616,11 @@
                     try {
                         const result = await this.callGAS('saveSettings', { settings: this.tempSettings });
                         if (result && result.success) {
-                            this.currentSettings = { ...this.tempSettings }; // 更新生效設定
+                            this.currentSettings = { ...this.tempSettings };
                             if (this.settingsModal) this.settingsModal.hide();
                             this.showMessage('拉霸設定已儲存！', 'alert-success');
                         } else {
-                            this.settingsMessage = `儲存失敗：${result.error || '未知錯誤。'}`;
+                            this.settingsMessage = `儲存失敗：${result?.error || '未知錯誤。'}`;
                         }
                     } catch (error) {
                         this.settingsMessage = `儲存失敗：${error.message || '請檢查網路。'}`;
@@ -556,7 +645,7 @@
                         this.passwordChangeMessageType = 'alert-warning';
                         return;
                     }
-                    if (this.newPassword.length < 6) { // 建議密碼長度
+                    if (this.newPassword.length < 6) {
                         this.passwordChangeMessage = '密碼長度至少為6個字元。';
                         this.passwordChangeMessageType = 'alert-warning';
                         return;
@@ -575,7 +664,7 @@
                             this.newPassword = '';
                             this.confirmNewPassword = '';
                         } else {
-                            this.passwordChangeMessage = `密碼修改失敗：${result.error || '未知錯誤。'}`;
+                            this.passwordChangeMessage = `密碼修改失敗：${result?.error || '未知錯誤。'}`;
                             this.passwordChangeMessageType = 'alert-danger';
                         }
                     } catch (error) {
@@ -593,9 +682,9 @@
                     this.messageType = type;
                     this.messageAnimation = animation;
                     setTimeout(() => {
-                        this.messageAnimation = 'animate__fadeOut'; // 讓訊息淡出
-                        setTimeout(() => this.message = '', 500); // 動畫結束後清除訊息
-                    }, 3000); // 訊息顯示 3 秒後開始淡出
+                        this.messageAnimation = 'animate__fadeOut';
+                        setTimeout(() => this.message = '', 500);
+                    }, 3000);
                 }
             }
         });
