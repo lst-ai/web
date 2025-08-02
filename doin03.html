@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-竹蜻蜓飛行拼字大冒險</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Baloo 2', cursive;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #64b5f6, #bbdefb);
+        }
+        
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            filter: blur(5px);
+            opacity: 0.8;
+            z-index: 1;
+            animation: float 20s infinite linear;
+        }
+        
+        .rainbow {
+            position: absolute;
+            width: 80%;
+            height: 300px;
+            left: 10%;
+            bottom: -150px;
+            border-radius: 50% 50% 0 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 0, 0, 0.2),
+                rgba(255, 165, 0, 0.2),
+                rgba(255, 255, 0, 0.2),
+                rgba(0, 128, 0, 0.2),
+                rgba(0, 0, 255, 0.2),
+                rgba(75, 0, 130, 0.2),
+                rgba(238, 130, 238, 0.2)
+            );
+            z-index: 1;
+        }
+        
+        .balloon {
+            position: absolute;
+            z-index: 2;
+            animation: float 30s infinite linear;
+        }
+        
+        .letter {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+        
+        .letter:hover {
+            transform: scale(1.2);
+        }
+        
+        .letter.target-letter {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+            border: 2px solid gold;
+        }
+        
+        .letter.highlighted {
+            animation: pulse 1s infinite;
+            transform: scale(1.2);
+            z-index: 20;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+            }
+            100% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+            }
+        }
+        
+        .player {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            z-index: 100;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+        }
+        
+        .collected-letters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .letter-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px dashed #3949ab;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.7);
+            position: relative;
+        }
+        
+        .letter-slot .clear-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .letter-slot:hover .clear-btn {
+            opacity: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 80%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+            }
+            25% {
+                transform: translateY(-20px) translateX(20px);
+            }
+            50% {
+                transform: translateY(0) translateX(40px);
+            }
+            75% {
+                transform: translateY(20px) translateX(20px);
+            }
+            100% {
+                transform: translateY(0) translateX(0);
+            }
+        }
+        
+        .bamboo-copter {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .bamboo-stick {
+            position: absolute;
+            width: 10px;
+            height: 40px;
+            background-color: #8d6e63;
+            left: 50%;
+            top: 40px;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+        
+        .propeller {
+            position: absolute;
+            width: 80px;
+            height: 10px;
+            background-color: #4caf50;
+            left: 0;
+            top: 35px;
+            border-radius: 5px;
+            animation: spin 0.5s linear infinite;
+            transform-origin: center;
+            z-index: 2;
+        }
+        
+        .character {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ffeb3b;
+            border-radius: 50%;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+        
+        .character::before {
+            content: "";
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: #000;
+            border-radius: 50%;
+            left: 8px;
+            top: 10px;
+        }
+        
+        .character::after {
+            content: "";
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: #000;
+            border-radius: 50%;
+            right: 8px;
+            top: 10px;
+        }
+        
+        .smile {
+            position: absolute;
+            width: 10px;
+            height: 5px;
+            border-bottom: 2px solid #000;
+            border-radius: 50%;
+            left: 50%;
+            bottom: 8px;
+            transform: translateX(-50%);
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .difficulty-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .difficulty-btn.active {
+            background-color: #3949ab;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #4caf50;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        .balloon-pop {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            animation: pop 0.5s forwards;
+        }
+        
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall 4s forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            z-index: 50;
+        }
+        
+        .hint-btn {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background-color: #ff9800;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+        
+        .hint-btn:hover {
+            transform: scale(1.1);
+            background-color: #f57c00;
+        }
+        
+        .hint-btn.disabled {
+            background-color: #9e9e9e;
+            cursor: default;
+        }
+        
+        .letter-counter {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 50;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .debug-info {
+            position: fixed;
+            bottom: 50px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-blue-200">
+    <div class="rainbow"></div>
+    
+    <!-- 遊戲容器 -->
+    <div id="game-container" class="relative w-full h-screen">
+        <!-- 玩家角色 -->
+        <div id="player" class="player">
+            <div class="bamboo-copter">
+                <div class="propeller"></div>
+                <div class="bamboo-stick"></div>
+                <div class="character">
+                    <div class="smile"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 慶祝效果容器 -->
+    <div id="celebration" class="celebration"></div>
+    
+    <!-- 字母計數器 -->
+    <div id="letter-counter" class="letter-counter"></div>
+    
+    <!-- 提示按鈕 -->
+    <div id="hint-btn" class="hint-btn">💡</div>
+    
+    <!-- 調試信息 -->
+    <div id="debug-info" class="debug-info"></div>
+    
+    <!-- 遊戲控制面板 -->
+    <div class="fixed top-0 left-0 w-full bg-white bg-opacity-80 p-4 shadow-md z-50">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-2 md:mb-0">
+                    <h1 class="text-2xl font-bold text-blue-800 mr-4">LST遊戲室-竹蜻蜓飛行拼字大冒險</h1>
+                    <div class="flex space-x-2">
+                        <button id="easy" class="difficulty-btn px-3 py-1 bg-blue-100 rounded-full text-sm font-semibold hover:bg-blue-200 active">簡單</button>
+                        <button id="medium" class="difficulty-btn px-3 py-1 bg-blue-100 rounded-full text-sm font-semibold hover:bg-blue-200">中等</button>
+                        <button id="hard" class="difficulty-btn px-3 py-1 bg-blue-100 rounded-full text-sm font-semibold hover:bg-blue-200">困難</button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <span class="font-bold">目標單字:</span>
+                        <span id="target-word" class="text-xl text-blue-700 font-bold ml-2">CAT</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">分數:</span>
+                        <span id="score" class="text-xl text-green-600 font-bold ml-2">0</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">時間:</span>
+                        <span id="timer" class="text-xl text-red-600 font-bold ml-2">60</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <div class="collected-letters bg-blue-50 p-2 rounded-lg" id="collected-letters"></div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 開始遊戲模態框 -->
+    <div id="start-modal" class="modal flex">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold text-blue-700 mb-4">LST遊戲室-竹蜻蜓飛行拼字大冒險</h2>
+            <p class="mb-6 text-lg">使用方向鍵或滑鼠點擊移動竹蜻蜓，收集字母拼出目標單字！</p>
+            <div class="flex justify-center space-x-4 mb-6">
+                <div class="text-center">
+                    <div class="bg-blue-100 p-3 rounded-lg mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                    </div>
+                    <p>向上移動</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-blue-100 p-3 rounded-lg mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                    </div>
+                    <p>向下移動</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-blue-100 p-3 rounded-lg mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </div>
+                    <p>向左移動</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-blue-100 p-3 rounded-lg mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </div>
+                    <p>向右移動</p>
+                </div>
+            </div>
+            <p class="mb-4 text-gray-600">提示：點擊右下角的💡按鈕可以顯示目標字母的位置！</p>
+            <button id="start-game" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg transition-all transform hover:scale-105">開始遊戲</button>
+        </div>
+    </div>
+    
+    <!-- 遊戲結束模態框 -->
+    <div id="end-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-3xl font-bold mb-4" id="end-title">遊戲結束</h2>
+            <p class="text-xl mb-4" id="end-message">你的分數是: <span id="final-score">0</span></p>
+            <button id="play-again" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg transition-all transform hover:scale-105">再玩一次</button>
+        </div>
+    </div>
+    
+    <!-- 頁腳 -->
+    <div class="footer">
+        <p>遊戲設計與製作：呂舒婷｜<a href="https://www.facebook.com/search/top?q=呂舒婷" target="_blank" class="text-blue-600 hover:underline">了解更多🔍</a>｜臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+    </div>
+
+    <script>
+        // 遊戲變數
+        let score = 0;
+        let timer = 60;
+        let gameInterval;
+        let letters = [];
+        let collectedLetters = [];
+        let targetWord = "CAT";
+        let currentDifficulty = "easy";
+        let gameActive = false;
+        let hintUsed = false;
+        let hintCooldown = false;
+        let letterNeeds = {}; // 記錄每個字母需要的數量
+        let letterCounts = {}; // 記錄每個字母已經生成的數量
+        
+        // 單字庫
+        const wordsByDifficulty = {
+            easy: ["CAT", "DOG", "SUN", "HAT", "BIG", "RUN", "FUN", "RED", "BOX", "PEN"],
+            medium: ["APPLE", "HAPPY", "WATER", "TIGER", "HOUSE", "CLOUD", "SMILE", "PLANT", "MUSIC", "BEACH"],
+            hard: ["ELEPHANT", "COMPUTER", "MOUNTAIN", "BUTTERFLY", "CHOCOLATE", "ADVENTURE", "BEAUTIFUL", "KNOWLEDGE", "WONDERFUL", "HAPPINESS"]
+        };
+        
+        // DOM 元素
+        const gameContainer = document.getElementById("game-container");
+        const player = document.getElementById("player");
+        const scoreElement = document.getElementById("score");
+        const timerElement = document.getElementById("timer");
+        const targetWordElement = document.getElementById("target-word");
+        const collectedLettersContainer = document.getElementById("collected-letters");
+        const startModal = document.getElementById("start-modal");
+        const endModal = document.getElementById("end-modal");
+        const finalScoreElement = document.getElementById("final-score");
+        const endTitleElement = document.getElementById("end-title");
+        const endMessageElement = document.getElementById("end-message");
+        const progressBar = document.getElementById("progress-bar");
+        const celebrationContainer = document.getElementById("celebration");
+        const letterCounter = document.getElementById("letter-counter");
+        const hintBtn = document.getElementById("hint-btn");
+        const debugInfo = document.getElementById("debug-info");
+        
+        // 難度按鈕
+        const easyBtn = document.getElementById("easy");
+        const mediumBtn = document.getElementById("medium");
+        const hardBtn = document.getElementById("hard");
+        
+        // 初始化遊戲
+        function initGame() {
+            // 創建雲朵
+            for (let i = 0; i < 10; i++) {
+                createCloud();
+            }
+            
+            // 創建熱氣球
+            for (let i = 0; i < 3; i++) {
+                createBalloon();
+            }
+            
+            // 設置玩家初始位置
+            player.style.left = "50%";
+            player.style.top = "50%";
+            
+            // 設置難度按鈕事件
+            easyBtn.addEventListener("click", () => setDifficulty("easy"));
+            mediumBtn.addEventListener("click", () => setDifficulty("medium"));
+            hardBtn.addEventListener("click", () => setDifficulty("hard"));
+            
+            // 設置開始遊戲按鈕事件
+            document.getElementById("start-game").addEventListener("click", startGame);
+            
+            // 設置再玩一次按鈕事件
+            document.getElementById("play-again").addEventListener("click", resetGame);
+            
+            // 設置鍵盤控制
+            document.addEventListener("keydown", movePlayer);
+            
+            // 設置滑鼠點擊控制
+            gameContainer.addEventListener("click", movePlayerToClick);
+            
+            // 設置提示按鈕事件
+            hintBtn.addEventListener("click", showHint);
+            
+            // 顯示開始模態框
+            startModal.style.display = "flex";
+        }
+        
+        // 設置難度
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            
+            // 更新按鈕樣式
+            easyBtn.classList.remove("active");
+            mediumBtn.classList.remove("active");
+            hardBtn.classList.remove("active");
+            
+            document.getElementById(difficulty).classList.add("active");
+            
+            // 更新目標單字
+            const words = wordsByDifficulty[difficulty];
+            targetWord = words[Math.floor(Math.random() * words.length)];
+            targetWordElement.textContent = targetWord;
+            
+            // 更新收集字母區域
+            updateCollectedLettersUI();
+        }
+        
+        // 開始遊戲
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            timer = 60;
+            collectedLetters = Array(targetWord.length).fill(null);
+            letters = [];
+            hintUsed = false;
+            hintCooldown = false;
+            hintBtn.classList.remove("disabled");
+            
+            // 隱藏開始模態框
+            startModal.style.display = "none";
+            
+            // 更新 UI
+            scoreElement.textContent = score;
+            timerElement.textContent = timer;
+            updateCollectedLettersUI();
+            
+            // 計算每個字母需要的數量
+            calculateLetterNeeds();
+            
+            // 生成字母
+            generateLetters();
+            
+            // 開始計時器
+            gameInterval = setInterval(() => {
+                timer--;
+                timerElement.textContent = timer;
+                
+                if (timer <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // 計算每個字母需要的數量
+        function calculateLetterNeeds() {
+            letterNeeds = {};
+            letterCounts = {};
+            
+            const targetLetters = targetWord.split("");
+            
+            // 計算每個字母需要的數量
+            targetLetters.forEach(letter => {
+                if (!letterNeeds[letter]) {
+                    letterNeeds[letter] = 0;
+                }
+                letterNeeds[letter]++;
+                letterCounts[letter] = 0;
+            });
+            
+            // 調試信息
+            updateDebugInfo();
+        }
+        
+        // 更新調試信息
+        function updateDebugInfo() {
+            let debugText = "字母需求：<br>";
+            
+            for (const letter in letterNeeds) {
+                debugText += `${letter}: 需要 ${letterNeeds[letter]}, 已生成 ${letterCounts[letter] || 0}<br>`;
+            }
+            
+            debugInfo.innerHTML = debugText;
+        }
+        
+        // 結束遊戲
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            
+            // 移除所有字母
+            letters.forEach(letter => {
+                if (letter.element && letter.element.parentNode) {
+                    letter.element.parentNode.removeChild(letter.element);
+                }
+            });
+            letters = [];
+            
+            // 顯示結束模態框
+            finalScoreElement.textContent = score;
+            
+            if (score > 100) {
+                endTitleElement.textContent = "太棒了！";
+                endMessageElement.innerHTML = `你是拼字高手！<br>你的分數是: <span class="text-green-600 font-bold">${score}</span>`;
+            } else {
+                endTitleElement.textContent = "遊戲結束";
+                endMessageElement.innerHTML = `再接再厲！<br>你的分數是: <span class="text-blue-600 font-bold">${score}</span>`;
+            }
+            
+            endModal.style.display = "flex";
+        }
+        
+        // 重置遊戲
+        function resetGame() {
+            endModal.style.display = "none";
+            startModal.style.display = "flex";
+            
+            // 重新設置難度和目標單字
+            setDifficulty(currentDifficulty);
+        }
+        
+        // 生成字母
+        function generateLetters() {
+            // 清除現有字母
+            letters.forEach(letter => {
+                if (letter.element && letter.element.parentNode) {
+                    letter.element.parentNode.removeChild(letter.element);
+                }
+            });
+            letters = [];
+            
+            // 重置字母計數
+            for (const letter in letterCounts) {
+                letterCounts[letter] = 0;
+            }
+            
+            // 創建字母元素的位置
+            const positions = divideScreenIntoRegions();
+            
+            // 首先確保所有需要的字母都會出現
+            for (const letter in letterNeeds) {
+                for (let i = 0; i < letterNeeds[letter]; i++) {
+                    // 從位置數組中隨機選擇一個位置
+                    if (positions.length === 0) break;
+                    const posIndex = Math.floor(Math.random() * positions.length);
+                    const position = positions[posIndex];
+                    positions.splice(posIndex, 1);
+                    
+                    // 創建字母
+                    createLetter(letter, position.x, position.y, true);
+                    letterCounts[letter]++;
+                }
+            }
+            
+            // 生成額外的隨機字母填滿剩餘位置
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            
+            while (positions.length > 0 && letters.length < 20) {
+                const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+                const posIndex = Math.floor(Math.random() * positions.length);
+                const position = positions[posIndex];
+                positions.splice(posIndex, 1);
+                
+                createLetter(randomLetter, position.x, position.y, false);
+            }
+            
+            // 更新字母計數器
+            updateLetterCounter();
+            
+            // 更新調試信息
+            updateDebugInfo();
+        }
+        
+        // 將屏幕分成區域以更好地分布字母
+        function divideScreenIntoRegions() {
+            const positions = [];
+            const padding = 100; // 邊緣填充
+            const width = window.innerWidth - padding * 2;
+            const height = window.innerHeight - padding * 2;
+            
+            // 將屏幕分成 5x5 的網格
+            const gridSize = 5;
+            const cellWidth = width / gridSize;
+            const cellHeight = height / gridSize;
+            
+            // 為每個網格單元創建一個位置
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    // 在每個網格單元內隨機選擇一個位置
+                    const x = padding + cellWidth * i + Math.random() * cellWidth;
+                    const y = padding + cellHeight * j + Math.random() * cellHeight;
+                    
+                    positions.push({ x, y });
+                }
+            }
+            
+            // 打亂位置順序
+            shuffleArray(positions);
+            
+            return positions;
+        }
+        
+        // 更新字母計數器
+        function updateLetterCounter() {
+            const targetLetters = targetWord.split("");
+            const uniqueLetters = [...new Set(targetLetters)];
+            
+            let counterHTML = "<strong>需要的字母:</strong> ";
+            
+            uniqueLetters.forEach(letter => {
+                const totalNeeded = letterNeeds[letter];
+                const collected = collectedLetters.filter(l => l === letter).length;
+                const remaining = totalNeeded - collected;
+                
+                if (remaining > 0) {
+                    counterHTML += `<span class="font-bold px-2 py-1 bg-blue-100 rounded-lg mx-1">${letter}: ${collected}/${totalNeeded}</span>`;
+                } else {
+                    counterHTML += `<span class="font-bold px-2 py-1 bg-green-100 text-green-600 rounded-lg mx-1">${letter}: ${collected}/${totalNeeded}</span>`;
+                }
+            });
+            
+            letterCounter.innerHTML = counterHTML;
+        }
+        
+        // 創建字母元素
+        function createLetter(letter, x, y, isTargetLetter) {
+            const letterElement = document.createElement("div");
+            letterElement.className = "letter";
+            if (isTargetLetter) {
+                letterElement.classList.add("target-letter");
+            }
+            letterElement.textContent = letter;
+            
+            // 隨機顏色
+            const colors = ["#f44336", "#2196f3", "#4caf50", "#ff9800", "#9c27b0", "#3f51b5"];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            letterElement.style.backgroundColor = randomColor;
+            letterElement.style.color = "#fff";
+            
+            letterElement.style.left = `${x}px`;
+            letterElement.style.top = `${y}px`;
+            
+            // 點擊事件
+            letterElement.addEventListener("click", () => {
+                if (!gameActive) return;
+                collectLetter(letter, letterObj);
+            });
+            
+            gameContainer.appendChild(letterElement);
+            
+            // 創建字母對象
+            const letterObj = {
+                letter: letter,
+                element: letterElement,
+                x: x,
+                y: y,
+                isTargetLetter: isTargetLetter
+            };
+            
+            letters.push(letterObj);
+            
+            return letterObj;
+        }
+        
+        // 收集字母
+        function collectLetter(letter, letterObj) {
+            // 檢查是否需要這個字母
+            const targetLetters = targetWord.split("");
+            
+            // 找到第一個空位置
+            let emptyIndex = -1;
+            for (let i = 0; i < targetLetters.length; i++) {
+                if (targetLetters[i] === letter && collectedLetters[i] === null) {
+                    emptyIndex = i;
+                    break;
+                }
+            }
+            
+            if (emptyIndex !== -1) {
+                // 收集字母
+                collectedLetters[emptyIndex] = letter;
+                
+                // 移除字母元素
+                if (letterObj.element && letterObj.element.parentNode) {
+                    letterObj.element.parentNode.removeChild(letterObj.element);
+                }
+                
+                // 從字母數組中移除
+                const index = letters.indexOf(letterObj);
+                if (index > -1) {
+                    letters.splice(index, 1);
+                }
+                
+                // 更新 UI
+                updateCollectedLettersUI();
+                updateLetterCounter();
+                
+                // 播放收集音效
+                playCollectSound();
+                
+                // 檢查是否完成單字
+                checkWordCompletion();
+                
+                // 檢查是否需要生成更多字母
+                checkAndRegenerateLetters();
+            }
+        }
+        
+        // 檢查並重新生成字母
+        function checkAndRegenerateLetters() {
+            // 檢查每個需要的字母是否還有足夠的數量
+            let needRegenerate = false;
+            
+            for (const letter in letterNeeds) {
+                const collected = collectedLetters.filter(l => l === letter).length;
+                const remaining = letterNeeds[letter] - collected;
+                const available = letters.filter(l => l.letter === letter && l.isTargetLetter).length;
+                
+                if (remaining > available) {
+                    needRegenerate = true;
+                    break;
+                }
+            }
+            
+            if (needRegenerate) {
+                // 只保留非目標字母
+                const nonTargetLetters = letters.filter(l => !l.isTargetLetter);
+                
+                // 移除所有目標字母
+                letters.filter(l => l.isTargetLetter).forEach(letter => {
+                    if (letter.element && letter.element.parentNode) {
+                        letter.element.parentNode.removeChild(letter.element);
+                    }
+                });
+                
+                letters = nonTargetLetters;
+                
+                // 重新計算每個字母需要的數量
+                for (const letter in letterNeeds) {
+                    const collected = collectedLetters.filter(l => l === letter).length;
+                    letterCounts[letter] = collected;
+                }
+                
+                // 生成新的目標字母
+                const positions = divideScreenIntoRegions();
+                
+                for (const letter in letterNeeds) {
+                    const collected = collectedLetters.filter(l => l === letter).length;
+                    const needed = letterNeeds[letter] - collected;
+                    
+                    for (let i = 0; i < needed; i++) {
+                        if (positions.length === 0) break;
+                        const posIndex = Math.floor(Math.random() * positions.length);
+                        const position = positions[posIndex];
+                        positions.splice(posIndex, 1);
+                        
+                        createLetter(letter, position.x, position.y, true);
+                    }
+                }
+                
+                // 更新調試信息
+                updateDebugInfo();
+            }
+        }
+        
+        // 清除收集的字母
+        function clearLetter(index) {
+            if (collectedLetters[index] !== null) {
+                collectedLetters[index] = null;
+                updateCollectedLettersUI();
+                updateLetterCounter();
+                
+                // 檢查是否需要生成更多字母
+                checkAndRegenerateLetters();
+            }
+        }
+        
+        // 更新收集字母 UI
+        function updateCollectedLettersUI() {
+            collectedLettersContainer.innerHTML = "";
+            
+            const targetLetters = targetWord.split("");
+            
+            // 創建字母槽
+            targetLetters.forEach((letter, index) => {
+                const slot = document.createElement("div");
+                slot.className = "letter-slot";
+                
+                // 檢查是否已收集該位置的字母
+                if (collectedLetters[index] !== null) {
+                    slot.textContent = collectedLetters[index];
+                    slot.style.backgroundColor = "#bbdefb";
+                    slot.style.borderStyle = "solid";
+                    
+                    // 添加清除按鈕
+                    const clearBtn = document.createElement("div");
+                    clearBtn.className = "clear-btn";
+                    clearBtn.innerHTML = "×";
+                    clearBtn.addEventListener("click", () => clearLetter(index));
+                    slot.appendChild(clearBtn);
+                }
+                
+                collectedLettersContainer.appendChild(slot);
+            });
+            
+            // 更新進度條
+            const filledSlots = collectedLetters.filter(letter => letter !== null).length;
+            const progress = (filledSlots / targetWord.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // 檢查單字完成情況
+        function checkWordCompletion() {
+            // 檢查是否所有槽都已填滿
+            const isComplete = collectedLetters.every(letter => letter !== null);
+            
+            if (isComplete) {
+                // 檢查拼寫是否正確
+                const word = collectedLetters.join("");
+                
+                if (word === targetWord) {
+                    // 加分
+                    const difficultyMultiplier = {
+                        easy: 1,
+                        medium: 2,
+                        hard: 3
+                    };
+                    
+                    score += 10 * difficultyMultiplier[currentDifficulty];
+                    scoreElement.textContent = score;
+                    
+                    // 顯示成功訊息
+                    showMessage("太棒了！", "#4caf50");
+                    
+                    // 顯示慶祝效果
+                    showCelebration();
+                    
+                    // 重置收集的字母
+                    collectedLetters = Array(targetWord.length).fill(null);
+                    
+                    // 生成新的目標單字
+                    const words = wordsByDifficulty[currentDifficulty];
+                    targetWord = words[Math.floor(Math.random() * words.length)];
+                    targetWordElement.textContent = targetWord;
+                    
+                    // 計算新的字母需求
+                    calculateLetterNeeds();
+                    
+                    // 生成新的字母
+                    generateLetters();
+                    
+                    // 更新 UI
+                    updateCollectedLettersUI();
+                    updateLetterCounter();
+                    
+                    // 重置提示
+                    hintUsed = false;
+                    hintCooldown = false;
+                    hintBtn.classList.remove("disabled");
+                }
+            }
+        }
+        
+        // 顯示提示
+        function showHint() {
+            if (!gameActive || hintCooldown) return;
+            
+            hintCooldown = true;
+            hintBtn.classList.add("disabled");
+            
+            // 找出所有目標字母
+            const targetLetters = letters.filter(letterObj => letterObj.isTargetLetter);
+            
+            // 高亮顯示目標字母
+            targetLetters.forEach(letterObj => {
+                letterObj.element.classList.add("highlighted");
+            });
+            
+            // 5秒後恢復
+            setTimeout(() => {
+                targetLetters.forEach(letterObj => {
+                    if (letterObj.element && letterObj.element.parentNode) {
+                        letterObj.element.classList.remove("highlighted");
+                    }
+                });
+                
+                // 10秒後重新啟用提示按鈕
+                setTimeout(() => {
+                    hintCooldown = false;
+                    hintBtn.classList.remove("disabled");
+                }, 5000);
+                
+            }, 5000);
+            
+            // 顯示提示訊息
+            showMessage("尋找金色邊框的字母！", "#ff9800");
+        }
+        
+        // 顯示慶祝效果
+        function showCelebration() {
+            // 清空容器
+            celebrationContainer.innerHTML = "";
+            
+            // 創建氣球爆破效果
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const balloon = document.createElement("div");
+                    balloon.className = "balloon-pop";
+                    
+                    // 隨機顏色
+                    const colors = ["#f44336", "#2196f3", "#4caf50", "#ff9800", "#9c27b0", "#3f51b5"];
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    balloon.innerHTML = `
+                        <svg width="60" height="80" viewBox="0 0 60 80">
+                            <path d="M30,5 C45,5 55,20 55,35 C55,50 45,65 30,65 C15,65 5,50 5,35 C5,20 15,5 30,5 Z" fill="${randomColor}" />
+                            <path d="M30,65 L25,75 L35,75 L30,65 Z" fill="#8d6e63" />
+                            <rect x="25" y="75" width="10" height="2" fill="#8d6e63" />
+                        </svg>
+                    `;
+                    
+                    // 隨機位置
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    
+                    balloon.style.left = `${x}px`;
+                    balloon.style.top = `${y}px`;
+                    
+                    celebrationContainer.appendChild(balloon);
+                    
+                    // 移除氣球
+                    setTimeout(() => {
+                        if (balloon.parentNode) {
+                            balloon.parentNode.removeChild(balloon);
+                        }
+                    }, 500);
+                }, i * 100);
+            }
+            
+            // 創建彩帶效果
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement("div");
+                    confetti.className = "confetti";
+                    
+                    // 隨機顏色
+                    const colors = ["#f44336", "#2196f3", "#4caf50", "#ff9800", "#9c27b0", "#3f51b5"];
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    confetti.style.backgroundColor = randomColor;
+                    
+                    // 隨機形狀
+                    const shapes = ["square", "rectangle", "circle"];
+                    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                    
+                    if (shape === "circle") {
+                        confetti.style.borderRadius = "50%";
+                    } else if (shape === "rectangle") {
+                        confetti.style.width = "5px";
+                        confetti.style.height = "15px";
+                    }
+                    
+                    // 隨機位置
+                    const x = Math.random() * window.innerWidth;
+                    
+                    confetti.style.left = `${x}px`;
+                    
+                    // 隨機動畫延遲
+                    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                    confetti.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                    
+                    celebrationContainer.appendChild(confetti);
+                    
+                    // 移除彩帶
+                    setTimeout(() => {
+                        if (confetti.parentNode) {
+                            confetti.parentNode.removeChild(confetti);
+                        }
+                    }, 4000);
+                }, i * 50);
+            }
+        }
+        
+        // 顯示訊息
+        function showMessage(text, color) {
+            const message = document.createElement("div");
+            message.textContent = text;
+            message.style.position = "fixed";
+            message.style.top = "50%";
+            message.style.left = "50%";
+            message.style.transform = "translate(-50%, -50%)";
+            message.style.padding = "20px";
+            message.style.backgroundColor = color;
+            message.style.color = "white";
+            message.style.borderRadius = "10px";
+            message.style.fontSize = "24px";
+            message.style.fontWeight = "bold";
+            message.style.zIndex = "1000";
+            message.style.opacity = "0";
+            message.style.transition = "opacity 0.5s";
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.style.opacity = "1";
+            }, 10);
+            
+            setTimeout(() => {
+                message.style.opacity = "0";
+                setTimeout(() => {
+                    document.body.removeChild(message);
+                }, 500);
+            }, 1500);
+        }
+        
+        // 播放收集音效
+        function playCollectSound() {
+            // 由於音頻限制，這裡只做視覺反饋
+            const ripple = document.createElement("div");
+            ripple.style.position = "absolute";
+            ripple.style.width = "50px";
+            ripple.style.height = "50px";
+            ripple.style.borderRadius = "50%";
+            ripple.style.backgroundColor = "rgba(255, 255, 255, 0.5)";
+            ripple.style.left = player.style.left;
+            ripple.style.top = player.style.top;
+            ripple.style.transform = "translate(-50%, -50%)";
+            ripple.style.animation = "ripple 0.6s linear";
+            ripple.style.zIndex = "50";
+            
+            gameContainer.appendChild(ripple);
+            
+            setTimeout(() => {
+                gameContainer.removeChild(ripple);
+            }, 600);
+        }
+        
+        // 移動玩家 (鍵盤控制)
+        function movePlayer(e) {
+            if (!gameActive) return;
+            
+            const speed = 20;
+            const currentLeft = parseInt(player.style.left) || window.innerWidth / 2;
+            const currentTop = parseInt(player.style.top) || window.innerHeight / 2;
+            
+            switch (e.key) {
+                case "ArrowUp":
+                    player.style.top = `${Math.max(40, currentTop - speed)}px`;
+                    break;
+                case "ArrowDown":
+                    player.style.top = `${Math.min(window.innerHeight - 40, currentTop + speed)}px`;
+                    break;
+                case "ArrowLeft":
+                    player.style.left = `${Math.max(40, currentLeft - speed)}px`;
+                    break;
+                case "ArrowRight":
+                    player.style.left = `${Math.min(window.innerWidth - 40, currentLeft + speed)}px`;
+                    break;
+            }
+            
+            checkLetterCollision();
+        }
+        
+        // 移動玩家 (滑鼠點擊控制)
+        function movePlayerToClick(e) {
+            if (!gameActive) return;
+            
+            player.style.left = `${e.clientX}px`;
+            player.style.top = `${e.clientY}px`;
+            
+            checkLetterCollision();
+        }
+        
+        // 檢查字母碰撞
+        function checkLetterCollision() {
+            const playerRect = {
+                x: parseInt(player.style.left) || window.innerWidth / 2,
+                y: parseInt(player.style.top) || window.innerHeight / 2,
+                radius: 40
+            };
+            
+            letters.forEach(letterObj => {
+                const letterRect = {
+                    x: letterObj.x,
+                    y: letterObj.y,
+                    radius: 25
+                };
+                
+                const dx = playerRect.x - letterRect.x;
+                const dy = playerRect.y - letterRect.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < playerRect.radius + letterRect.radius) {
+                    collectLetter(letterObj.letter, letterObj);
+                }
+            });
+        }
+        
+        // 創建雲朵
+        function createCloud() {
+            const cloud = document.createElement("div");
+            cloud.className = "cloud";
+            
+            const size = Math.random() * 100 + 50;
+            cloud.style.width = `${size}px`;
+            cloud.style.height = `${size / 2}px`;
+            
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * (window.innerHeight / 2);
+            
+            cloud.style.left = `${x}px`;
+            cloud.style.top = `${y}px`;
+            
+            // 隨機動畫延遲
+            cloud.style.animationDelay = `${Math.random() * 20}s`;
+            
+            gameContainer.appendChild(cloud);
+        }
+        
+        // 創建熱氣球
+        function createBalloon() {
+            const balloon = document.createElement("div");
+            balloon.className = "balloon";
+            
+            // 隨機顏色
+            const colors = ["#f44336", "#2196f3", "#4caf50", "#ff9800", "#9c27b0"];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            balloon.innerHTML = `
+                <svg width="60" height="80" viewBox="0 0 60 80">
+                    <path d="M30,5 C45,5 55,20 55,35 C55,50 45,65 30,65 C15,65 5,50 5,35 C5,20 15,5 30,5 Z" fill="${randomColor}" />
+                    <path d="M30,65 L25,75 L35,75 L30,65 Z" fill="#8d6e63" />
+                    <rect x="25" y="75" width="10" height="2" fill="#8d6e63" />
+                </svg>
+            `;
+            
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            
+            balloon.style.left = `${x}px`;
+            balloon.style.top = `${y}px`;
+            
+            // 隨機動畫延遲
+            balloon.style.animationDelay = `${Math.random() * 10}s`;
+            
+            gameContainer.appendChild(balloon);
+        }
+        
+        // 打亂數組
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // 添加 CSS 動畫
+        const style = document.createElement("style");
+        style.textContent = `
+            @keyframes ripple {
+                0% {
+                    transform: translate(-50%, -50%) scale(0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(-50%, -50%) scale(3);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 初始化遊戲
+        window.onload = initGame;
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968e1891c788f218',t:'MTc1NDE0MzE2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
