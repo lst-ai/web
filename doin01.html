@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-動物變身藥水</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f9ff;
+            overflow-x: hidden;
+        }
+        .animal-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .animal-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        .sensory-experience {
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        .bat-vision {
+            filter: grayscale(100%) brightness(0.7) contrast(1.5);
+            animation: echolocation 3s infinite;
+        }
+        .shark-vision {
+            filter: hue-rotate(180deg) saturate(0.8) brightness(0.7);
+        }
+        .bee-vision {
+            filter: saturate(2) contrast(1.3) brightness(1.2);
+            animation: beeView 5s infinite;
+        }
+        .cheetah-vision {
+            filter: saturate(1.5) contrast(1.2);
+            animation: fastMovement 2s infinite;
+        }
+        .owl-vision {
+            filter: brightness(1.5) contrast(1.3) sepia(0.3);
+        }
+        .whale-vision {
+            filter: blur(1px) brightness(0.7) saturate(0.8);
+            animation: underwater 8s infinite;
+        }
+        .polar-vision {
+            filter: brightness(1.5) contrast(1.2) saturate(0.5);
+        }
+        @keyframes echolocation {
+            0%, 100% { filter: grayscale(100%) brightness(0.7) contrast(1.5); }
+            50% { filter: grayscale(100%) brightness(0.9) contrast(2); }
+        }
+        @keyframes beeView {
+            0%, 100% { filter: saturate(2) contrast(1.3) brightness(1.2); }
+            50% { filter: saturate(2.5) contrast(1.5) brightness(1.4) hue-rotate(20deg); }
+        }
+        @keyframes fastMovement {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        @keyframes underwater {
+            0%, 100% { filter: blur(1px) brightness(0.7) saturate(0.8); }
+            50% { filter: blur(2px) brightness(0.6) saturate(0.7) hue-rotate(10deg); }
+        }
+        .sensory-clue {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            z-index: 10;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+        .potion-bottle {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .diary-template {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .btn-primary {
+            background-color: #6366f1;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: #f59e0b;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #d97706;
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 遊戲標題 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-700 mb-4">LST遊戲室-動物變身藥水</h1>
+            <p class="text-xl md:text-2xl text-indigo-500">第一人稱感官冒險日記</p>
+        </div>
+
+        <!-- 遊戲階段指示器 -->
+        <div class="flex justify-center mb-8">
+            <div class="flex items-center w-full max-w-3xl">
+                <div id="step1-indicator" class="flex-1 text-center">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">1</div>
+                    <p class="mt-2 text-indigo-600 font-medium">選擇動物</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300" id="line1"></div>
+                <div id="step2-indicator" class="flex-1 text-center">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold">2</div>
+                    <p class="mt-2 text-gray-500">感官體驗</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300" id="line2"></div>
+                <div id="step3-indicator" class="flex-1 text-center">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold">3</div>
+                    <p class="mt-2 text-gray-500">撰寫日記</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300" id="line3"></div>
+                <div id="step4-indicator" class="flex-1 text-center">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold">4</div>
+                    <p class="mt-2 text-gray-500">成果呈現</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟 1：選擇動物 -->
+        <div id="step1" class="mb-8">
+            <div class="text-center mb-8">
+                <div class="inline-block">
+                    <svg class="w-24 h-24 mx-auto potion-bottle" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M40 20H60V40C70 45 75 55 75 65C75 75 65 85 50 85C35 85 25 75 25 65C25 55 30 45 40 40V20Z" fill="#c4b5fd" stroke="#4338ca" stroke-width="3"/>
+                        <path d="M35 15H65V25H35V15Z" fill="#818cf8" stroke="#4338ca" stroke-width="3"/>
+                        <path d="M40 40C50 45 55 55 55 65C55 75 45 80 40 80" stroke="#4338ca" stroke-width="2" stroke-dasharray="3 3"/>
+                        <circle cx="45" cy="50" r="3" fill="white"/>
+                        <circle cx="55" cy="60" r="2" fill="white"/>
+                        <circle cx="40" cy="65" r="4" fill="white"/>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-indigo-700 mt-4">選擇你想變身的動物</h2>
+                <p class="text-gray-600 mt-2">每種動物都有獨特的感官能力，選擇一種你想體驗的動物！</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- 蝙蝠 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="bat">
+                    <div class="h-40 bg-gray-800 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M50 30C40 20 25 25 20 35C15 45 25 55 30 60C35 65 45 70 50 70C55 70 65 65 70 60C75 55 85 45 80 35C75 25 60 20 50 30Z" fill="#444"/>
+                            <path d="M20 35C15 25 5 30 5 40" stroke="#444" stroke-width="3"/>
+                            <path d="M80 35C85 25 95 30 95 40" stroke="#444" stroke-width="3"/>
+                            <circle cx="40" cy="40" r="3" fill="white"/>
+                            <circle cx="60" cy="40" r="3" fill="white"/>
+                            <path d="M45 50C47 52 53 52 55 50" stroke="#666" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">蝙蝠</h3>
+                        <p class="text-gray-600 mt-2">我用超音波來看世界，在漆黑的夜晚也能精準飛行。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：回聲定位</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 鯊魚 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="shark">
+                    <div class="h-40 bg-blue-900 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 50C20 40 40 35 60 40L80 30L75 50L80 70L60 60C40 65 20 60 10 50Z" fill="#546e7a"/>
+                            <path d="M60 40L75 30" stroke="#455a64" stroke-width="2"/>
+                            <path d="M60 60L75 70" stroke="#455a64" stroke-width="2"/>
+                            <circle cx="25" cy="45" r="3" fill="black"/>
+                            <path d="M40 50L50 50" stroke="#455a64" stroke-width="2"/>
+                            <path d="M30 60L40 50L30 40" fill="#455a64"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">鯊魚</h3>
+                        <p class="text-gray-600 mt-2">我能感知水中微弱的電流，察覺獵物的心跳。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：電流感應</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 蜜蜂 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="bee">
+                    <div class="h-40 bg-yellow-100 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="50" cy="50" rx="25" ry="20" fill="#fbbf24"/>
+                            <path d="M25 50C25 40 35 30 50 30C65 30 75 40 75 50" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5 3"/>
+                            <path d="M25 50C25 60 35 70 50 70C65 70 75 60 75 50" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5 3"/>
+                            <circle cx="40" cy="45" r="3" fill="black"/>
+                            <circle cx="60" cy="45" r="3" fill="black"/>
+                            <path d="M45 55C47 57 53 57 55 55" stroke="#d97706" stroke-width="2"/>
+                            <path d="M85 40L75 50L85 60" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+                            <path d="M15 40L25 50L15 60" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">蜜蜂</h3>
+                        <p class="text-gray-600 mt-2">我能看見紫外線，花朵在我眼中有特殊的圖案指引。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：紫外線視覺</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 獵豹 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="cheetah">
+                    <div class="h-40 bg-amber-100 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 60C25 45 40 40 50 40C60 40 75 45 80 60C75 70 60 75 50 75C40 75 25 70 20 60Z" fill="#f59e0b"/>
+                            <path d="M20 60C15 55 10 55 5 60" stroke="#d97706" stroke-width="2"/>
+                            <path d="M80 60C85 55 90 55 95 60" stroke="#d97706" stroke-width="2"/>
+                            <circle cx="40" cy="50" r="3" fill="black"/>
+                            <circle cx="60" cy="50" r="3" fill="black"/>
+                            <path d="M45 60C47 62 53 62 55 60" stroke="#b45309" stroke-width="2"/>
+                            <path d="M30 40L35 45M40 35L45 40M55 40L60 35M65 45L70 40" stroke="#b45309" stroke-width="1"/>
+                            <path d="M25 55C25 55 30 50 35 55M35 55C35 55 40 50 45 55M55 55C55 55 60 50 65 55M65 55C65 55 70 50 75 55" stroke="#b45309" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">獵豹</h3>
+                        <p class="text-gray-600 mt-2">我是地表上跑得最快的動物，視覺能快速捕捉移動目標。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：動態視覺</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 貓頭鷹 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="owl">
+                    <div class="h-40 bg-amber-50 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="25" fill="#a16207"/>
+                            <circle cx="40" cy="45" r="8" fill="white"/>
+                            <circle cx="60" cy="45" r="8" fill="white"/>
+                            <circle cx="40" cy="45" r="4" fill="black"/>
+                            <circle cx="60" cy="45" r="4" fill="black"/>
+                            <path d="M45 60L50 65L55 60" fill="#f59e0b"/>
+                            <path d="M25 30L35 40M75 30L65 40" stroke="#a16207" stroke-width="3"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">貓頭鷹</h3>
+                        <p class="text-gray-600 mt-2">我在夜裡能清楚看見，聽力超群能定位獵物位置。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：夜視與聽覺</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 鯨魚 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="whale">
+                    <div class="h-40 bg-blue-800 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 50C20 30 40 25 60 30C80 35 90 45 90 50C90 55 80 65 60 70C40 75 20 70 10 50Z" fill="#1e40af"/>
+                            <circle cx="25" cy="40" r="3" fill="black"/>
+                            <path d="M70 40C70 40 75 35 80 40" stroke="#1e3a8a" stroke-width="2"/>
+                            <path d="M15 50C15 50 20 60 30 60C40 60 45 50 45 50" fill="#1e3a8a"/>
+                            <path d="M60 70C60 70 65 75 70 70" stroke="#1e3a8a" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">鯨魚</h3>
+                        <p class="text-gray-600 mt-2">我用歌聲在海洋中溝通，聲音能傳遞數百公里。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：聲波傳遞</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 北極熊 -->
+                <div class="animal-card bg-white rounded-xl shadow-lg overflow-hidden" data-animal="polar">
+                    <div class="h-40 bg-blue-50 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M30 70C20 60 20 40 30 30C40 20 60 20 70 30C80 40 80 60 70 70C60 80 40 80 30 70Z" fill="white" stroke="#e5e7eb" stroke-width="2"/>
+                            <circle cx="40" cy="45" r="3" fill="black"/>
+                            <circle cx="60" cy="45" r="3" fill="black"/>
+                            <path d="M45 55C47 57 53 57 55 55" stroke="#9ca3af" stroke-width="2"/>
+                            <circle cx="50" cy="50" r="10" fill="#e5e7eb"/>
+                        </svg>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-bold text-gray-800">北極熊</h3>
+                        <p class="text-gray-600 mt-2">我的嗅覺極為靈敏，能聞到冰層下數公里外的獵物。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-indigo-600 font-medium">特殊能力：超級嗅覺</span>
+                            <button class="select-animal-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200 transition">選擇</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟 2：感官體驗 -->
+        <div id="step2" class="mb-8 hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-indigo-700">感官體驗</h2>
+                <p class="text-gray-600 mt-2">探索你所選擇動物的感官世界！點擊畫面中的亮點收集感官線索卡。</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div id="animal-name" class="text-xl font-bold text-center mb-4"></div>
+                
+                <div class="sensory-experience rounded-lg mb-6 relative" id="sensory-container">
+                    <!-- 感官體驗區域，會根據選擇的動物動態生成 -->
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-700 mb-3">感官線索卡</h3>
+                        <div id="sensory-clues" class="bg-indigo-50 rounded-lg p-4 min-h-[150px]">
+                            <p class="text-gray-500 text-center">點擊畫面中的亮點收集線索卡</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-700 mb-3">互動問答</h3>
+                        <div class="bg-amber-50 rounded-lg p-4">
+                            <div class="mb-4">
+                                <p class="font-medium mb-2">你今天遇到的最大挑戰是什麼？</p>
+                                <textarea id="challenge-answer" class="w-full p-2 border border-gray-300 rounded-md" rows="2"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <p class="font-medium mb-2">你靠什麼方式找食物？</p>
+                                <textarea id="food-answer" class="w-full p-2 border border-gray-300 rounded-md" rows="2"></textarea>
+                            </div>
+                            <div>
+                                <p class="font-medium mb-2">你最喜歡的地方是哪裡？</p>
+                                <textarea id="place-answer" class="w-full p-2 border border-gray-300 rounded-md" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button id="back-to-step1" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">返回選擇</button>
+                    <button id="go-to-step3" class="px-6 py-2 btn-primary rounded-lg">繼續寫日記</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟 3：撰寫日記 -->
+        <div id="step3" class="mb-8 hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-indigo-700">撰寫第一人稱動物日記</h2>
+                <p class="text-gray-600 mt-2">以「我」為主詞，描述你作為動物的一天體驗</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2">
+                        <div class="diary-template bg-amber-50 rounded-lg p-6 min-h-[500px]">
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">日記標題</label>
+                                <input type="text" id="diary-title" class="w-full p-2 border border-gray-300 rounded-md" placeholder="例如：蝙蝠的夜間冒險">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">我的外型</label>
+                                <textarea id="diary-appearance" class="w-full p-2 border border-gray-300 rounded-md" rows="3" placeholder="例如：我有一對超大的耳朵..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">我的感官世界</label>
+                                <textarea id="diary-sensory" class="w-full p-2 border border-gray-300 rounded-md" rows="4" placeholder="例如：我看不見彩色世界，但我的鼻子能找出遠方的食物..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-medium mb-2">我一天的生活</label>
+                                <textarea id="diary-daily" class="w-full p-2 border border-gray-300 rounded-md" rows="5" placeholder="例如：今天，我在夜裡巡邏，找到了滿滿的花蜜..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2">我的心情</label>
+                                <textarea id="diary-feeling" class="w-full p-2 border border-gray-300 rounded-md" rows="3" placeholder="例如：我覺得好驕傲，因為我飛得又快又高！"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="bg-indigo-50 rounded-lg p-4 sticky top-4">
+                            <h3 class="text-lg font-semibold text-indigo-700 mb-3">寫作提示</h3>
+                            <div class="mb-4">
+                                <h4 class="font-medium text-indigo-600">引導句</h4>
+                                <ul class="list-disc list-inside text-gray-600 space-y-2 mt-2">
+                                    <li>當我醒來時，我感覺到...</li>
+                                    <li>我的眼睛可以看見...</li>
+                                    <li>我的耳朵能聽到...</li>
+                                    <li>我最喜歡用我的...來...</li>
+                                    <li>如果人類能體驗我的感官，他們會...</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-indigo-600">你的感官線索</h4>
+                                <div id="diary-clues" class="mt-2 text-gray-600">
+                                    <!-- 動態生成的感官線索 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button id="back-to-step2" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">返回體驗</button>
+                    <button id="go-to-step4" class="px-6 py-2 btn-primary rounded-lg">完成日記</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟 4：成果呈現 -->
+        <div id="step4" class="mb-8 hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-indigo-700">成果呈現</h2>
+                <p class="text-gray-600 mt-2">恭喜完成你的動物變身日記！</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-center mb-4" id="final-title">日記標題</h3>
+                    <div class="flex justify-center mb-4">
+                        <div id="animal-icon" class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <!-- 動物圖示 -->
+                        </div>
+                    </div>
+                    <div class="diary-template bg-amber-50 rounded-lg p-6">
+                        <div class="mb-4">
+                            <h4 class="font-medium text-indigo-700">我的外型</h4>
+                            <p id="final-appearance" class="mt-2 text-gray-700"></p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-medium text-indigo-700">我的感官世界</h4>
+                            <p id="final-sensory" class="mt-2 text-gray-700"></p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-medium text-indigo-700">我一天的生活</h4>
+                            <p id="final-daily" class="mt-2 text-gray-700"></p>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-indigo-700">我的心情</h4>
+                            <p id="final-feeling" class="mt-2 text-gray-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-4">將你的日記分享到班級 Padlet：</p>
+                    <a href="https://ylcdo.padlet.org/Lu/padlet-c1kacvrxv3nnaeoh" target="_blank" class="inline-block px-6 py-3 btn-secondary rounded-lg mb-6">前往 Padlet 分享</a>
+                    
+                    <div class="mt-4">
+                        <button id="restart-game" class="px-6 py-2 btn-primary rounded-lg">重新開始遊戲</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 頁腳 -->
+        <footer class="mt-12 py-4 border-t border-gray-200 text-center footer rounded-lg shadow-md">
+            <p class="text-gray-700">遊戲設計與製作：呂舒婷｜<a href="#" class="text-indigo-600 hover:text-indigo-800">了解更多🔍</a></p>
+            <p class="text-gray-600 mt-1">臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 全局變數
+            let selectedAnimal = '';
+            let collectedClues = [];
+            
+            // 動物資料
+            const animalData = {
+                bat: {
+                    name: '蝙蝠',
+                    visionClass: 'bat-vision',
+                    background: 'bg-gray-800',
+                    clues: [
+                        '我能發出人類聽不見的超音波',
+                        '聲波反彈回來告訴我物體的位置',
+                        '我的耳朵極為靈敏，能捕捉微小聲音',
+                        '黑暗中我比人類更有優勢'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 150 L400 150" stroke="#555" stroke-width="1" stroke-dasharray="5,5"/>
+                                <path d="M100 50 L100 250" stroke="#555" stroke-width="1" stroke-dasharray="5,5"/>
+                                <path d="M200 50 L200 250" stroke="#555" stroke-width="1" stroke-dasharray="5,5"/>
+                                <path d="M300 50 L300 250" stroke="#555" stroke-width="1" stroke-dasharray="5,5"/>
+                                <circle cx="150" cy="100" r="20" fill="#777"/>
+                                <rect x="250" y="180" width="40" height="60" fill="#666"/>
+                                <path d="M50 200 L90 200 L70 170 Z" fill="#888"/>
+                            </svg>
+                        </div>
+                    `
+                },
+                shark: {
+                    name: '鯊魚',
+                    visionClass: 'shark-vision',
+                    background: 'bg-blue-900',
+                    clues: [
+                        '我能感知水中微弱的電流',
+                        '我能察覺獵物的心跳',
+                        '我的鼻子能聞到很遠的血腥味',
+                        '我的皮膚能感知水流的變化'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 100 Q 100 150 200 100 Q 300 50 400 100" fill="none" stroke="#6b7280" stroke-width="1"/>
+                                <path d="M0 150 Q 100 200 200 150 Q 300 100 400 150" fill="none" stroke="#6b7280" stroke-width="1"/>
+                                <path d="M0 200 Q 100 250 200 200 Q 300 150 400 200" fill="none" stroke="#6b7280" stroke-width="1"/>
+                                <circle cx="100" cy="120" r="8" fill="#9ca3af"/>
+                                <circle cx="150" cy="180" r="6" fill="#9ca3af"/>
+                                <circle cx="250" cy="150" r="10" fill="#9ca3af"/>
+                                <path d="M300 120 L320 130 L300 140 Z" fill="#9ca3af"/>
+                            </svg>
+                        </div>
+                    `
+                },
+                bee: {
+                    name: '蜜蜂',
+                    visionClass: 'bee-vision',
+                    background: 'bg-yellow-100',
+                    clues: [
+                        '我能看見紫外線',
+                        '花朵在我眼中有特殊的圖案',
+                        '我能感知地球的磁場',
+                        '我用舞蹈告訴同伴食物的位置'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0" y="200" width="400" height="100" fill="#84cc16"/>
+                                <circle cx="100" cy="220" r="40" fill="#a3e635"/>
+                                <circle cx="300" cy="220" r="30" fill="#a3e635"/>
+                                <path d="M150 150 L170 100 L190 150" stroke="#d97706" stroke-width="3" fill="none"/>
+                                <circle cx="170" cy="100" r="20" fill="#fbbf24"/>
+                                <circle cx="250" cy="180" r="15" fill="#fbbf24"/>
+                                <circle cx="80" cy="160" r="12" fill="#fbbf24"/>
+                            </svg>
+                        </div>
+                    `
+                },
+                cheetah: {
+                    name: '獵豹',
+                    visionClass: 'cheetah-vision',
+                    background: 'bg-amber-100',
+                    clues: [
+                        '我的視覺能快速捕捉移動目標',
+                        '我能在奔跑時保持頭部穩定',
+                        '我的身體為速度而生',
+                        '我能在短距離內達到極高速度'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0" y="200" width="400" height="100" fill="#fbbf24"/>
+                                <circle cx="350" cy="80" r="30" fill="#fcd34d"/>
+                                <path d="M100 220 L130 220 L115 200 Z" fill="#d97706"/>
+                                <path d="M200 230 L240 230 L220 200 Z" fill="#d97706"/>
+                                <path d="M50 250 L70 250 L60 235 Z" fill="#d97706"/>
+                                <circle cx="150" cy="150" r="10" fill="#d97706"/>
+                                <circle cx="180" cy="160" r="8" fill="#d97706"/>
+                                <circle cx="210" cy="140" r="12" fill="#d97706"/>
+                            </svg>
+                        </div>
+                    `
+                },
+                owl: {
+                    name: '貓頭鷹',
+                    visionClass: 'owl-vision',
+                    background: 'bg-amber-50',
+                    clues: [
+                        '我在夜裡能清楚看見',
+                        '我的聽力超群能定位獵物位置',
+                        '我的頭能旋轉270度',
+                        '我的羽毛特別柔軟，飛行時幾乎無聲'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0" y="0" width="400" height="300" fill="#1e293b" opacity="0.7"/>
+                                <circle cx="350" cy="50" r="30" fill="#f1f5f9"/>
+                                <path d="M100 100 L150 50 L200 100" fill="none" stroke="#475569" stroke-width="5"/>
+                                <path d="M250 150 L300 100 L350 150" fill="none" stroke="#475569" stroke-width="5"/>
+                                <rect x="180" y="200" width="40" height="100" fill="#475569"/>
+                                <circle cx="100" cy="250" r="10" fill="#94a3b8"/>
+                                <circle cx="300" cy="220" r="15" fill="#94a3b8"/>
+                            </svg>
+                        </div>
+                    `
+                },
+                whale: {
+                    name: '鯨魚',
+                    visionClass: 'whale-vision',
+                    background: 'bg-blue-800',
+                    clues: [
+                        '我用歌聲在海洋中溝通',
+                        '我的聲音能傳遞數百公里',
+                        '我能感知海洋中的聲音變化',
+                        '我的歌聲有特定的模式和結構'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0" y="0" width="400" height="300" fill="#1e40af" opacity="0.3"/>
+                                <path d="M0 100 Q 100 120 200 100 Q 300 80 400 100" fill="none" stroke="#60a5fa" stroke-width="2"/>
+                                <path d="M0 150 Q 100 170 200 150 Q 300 130 400 150" fill="none" stroke="#60a5fa" stroke-width="2"/>
+                                <path d="M0 200 Q 100 220 200 200 Q 300 180 400 200" fill="none" stroke="#60a5fa" stroke-width="2"/>
+                                <circle cx="100" cy="120" r="15" fill="#93c5fd" opacity="0.5"/>
+                                <circle cx="250" cy="180" r="20" fill="#93c5fd" opacity="0.5"/>
+                                <circle cx="350" cy="150" r="25" fill="#93c5fd" opacity="0.5"/>
+                                <circle cx="150" cy="220" r="10" fill="#93c5fd" opacity="0.5"/>
+                            </svg>
+                        </div>
+                    `
+                },
+                polar: {
+                    name: '北極熊',
+                    visionClass: 'polar-vision',
+                    background: 'bg-blue-50',
+                    clues: [
+                        '我的嗅覺極為靈敏',
+                        '我能聞到冰層下數公里外的獵物',
+                        '我的毛髮其實是透明的',
+                        '我的皮膚是黑色的，能吸收陽光保暖'
+                    ],
+                    environment: `
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="0" y="200" width="400" height="100" fill="#e5e7eb"/>
+                                <path d="M0 200 Q 50 180 100 200 Q 150 220 200 200 Q 250 180 300 200 Q 350 220 400 200" fill="#f9fafb"/>
+                                <circle cx="350" cy="80" r="30" fill="#f3f4f6"/>
+                                <path d="M100 220 L150 220 L125 200 Z" fill="#f3f4f6"/>
+                                <path d="M200 230 L250 230 L225 210 Z" fill="#f3f4f6"/>
+                                <path d="M300 240 L330 240 L315 225 Z" fill="#f3f4f6"/>
+                                <circle cx="150" cy="150" r="10" fill="#e5e7eb"/>
+                            </svg>
+                        </div>
+                    `
+                }
+            };
+
+            // 選擇動物
+            document.querySelectorAll('.select-animal-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const card = this.closest('.animal-card');
+                    selectedAnimal = card.dataset.animal;
+                    
+                    // 更新步驟指示器
+                    document.getElementById('step1-indicator').querySelector('div').classList.remove('bg-indigo-600');
+                    document.getElementById('step1-indicator').querySelector('div').classList.add('bg-green-600');
+                    document.getElementById('step1-indicator').querySelector('p').classList.remove('text-indigo-600');
+                    document.getElementById('step1-indicator').querySelector('p').classList.add('text-green-600');
+                    
+                    document.getElementById('step2-indicator').querySelector('div').classList.remove('bg-gray-300');
+                    document.getElementById('step2-indicator').querySelector('div').classList.add('bg-indigo-600');
+                    document.getElementById('step2-indicator').querySelector('p').classList.remove('text-gray-500');
+                    document.getElementById('step2-indicator').querySelector('p').classList.add('text-indigo-600');
+                    
+                    document.getElementById('line1').classList.remove('bg-gray-300');
+                    document.getElementById('line1').classList.add('bg-green-600');
+                    
+                    // 隱藏步驟1，顯示步驟2
+                    document.getElementById('step1').classList.add('hidden');
+                    document.getElementById('step2').classList.remove('hidden');
+                    
+                    // 設置動物名稱
+                    document.getElementById('animal-name').textContent = animalData[selectedAnimal].name;
+                    
+                    // 設置感官體驗區域
+                    const sensoryContainer = document.getElementById('sensory-container');
+                    sensoryContainer.className = `sensory-experience rounded-lg mb-6 relative ${animalData[selectedAnimal].visionClass} ${animalData[selectedAnimal].background}`;
+                    sensoryContainer.innerHTML = animalData[selectedAnimal].environment;
+                    
+                    // 添加感官線索點
+                    addSensoryCluePoints();
+                    
+                    // 清空已收集的線索
+                    collectedClues = [];
+                    document.getElementById('sensory-clues').innerHTML = '<p class="text-gray-500 text-center">點擊畫面中的亮點收集線索卡</p>';
+                });
+            });
+
+            // 添加感官線索點
+            function addSensoryCluePoints() {
+                const sensoryContainer = document.getElementById('sensory-container');
+                const clues = animalData[selectedAnimal].clues;
+                
+                // 清除現有的線索點
+                document.querySelectorAll('.sensory-clue').forEach(el => el.remove());
+                
+                // 添加新的線索點
+                for (let i = 0; i < clues.length; i++) {
+                    const cluePoint = document.createElement('div');
+                    cluePoint.className = 'sensory-clue';
+                    cluePoint.innerHTML = `<span class="text-xl">💡</span>`;
+                    
+                    // 隨機位置
+                    const top = 20 + Math.random() * 60; // 20% to 80%
+                    const left = 20 + Math.random() * 60; // 20% to 80%
+                    
+                    cluePoint.style.top = `${top}%`;
+                    cluePoint.style.left = `${left}%`;
+                    
+                    cluePoint.dataset.clue = clues[i];
+                    cluePoint.addEventListener('click', collectClue);
+                    
+                    sensoryContainer.appendChild(cluePoint);
+                }
+            }
+
+            // 收集線索
+            function collectClue(e) {
+                const clue = e.currentTarget.dataset.clue;
+                
+                if (!collectedClues.includes(clue)) {
+                    collectedClues.push(clue);
+                    
+                    // 更新線索顯示
+                    const sensoryClues = document.getElementById('sensory-clues');
+                    sensoryClues.innerHTML = '';
+                    
+                    collectedClues.forEach(c => {
+                        const clueEl = document.createElement('div');
+                        clueEl.className = 'bg-white p-2 rounded mb-2 shadow-sm';
+                        clueEl.textContent = c;
+                        sensoryClues.appendChild(clueEl);
+                    });
+                    
+                    // 移除已點擊的線索點
+                    e.currentTarget.remove();
+                }
+            }
+
+            // 返回步驟1
+            document.getElementById('back-to-step1').addEventListener('click', function() {
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step1').classList.remove('hidden');
+                
+                // 重置步驟指示器
+                document.getElementById('step1-indicator').querySelector('div').classList.remove('bg-green-600');
+                document.getElementById('step1-indicator').querySelector('div').classList.add('bg-indigo-600');
+                document.getElementById('step1-indicator').querySelector('p').classList.remove('text-green-600');
+                document.getElementById('step1-indicator').querySelector('p').classList.add('text-indigo-600');
+                
+                document.getElementById('step2-indicator').querySelector('div').classList.remove('bg-indigo-600');
+                document.getElementById('step2-indicator').querySelector('div').classList.add('bg-gray-300');
+                document.getElementById('step2-indicator').querySelector('p').classList.remove('text-indigo-600');
+                document.getElementById('step2-indicator').querySelector('p').classList.add('text-gray-500');
+                
+                document.getElementById('line1').classList.remove('bg-green-600');
+                document.getElementById('line1').classList.add('bg-gray-300');
+            });
+
+            // 前往步驟3
+            document.getElementById('go-to-step3').addEventListener('click', function() {
+                // 更新步驟指示器
+                document.getElementById('step2-indicator').querySelector('div').classList.remove('bg-indigo-600');
+                document.getElementById('step2-indicator').querySelector('div').classList.add('bg-green-600');
+                document.getElementById('step2-indicator').querySelector('p').classList.remove('text-indigo-600');
+                document.getElementById('step2-indicator').querySelector('p').classList.add('text-green-600');
+                
+                document.getElementById('step3-indicator').querySelector('div').classList.remove('bg-gray-300');
+                document.getElementById('step3-indicator').querySelector('div').classList.add('bg-indigo-600');
+                document.getElementById('step3-indicator').querySelector('p').classList.remove('text-gray-500');
+                document.getElementById('step3-indicator').querySelector('p').classList.add('text-indigo-600');
+                
+                document.getElementById('line2').classList.remove('bg-gray-300');
+                document.getElementById('line2').classList.add('bg-green-600');
+                
+                // 隱藏步驟2，顯示步驟3
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                
+                // 更新日記提示中的感官線索
+                const diaryClues = document.getElementById('diary-clues');
+                diaryClues.innerHTML = '';
+                
+                if (collectedClues.length > 0) {
+                    collectedClues.forEach(clue => {
+                        const clueEl = document.createElement('p');
+                        clueEl.className = 'mb-1';
+                        clueEl.textContent = `• ${clue}`;
+                        diaryClues.appendChild(clueEl);
+                    });
+                } else {
+                    diaryClues.innerHTML = '<p class="text-gray-500">你還沒有收集到感官線索</p>';
+                }
+                
+                // 預填寫日記標題
+                document.getElementById('diary-title').value = `${animalData[selectedAnimal].name}的一天`;
+            });
+
+            // 返回步驟2
+            document.getElementById('back-to-step2').addEventListener('click', function() {
+                document.getElementById('step3').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                
+                // 重置步驟指示器
+                document.getElementById('step2-indicator').querySelector('div').classList.remove('bg-green-600');
+                document.getElementById('step2-indicator').querySelector('div').classList.add('bg-indigo-600');
+                document.getElementById('step2-indicator').querySelector('p').classList.remove('text-green-600');
+                document.getElementById('step2-indicator').querySelector('p').classList.add('text-indigo-600');
+                
+                document.getElementById('step3-indicator').querySelector('div').classList.remove('bg-indigo-600');
+                document.getElementById('step3-indicator').querySelector('div').classList.add('bg-gray-300');
+                document.getElementById('step3-indicator').querySelector('p').classList.remove('text-indigo-600');
+                document.getElementById('step3-indicator').querySelector('p').classList.add('text-gray-500');
+                
+                document.getElementById('line2').classList.remove('bg-green-600');
+                document.getElementById('line2').classList.add('bg-gray-300');
+            });
+
+            // 前往步驟4
+            document.getElementById('go-to-step4').addEventListener('click', function() {
+                // 更新步驟指示器
+                document.getElementById('step3-indicator').querySelector('div').classList.remove('bg-indigo-600');
+                document.getElementById('step3-indicator').querySelector('div').classList.add('bg-green-600');
+                document.getElementById('step3-indicator').querySelector('p').classList.remove('text-indigo-600');
+                document.getElementById('step3-indicator').querySelector('p').classList.add('text-green-600');
+                
+                document.getElementById('step4-indicator').querySelector('div').classList.remove('bg-gray-300');
+                document.getElementById('step4-indicator').querySelector('div').classList.add('bg-indigo-600');
+                document.getElementById('step4-indicator').querySelector('p').classList.remove('text-gray-500');
+                document.getElementById('step4-indicator').querySelector('p').classList.add('text-indigo-600');
+                
+                document.getElementById('line3').classList.remove('bg-gray-300');
+                document.getElementById('line3').classList.add('bg-green-600');
+                
+                // 隱藏步驟3，顯示步驟4
+                document.getElementById('step3').classList.add('hidden');
+                document.getElementById('step4').classList.remove('hidden');
+                
+                // 填充最終日記內容
+                document.getElementById('final-title').textContent = document.getElementById('diary-title').value || `${animalData[selectedAnimal].name}的一天`;
+                document.getElementById('final-appearance').textContent = document.getElementById('diary-appearance').value || '（未填寫）';
+                document.getElementById('final-sensory').textContent = document.getElementById('diary-sensory').value || '（未填寫）';
+                document.getElementById('final-daily').textContent = document.getElementById('diary-daily').value || '（未填寫）';
+                document.getElementById('final-feeling').textContent = document.getElementById('diary-feeling').value || '（未填寫）';
+                
+                // 設置動物圖示
+                const animalIcon = document.getElementById('animal-icon');
+                animalIcon.className = `w-20 h-20 ${animalData[selectedAnimal].background} rounded-full flex items-center justify-center`;
+                
+                // 根據選擇的動物添加相應的SVG圖示
+                let svgIcon = '';
+                switch(selectedAnimal) {
+                    case 'bat':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M50 30C40 20 25 25 20 35C15 45 25 55 30 60C35 65 45 70 50 70C55 70 65 65 70 60C75 55 85 45 80 35C75 25 60 20 50 30Z" fill="#444"/>
+                            <path d="M20 35C15 25 5 30 5 40" stroke="#444" stroke-width="3"/>
+                            <path d="M80 35C85 25 95 30 95 40" stroke="#444" stroke-width="3"/>
+                            <circle cx="40" cy="40" r="3" fill="white"/>
+                            <circle cx="60" cy="40" r="3" fill="white"/>
+                        </svg>`;
+                        break;
+                    case 'shark':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 50C20 40 40 35 60 40L80 30L75 50L80 70L60 60C40 65 20 60 10 50Z" fill="#546e7a"/>
+                            <circle cx="25" cy="45" r="3" fill="black"/>
+                        </svg>`;
+                        break;
+                    case 'bee':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="50" cy="50" rx="25" ry="20" fill="#fbbf24"/>
+                            <path d="M25 50C25 40 35 30 50 30C65 30 75 40 75 50" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5 3"/>
+                            <path d="M25 50C25 60 35 70 50 70C65 70 75 60 75 50" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5 3"/>
+                            <circle cx="40" cy="45" r="3" fill="black"/>
+                            <circle cx="60" cy="45" r="3" fill="black"/>
+                        </svg>`;
+                        break;
+                    case 'cheetah':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 60C25 45 40 40 50 40C60 40 75 45 80 60C75 70 60 75 50 75C40 75 25 70 20 60Z" fill="#f59e0b"/>
+                            <circle cx="40" cy="50" r="3" fill="black"/>
+                            <circle cx="60" cy="50" r="3" fill="black"/>
+                            <path d="M30 40L35 45M40 35L45 40M55 40L60 35M65 45L70 40" stroke="#b45309" stroke-width="1"/>
+                        </svg>`;
+                        break;
+                    case 'owl':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="25" fill="#a16207"/>
+                            <circle cx="40" cy="45" r="8" fill="white"/>
+                            <circle cx="60" cy="45" r="8" fill="white"/>
+                            <circle cx="40" cy="45" r="4" fill="black"/>
+                            <circle cx="60" cy="45" r="4" fill="black"/>
+                            <path d="M45 60L50 65L55 60" fill="#f59e0b"/>
+                        </svg>`;
+                        break;
+                    case 'whale':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 50C20 30 40 25 60 30C80 35 90 45 90 50C90 55 80 65 60 70C40 75 20 70 10 50Z" fill="#1e40af"/>
+                            <circle cx="25" cy="40" r="3" fill="black"/>
+                        </svg>`;
+                        break;
+                    case 'polar':
+                        svgIcon = `<svg class="w-12 h-12" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M30 70C20 60 20 40 30 30C40 20 60 20 70 30C80 40 80 60 70 70C60 80 40 80 30 70Z" fill="white" stroke="#e5e7eb" stroke-width="2"/>
+                            <circle cx="40" cy="45" r="3" fill="black"/>
+                            <circle cx="60" cy="45" r="3" fill="black"/>
+                        </svg>`;
+                        break;
+                }
+                
+                animalIcon.innerHTML = svgIcon;
+            });
+
+            // 重新開始遊戲
+            document.getElementById('restart-game').addEventListener('click', function() {
+                // 重置所有步驟指示器
+                document.getElementById('step1-indicator').querySelector('div').classList.remove('bg-green-600');
+                document.getElementById('step1-indicator').querySelector('div').classList.add('bg-indigo-600');
+                document.getElementById('step1-indicator').querySelector('p').classList.remove('text-green-600');
+                document.getElementById('step1-indicator').querySelector('p').classList.add('text-indigo-600');
+                
+                document.getElementById('step2-indicator').querySelector('div').classList.remove('bg-green-600');
+                document.getElementById('step2-indicator').querySelector('div').classList.add('bg-gray-300');
+                document.getElementById('step2-indicator').querySelector('p').classList.remove('text-green-600');
+                document.getElementById('step2-indicator').querySelector('p').classList.add('text-gray-500');
+                
+                document.getElementById('step3-indicator').querySelector('div').classList.remove('bg-green-600');
+                document.getElementById('step3-indicator').querySelector('div').classList.add('bg-gray-300');
+                document.getElementById('step3-indicator').querySelector('p').classList.remove('text-green-600');
+                document.getElementById('step3-indicator').querySelector('p').classList.add('text-gray-500');
+                
+                document.getElementById('step4-indicator').querySelector('div').classList.remove('bg-indigo-600');
+                document.getElementById('step4-indicator').querySelector('div').classList.add('bg-gray-300');
+                document.getElementById('step4-indicator').querySelector('p').classList.remove('text-indigo-600');
+                document.getElementById('step4-indicator').querySelector('p').classList.add('text-gray-500');
+                
+                document.getElementById('line1').classList.remove('bg-green-600');
+                document.getElementById('line1').classList.add('bg-gray-300');
+                
+                document.getElementById('line2').classList.remove('bg-green-600');
+                document.getElementById('line2').classList.add('bg-gray-300');
+                
+                document.getElementById('line3').classList.remove('bg-green-600');
+                document.getElementById('line3').classList.add('bg-gray-300');
+                
+                // 顯示步驟1，隱藏其他步驟
+                document.getElementById('step1').classList.remove('hidden');
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.add('hidden');
+                document.getElementById('step4').classList.add('hidden');
+                
+                // 清空表單
+                document.getElementById('challenge-answer').value = '';
+                document.getElementById('food-answer').value = '';
+                document.getElementById('place-answer').value = '';
+                document.getElementById('diary-title').value = '';
+                document.getElementById('diary-appearance').value = '';
+                document.getElementById('diary-sensory').value = '';
+                document.getElementById('diary-daily').value = '';
+                document.getElementById('diary-feeling').value = '';
+                
+                // 重置已收集的線索
+                collectedClues = [];
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968dd40b5468f1f4',t:'MTc1NDE0MDM2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
