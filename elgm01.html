@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST game studio: Word Explorer Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Comic Neue', cursive;
+            background-color: #f0f9ff;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239ee6ff' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .game-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .character {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 120px;
+            height: 120px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            animation: confetti-fall 3s ease-in-out forwards;
+            z-index: 100;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .star-burst {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: yellow;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: rotate 2s infinite linear;
+            opacity: 0;
+            z-index: 50;
+        }
+        
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(180deg) scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .letter-tile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #FFD166;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 0 #E09F3E;
+        }
+        
+        .letter-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 0 #E09F3E;
+        }
+        
+        .letter-tile:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 0 #E09F3E;
+        }
+        
+        .letter-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f0f0f0;
+            border: 2px dashed #aaa;
+            border-radius: 8px;
+        }
+        
+        .letter-slot.filled {
+            border: 2px solid #4CAF50;
+            background-color: #E8F5E9;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .pulse {
+            animation: pulse 0.5s;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            font-size: 16px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-600 mb-2">LST game studio: Word Explorer Adventure</h1>
+            <p class="text-xl text-indigo-400">Fun English Practice for Young Learners!</p>
+        </header>
+        
+        <div id="main-menu" class="max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="game-card bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl p-6 text-white shadow-lg" onclick="startGame('wordMatch')">
+                    <h2 class="text-2xl font-bold mb-3">🔤 Word Matching</h2>
+                    <p>Match the words with their correct pictures. Learn vocabulary in a fun way!</p>
+                </div>
+                
+                <div class="game-card bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-6 text-white shadow-lg" onclick="startGame('sentenceBuilder')">
+                    <h2 class="text-2xl font-bold mb-3">📝 Sentence Builder</h2>
+                    <p>Arrange words to create correct sentences. Practice your grammar skills!</p>
+                </div>
+                
+                <div class="game-card bg-gradient-to-br from-green-400 to-teal-500 rounded-xl p-6 text-white shadow-lg" onclick="startGame('wordScramble')">
+                    <h2 class="text-2xl font-bold mb-3">🔡 Word Scramble</h2>
+                    <p>Unscramble the jumbled letters to form correct words. Improve your spelling skills!</p>
+                </div>
+                
+                <div class="game-card bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl p-6 text-white shadow-lg" onclick="startGame('wordSearch')">
+                    <h2 class="text-2xl font-bold mb-3">🔍 Word Search</h2>
+                    <p>Find hidden words in the puzzle. Enhance your word recognition!</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <button id="start-random" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg hover:from-purple-700 hover:to-indigo-700 transform transition hover:scale-105">
+                    Start Random Game! 🎲
+                </button>
+            </div>
+        </div>
+        
+        <!-- Word Matching Game -->
+        <div id="wordMatch" class="game-container max-w-4xl mx-auto hidden">
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">Match the Words with Pictures</h2>
+                
+                <div class="flex flex-wrap justify-center gap-4 mb-8" id="word-container">
+                    <!-- Words will be generated here -->
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="image-container">
+                    <!-- Images will be generated here -->
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <div class="text-xl font-bold mb-2">Score: <span id="score">0</span></div>
+                    <button id="back-to-menu" class="bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700">
+                        Back to Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sentence Builder Game -->
+        <div id="sentenceBuilder" class="game-container max-w-4xl mx-auto hidden">
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">Build a Correct Sentence</h2>
+                
+                <div class="bg-indigo-100 p-4 rounded-lg mb-6">
+                    <p class="text-center text-lg">Arrange the words to form a correct sentence:</p>
+                </div>
+                
+                <div class="min-h-[100px] bg-gray-100 rounded-lg p-4 mb-6 flex flex-wrap gap-2" id="sentence-area">
+                    <!-- Sentence will be built here -->
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-2 mb-6" id="word-bank">
+                    <!-- Word bank will be generated here -->
+                </div>
+                
+                <div class="text-center">
+                    <button id="check-sentence" class="bg-green-500 text-white py-2 px-6 rounded-full hover:bg-green-600 mr-2">
+                        Check Answer
+                    </button>
+                    <button id="back-to-menu-sentence" class="bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700">
+                        Back to Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Word Scramble Game -->
+        <div id="wordScramble" class="game-container max-w-4xl mx-auto hidden">
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">Word Scramble Challenge</h2>
+                
+                <div class="bg-green-100 p-4 rounded-lg mb-6">
+                    <p class="text-center text-lg">Unscramble the letters to form a correct word:</p>
+                </div>
+                
+                <div class="text-center mb-6">
+                    <div id="word-hint" class="text-6xl mb-2"><!-- Emoji hint will go here --></div>
+                    <div id="word-hint-text" class="text-lg text-gray-600 mb-4"><!-- Text hint will go here --></div>
+                </div>
+                
+                <div id="scrambled-word" class="flex justify-center mb-6">
+                    <!-- Scrambled letters will go here -->
+                </div>
+                
+                <div id="word-solution" class="flex justify-center mb-6">
+                    <!-- Solution slots will go here -->
+                </div>
+                
+                <div class="text-center mb-6">
+                    <button id="reset-word" class="bg-yellow-500 text-white py-2 px-6 rounded-full hover:bg-yellow-600 mr-2">
+                        Reset Letters
+                    </button>
+                    <button id="show-hint" class="bg-blue-500 text-white py-2 px-6 rounded-full hover:bg-blue-600">
+                        Show Hint
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <button id="check-scramble" class="bg-green-500 text-white py-2 px-6 rounded-full hover:bg-green-600 mr-2">
+                        Check Answer
+                    </button>
+                    <button id="back-to-menu-scramble" class="bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700">
+                        Back to Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Word Search Game -->
+        <div id="wordSearch" class="game-container max-w-4xl mx-auto hidden">
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">Word Search Puzzle</h2>
+                
+                <div class="grid grid-cols-10 gap-1 mb-6 max-w-md mx-auto" id="word-search-grid">
+                    <!-- Word search grid will be generated here -->
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-center mb-2">Find these words:</h3>
+                    <div class="flex flex-wrap justify-center gap-2" id="word-list">
+                        <!-- Word list will be generated here -->
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button id="back-to-menu-wordsearch" class="bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700">
+                        Back to Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feedback Modal -->
+        <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl p-6 max-w-md w-full">
+                <div id="feedback-content" class="text-center text-2xl font-bold mb-4">
+                    <!-- Feedback content will go here -->
+                </div>
+                <div class="text-center">
+                    <button id="close-feedback" class="bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Character -->
+        <div class="character">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Body -->
+                <circle cx="100" cy="100" r="50" fill="#FFD166" />
+                <!-- Eyes -->
+                <circle cx="80" cy="85" r="10" fill="white" />
+                <circle cx="120" cy="85" r="10" fill="white" />
+                <circle cx="80" cy="85" r="5" fill="black" />
+                <circle cx="120" cy="85" r="5" fill="black" />
+                <!-- Smile -->
+                <path id="mouth" d="M70 110 Q100 140 130 110" fill="none" stroke="black" stroke-width="5" stroke-linecap="round" />
+            </svg>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            遊戲設計與製作：呂舒婷
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const wordMatchData = [
+            { word: "apple", image: "🍎" },
+            { word: "banana", image: "🍌" },
+            { word: "cat", image: "🐱" },
+            { word: "dog", image: "🐶" },
+            { word: "elephant", image: "🐘" },
+            { word: "fish", image: "🐠" }
+        ];
+        
+        const sentenceData = [
+            { words: ["I", "like", "to", "play", "games"], image: "🎮" },
+            { words: ["The", "cat", "sleeps", "on", "the", "bed"], image: "🛏️" },
+            { words: ["She", "reads", "a", "book", "every", "day"], image: "📚" },
+            { words: ["They", "are", "going", "to", "school"], image: "🏫" }
+        ];
+        
+        const wordScrambleData = [
+            { word: "apple", emoji: "🍎", hint: "A red fruit" },
+            { word: "banana", emoji: "🍌", hint: "A yellow fruit" },
+            { word: "cat", emoji: "🐱", hint: "A small pet that meows" },
+            { word: "dog", emoji: "🐶", hint: "A pet that barks" },
+            { word: "elephant", emoji: "🐘", hint: "A large animal with a trunk" },
+            { word: "fish", emoji: "🐠", hint: "Lives in water" },
+            { word: "house", emoji: "🏠", hint: "Where people live" },
+            { word: "jacket", emoji: "🧥", hint: "You wear it when it's cold" },
+            { word: "kite", emoji: "🪁", hint: "Flies in the sky" },
+            { word: "lemon", emoji: "🍋", hint: "A sour yellow fruit" }
+        ];
+        
+        const wordSearchData = {
+            words: ["CAT", "DOG", "FISH", "BIRD", "FROG"],
+            grid: [
+                ["C", "A", "T", "X", "F", "G", "H", "I", "J", "K"],
+                ["Q", "W", "E", "R", "I", "Y", "U", "I", "O", "P"],
+                ["A", "S", "D", "F", "S", "H", "J", "K", "L", "Z"],
+                ["Z", "X", "C", "V", "H", "B", "N", "M", "Q", "W"],
+                ["F", "R", "O", "G", "X", "C", "V", "B", "N", "M"],
+                ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Z"],
+                ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+                ["Z", "X", "C", "V", "B", "N", "M", "Q", "W", "E"],
+                ["B", "I", "R", "D", "T", "Y", "U", "I", "O", "P"],
+                ["D", "O", "G", "F", "G", "H", "J", "K", "L", "Z"]
+            ]
+        };
+        
+        // Game state
+        let currentGame = null;
+        let score = 0;
+        let selectedWord = null;
+        let matchedPairs = [];
+        let currentSentence = null;
+        let currentScrambleWord = null;
+        let foundWords = [];
+        let scrambledLetters = [];
+        let solutionSlots = [];
+        let hintShown = false;
+        
+        // DOM Elements
+        const mainMenu = document.getElementById('main-menu');
+        const gameContainers = document.querySelectorAll('.game-container');
+        const startRandomBtn = document.getElementById('start-random');
+        const backToMenuBtns = document.querySelectorAll('[id^="back-to-menu"]');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const feedbackContent = document.getElementById('feedback-content');
+        const closeFeedbackBtn = document.getElementById('close-feedback');
+        
+        // Event Listeners
+        startRandomBtn.addEventListener('click', () => {
+            const games = ['wordMatch', 'sentenceBuilder', 'wordScramble', 'wordSearch'];
+            const randomGame = games[Math.floor(Math.random() * games.length)];
+            startGame(randomGame);
+        });
+        
+        backToMenuBtns.forEach(btn => {
+            btn.addEventListener('click', showMainMenu);
+        });
+        
+        closeFeedbackBtn.addEventListener('click', () => {
+            feedbackModal.classList.add('hidden');
+        });
+        
+        document.getElementById('check-sentence').addEventListener('click', checkSentence);
+        document.getElementById('check-scramble').addEventListener('click', checkScramble);
+        document.getElementById('reset-word').addEventListener('click', resetScrambledWord);
+        document.getElementById('show-hint').addEventListener('click', showScrambleHint);
+        
+        // Game Functions
+        function startGame(gameType) {
+            currentGame = gameType;
+            hideAllGames();
+            document.getElementById(gameType).classList.remove('hidden');
+            
+            switch(gameType) {
+                case 'wordMatch':
+                    initWordMatchGame();
+                    break;
+                case 'sentenceBuilder':
+                    initSentenceBuilderGame();
+                    break;
+                case 'wordScramble':
+                    initWordScrambleGame();
+                    break;
+                case 'wordSearch':
+                    initWordSearchGame();
+                    break;
+            }
+        }
+        
+        function hideAllGames() {
+            mainMenu.classList.add('hidden');
+            gameContainers.forEach(container => {
+                container.classList.add('hidden');
+            });
+        }
+        
+        function showMainMenu() {
+            hideAllGames();
+            mainMenu.classList.remove('hidden');
+        }
+        
+        function showFeedback(message, isSuccess) {
+            feedbackContent.innerHTML = `
+                <div class="text-${isSuccess ? 'green' : 'red'}-500 mb-2 text-4xl">
+                    ${isSuccess ? '🎉' : '😕'}
+                </div>
+                <div>${message}</div>
+            `;
+            feedbackModal.classList.remove('hidden');
+            
+            if (isSuccess) {
+                createConfetti();
+                createStarBurst();
+            }
+        }
+        
+        // Word Match Game
+        function initWordMatchGame() {
+            score = 0;
+            matchedPairs = [];
+            selectedWord = null;
+            document.getElementById('score').textContent = score;
+            
+            const wordContainer = document.getElementById('word-container');
+            const imageContainer = document.getElementById('image-container');
+            
+            wordContainer.innerHTML = '';
+            imageContainer.innerHTML = '';
+            
+            // Shuffle the words
+            const shuffledWords = [...wordMatchData].sort(() => Math.random() - 0.5);
+            
+            // Create word elements
+            shuffledWords.forEach((item, index) => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'bg-blue-500 text-white py-2 px-4 rounded-lg cursor-pointer transition transform hover:scale-105';
+                wordElement.textContent = item.word;
+                wordElement.dataset.index = index;
+                wordElement.addEventListener('click', () => selectWord(wordElement, index));
+                wordContainer.appendChild(wordElement);
+            });
+            
+            // Shuffle the images
+            const shuffledImages = [...shuffledWords].sort(() => Math.random() - 0.5);
+            
+            // Create image elements
+            shuffledImages.forEach((item, index) => {
+                const imageElement = document.createElement('div');
+                imageElement.className = 'bg-gray-100 p-4 rounded-lg flex items-center justify-center cursor-pointer transition transform hover:scale-105';
+                imageElement.innerHTML = `<span class="text-6xl">${item.image}</span>`;
+                imageElement.dataset.word = item.word;
+                imageElement.dataset.originalIndex = shuffledWords.findIndex(w => w.word === item.word);
+                imageElement.addEventListener('click', () => selectImage(imageElement));
+                imageContainer.appendChild(imageElement);
+            });
+        }
+        
+        function selectWord(element, index) {
+            if (matchedPairs.includes(index)) return;
+            
+            // Reset previously selected word
+            const words = document.querySelectorAll('#word-container div');
+            words.forEach(word => word.classList.remove('bg-purple-600'));
+            
+            // Select new word
+            element.classList.add('bg-purple-600');
+            selectedWord = {
+                element: element,
+                index: index,
+                word: wordMatchData[index].word
+            };
+        }
+        
+        function selectImage(element) {
+            if (!selectedWord) return;
+            
+            const originalIndex = parseInt(element.dataset.originalIndex);
+            if (matchedPairs.includes(originalIndex)) return;
+            
+            if (element.dataset.word === selectedWord.word) {
+                // Correct match
+                element.classList.add('bg-green-200');
+                selectedWord.element.classList.add('bg-green-500');
+                selectedWord.element.classList.remove('bg-purple-600');
+                
+                matchedPairs.push(selectedWord.index);
+                score += 10;
+                document.getElementById('score').textContent = score;
+                
+                // Check if game is complete
+                if (matchedPairs.length === wordMatchData.length) {
+                    setTimeout(() => {
+                        showFeedback(`Great job! You matched all words! Final score: ${score}`, true);
+                    }, 500);
+                }
+                
+                selectedWord = null;
+            } else {
+                // Incorrect match
+                element.classList.add('bg-red-200');
+                selectedWord.element.classList.add('bg-red-500');
+                selectedWord.element.classList.remove('bg-purple-600');
+                
+                setTimeout(() => {
+                    element.classList.remove('bg-red-200');
+                    selectedWord.element.classList.remove('bg-red-500');
+                    selectedWord = null;
+                }, 1000);
+            }
+        }
+        
+        // Sentence Builder Game
+        function initSentenceBuilderGame() {
+            const sentenceArea = document.getElementById('sentence-area');
+            const wordBank = document.getElementById('word-bank');
+            
+            sentenceArea.innerHTML = '';
+            wordBank.innerHTML = '';
+            
+            // Select a random sentence
+            currentSentence = sentenceData[Math.floor(Math.random() * sentenceData.length)];
+            
+            // Create word bank with shuffled words
+            const shuffledWords = [...currentSentence.words].sort(() => Math.random() - 0.5);
+            
+            shuffledWords.forEach((word, index) => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'bg-blue-500 text-white py-2 px-4 rounded-lg cursor-pointer transition transform hover:scale-105';
+                wordElement.textContent = word;
+                wordElement.dataset.word = word;
+                wordElement.addEventListener('click', () => moveWord(wordElement));
+                wordBank.appendChild(wordElement);
+            });
+        }
+        
+        function moveWord(element) {
+            const sentenceArea = document.getElementById('sentence-area');
+            const wordBank = document.getElementById('word-bank');
+            
+            if (element.parentNode === wordBank) {
+                // Move from word bank to sentence area
+                wordBank.removeChild(element);
+                sentenceArea.appendChild(element);
+                element.classList.remove('bg-blue-500');
+                element.classList.add('bg-green-500');
+            } else {
+                // Move from sentence area to word bank
+                sentenceArea.removeChild(element);
+                wordBank.appendChild(element);
+                element.classList.remove('bg-green-500');
+                element.classList.add('bg-blue-500');
+            }
+        }
+        
+        function checkSentence() {
+            const sentenceArea = document.getElementById('sentence-area');
+            const wordElements = sentenceArea.querySelectorAll('div');
+            
+            if (wordElements.length !== currentSentence.words.length) {
+                showFeedback("You need to use all the words!", false);
+                return;
+            }
+            
+            const builtSentence = Array.from(wordElements).map(el => el.dataset.word);
+            
+            if (arraysEqual(builtSentence, currentSentence.words)) {
+                showFeedback(`Correct! "${currentSentence.words.join(' ')}" is right!`, true);
+                setTimeout(() => {
+                    initSentenceBuilderGame();
+                }, 2000);
+            } else {
+                showFeedback("Not quite right. Try again!", false);
+            }
+        }
+        
+        function arraysEqual(a, b) {
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+        
+        // Word Scramble Game
+        function initWordScrambleGame() {
+            const scrambledWordContainer = document.getElementById('scrambled-word');
+            const wordSolutionContainer = document.getElementById('word-solution');
+            const wordHint = document.getElementById('word-hint');
+            const wordHintText = document.getElementById('word-hint-text');
+            
+            scrambledWordContainer.innerHTML = '';
+            wordSolutionContainer.innerHTML = '';
+            
+            // Select a random word
+            currentScrambleWord = wordScrambleData[Math.floor(Math.random() * wordScrambleData.length)];
+            
+            // Display emoji hint
+            wordHint.textContent = currentScrambleWord.emoji;
+            wordHintText.textContent = currentScrambleWord.hint;
+            
+            // Create scrambled letters
+            const letters = currentScrambleWord.word.split('');
+            scrambledLetters = [...letters].sort(() => Math.random() - 0.5);
+            
+            // Create letter tiles
+            scrambledLetters.forEach((letter, index) => {
+                const letterTile = document.createElement('div');
+                letterTile.className = 'letter-tile';
+                letterTile.textContent = letter;
+                letterTile.dataset.letter = letter;
+                letterTile.dataset.index = index;
+                letterTile.addEventListener('click', () => moveLetter(letterTile));
+                scrambledWordContainer.appendChild(letterTile);
+            });
+            
+            // Create solution slots
+            solutionSlots = Array(letters.length).fill(null);
+            
+            for (let i = 0; i < letters.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'letter-slot';
+                slot.dataset.position = i;
+                wordSolutionContainer.appendChild(slot);
+            }
+            
+            hintShown = false;
+        }
+        
+        function moveLetter(letterTile) {
+            // Find first empty slot
+            const slots = document.querySelectorAll('.letter-slot:not(.filled)');
+            if (slots.length > 0 && !letterTile.classList.contains('used')) {
+                const firstEmptySlot = slots[0];
+                const position = parseInt(firstEmptySlot.dataset.position);
+                
+                // Place letter in slot
+                firstEmptySlot.textContent = letterTile.textContent;
+                firstEmptySlot.classList.add('filled');
+                firstEmptySlot.dataset.letterIndex = letterTile.dataset.index;
+                
+                // Mark letter as used
+                letterTile.classList.add('used');
+                letterTile.style.visibility = 'hidden';
+                
+                // Update solution array
+                solutionSlots[position] = letterTile.dataset.letter;
+                
+                // Add click to remove letter
+                firstEmptySlot.addEventListener('click', () => {
+                    // Remove letter from slot
+                    firstEmptySlot.textContent = '';
+                    firstEmptySlot.classList.remove('filled');
+                    
+                    // Find original letter tile and make it visible again
+                    const letterIndex = firstEmptySlot.dataset.letterIndex;
+                    const originalTile = document.querySelector(`.letter-tile[data-index="${letterIndex}"]`);
+                    originalTile.classList.remove('used');
+                    originalTile.style.visibility = 'visible';
+                    
+                    // Update solution array
+                    solutionSlots[position] = null;
+                });
+            }
+        }
+        
+        function resetScrambledWord() {
+            // Clear solution slots
+            const slots = document.querySelectorAll('.letter-slot');
+            slots.forEach(slot => {
+                slot.textContent = '';
+                slot.classList.remove('filled');
+            });
+            
+            // Make all letter tiles visible again
+            const letterTiles = document.querySelectorAll('.letter-tile');
+            letterTiles.forEach(tile => {
+                tile.classList.remove('used');
+                tile.style.visibility = 'visible';
+            });
+            
+            // Reset solution array
+            solutionSlots = Array(currentScrambleWord.word.length).fill(null);
+            
+            // Reset hint
+            if (hintShown) {
+                const firstSlot = document.querySelector('.letter-slot');
+                firstSlot.textContent = '';
+                firstSlot.classList.remove('filled');
+                hintShown = false;
+            }
+        }
+        
+        function showScrambleHint() {
+            if (hintShown) return;
+            
+            // Show first letter
+            const firstLetter = currentScrambleWord.word[0];
+            const firstSlot = document.querySelector('.letter-slot');
+            
+            // Find the tile with the first letter
+            const letterTiles = document.querySelectorAll('.letter-tile');
+            let firstLetterTile = null;
+            
+            for (let tile of letterTiles) {
+                if (tile.dataset.letter === firstLetter && !tile.classList.contains('used')) {
+                    firstLetterTile = tile;
+                    break;
+                }
+            }
+            
+            if (firstLetterTile) {
+                // Mark tile as used
+                firstLetterTile.classList.add('used');
+                firstLetterTile.style.visibility = 'hidden';
+                
+                // Fill first slot
+                firstSlot.textContent = firstLetter;
+                firstSlot.classList.add('filled');
+                firstSlot.dataset.letterIndex = firstLetterTile.dataset.index;
+                
+                // Update solution array
+                solutionSlots[0] = firstLetter;
+                
+                // Add click to remove letter
+                firstSlot.addEventListener('click', () => {
+                    if (hintShown) {
+                        // Remove letter from slot
+                        firstSlot.textContent = '';
+                        firstSlot.classList.remove('filled');
+                        
+                        // Find original letter tile and make it visible again
+                        const letterIndex = firstSlot.dataset.letterIndex;
+                        const originalTile = document.querySelector(`.letter-tile[data-index="${letterIndex}"]`);
+                        originalTile.classList.remove('used');
+                        originalTile.style.visibility = 'visible';
+                        
+                        // Update solution array
+                        solutionSlots[0] = null;
+                        
+                        hintShown = false;
+                    }
+                });
+                
+                hintShown = true;
+                
+                // Add pulse animation to the hint
+                firstSlot.classList.add('pulse');
+                setTimeout(() => {
+                    firstSlot.classList.remove('pulse');
+                }, 500);
+            }
+        }
+        
+        function checkScramble() {
+            // Check if all slots are filled
+            if (solutionSlots.includes(null)) {
+                showFeedback("Please fill in all the letters!", false);
+                return;
+            }
+            
+            // Check if solution is correct
+            const userAnswer = solutionSlots.join('');
+            
+            if (userAnswer === currentScrambleWord.word) {
+                showFeedback(`Correct! "${currentScrambleWord.word}" is right!`, true);
+                setTimeout(() => {
+                    initWordScrambleGame();
+                }, 2000);
+            } else {
+                showFeedback(`Not quite right. Try again!`, false);
+            }
+        }
+        
+        // Word Search Game
+        function initWordSearchGame() {
+            const wordSearchGrid = document.getElementById('word-search-grid');
+            const wordList = document.getElementById('word-list');
+            
+            wordSearchGrid.innerHTML = '';
+            wordList.innerHTML = '';
+            foundWords = [];
+            
+            // Create grid
+            wordSearchData.grid.forEach((row, rowIndex) => {
+                row.forEach((letter, colIndex) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'w-8 h-8 flex items-center justify-center bg-blue-100 rounded-md text-lg font-bold cursor-pointer';
+                    cell.textContent = letter;
+                    cell.dataset.row = rowIndex;
+                    cell.dataset.col = colIndex;
+                    cell.addEventListener('click', () => highlightCell(cell));
+                    wordSearchGrid.appendChild(cell);
+                });
+            });
+            
+            // Create word list
+            wordSearchData.words.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'bg-gray-200 py-1 px-3 rounded-lg';
+                wordElement.textContent = word;
+                wordElement.dataset.word = word;
+                wordList.appendChild(wordElement);
+            });
+        }
+        
+        function highlightCell(cell) {
+            cell.classList.toggle('bg-yellow-300');
+            cell.classList.toggle('bg-blue-100');
+            
+            // Check if any words are found
+            checkForFoundWords();
+        }
+        
+        function checkForFoundWords() {
+            // This is a simplified version - in a real game, you'd check rows, columns, and diagonals
+            const highlightedCells = document.querySelectorAll('.bg-yellow-300');
+            const highlightedLetters = Array.from(highlightedCells).map(cell => cell.textContent).join('');
+            
+            wordSearchData.words.forEach(word => {
+                if (!foundWords.includes(word) && highlightedLetters.includes(word)) {
+                    foundWords.push(word);
+                    
+                    // Mark word as found in the list
+                    const wordElement = document.querySelector(`[data-word="${word}"]`);
+                    wordElement.classList.remove('bg-gray-200');
+                    wordElement.classList.add('bg-green-300');
+                    
+                    // Show feedback
+                    showFeedback(`You found "${word}"!`, true);
+                    
+                    // Check if all words are found
+                    if (foundWords.length === wordSearchData.words.length) {
+                        setTimeout(() => {
+                            showFeedback("Congratulations! You found all the words!", true);
+                        }, 1500);
+                    }
+                }
+            });
+        }
+        
+        // Visual effects
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    document.body.removeChild(confetti);
+                }, 5000);
+            }
+        }
+        
+        function createStarBurst() {
+            const star = document.createElement('div');
+            star.className = 'star-burst';
+            star.style.left = `${Math.random() * 80 + 10}%`;
+            star.style.top = `${Math.random() * 80 + 10}%`;
+            document.body.appendChild(star);
+            
+            setTimeout(() => {
+                document.body.removeChild(star);
+            }, 2000);
+        }
+        
+        function getRandomColor() {
+            const colors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#448AFF', '#40C4FF', '#18FFFF', '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41', '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968dbb2733fef248',t:'MTc1NDEzOTM0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
