@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-任意門文學迷宮</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background-image: linear-gradient(to bottom right, #f3e7ff, #ffd6e7);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .door {
+            transition: all 0.5s ease;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transform-origin: left;
+        }
+        
+        .door:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 15px rgba(255, 182, 193, 0.8));
+        }
+        
+        .door.opening {
+            animation: openDoor 1.5s forwards;
+        }
+        
+        @keyframes openDoor {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(-105deg); }
+        }
+        
+        .door-frame {
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        .scene-container {
+            display: none;
+            animation: fadeIn 1s forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .treasure-card {
+            transform: rotate(-5deg);
+            transition: all 0.3s ease;
+        }
+        
+        .treasure-card:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+        
+        .puzzle-piece {
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+        
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        .puzzle-piece.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+        }
+        
+        .puzzle-slot.highlight {
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 2px dashed #ff69b4;
+        }
+        
+        .stone {
+            cursor: grab;
+            transition: transform 0.2s ease;
+        }
+        
+        .stone:hover {
+            transform: scale(1.1);
+        }
+        
+        .stone.falling {
+            animation: fallStone 1s forwards;
+        }
+        
+        @keyframes fallStone {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(150px); }
+        }
+        
+        .water-level {
+            transition: height 1s ease;
+        }
+        
+        .character {
+            transition: all 0.5s ease;
+        }
+        
+        .character:hover {
+            filter: drop-shadow(0 0 8px gold);
+        }
+        
+        .answer-explanation {
+            display: none;
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .footer {
+            border-top: 1px solid rgba(107, 33, 168, 0.2);
+        }
+    </style>
+</head>
+<body class="relative">
+    <div id="main-container" class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 主頁面 -->
+        <div id="home-screen" class="flex flex-col items-center justify-center min-h-[80vh]">
+            <h1 class="text-4xl md:text-5xl font-bold text-purple-800 mb-8 text-center">LST遊戲室-任意門文學迷宮</h1>
+            <p class="text-xl text-center mb-12 max-w-2xl">穿越神奇的任意門，探索中國文學的奇妙世界！完成解謎挑戰，收集珍貴的文學寶藏卡。</p>
+            
+            <div class="door-frame w-64 h-80 md:w-80 md:h-96 mb-8 relative">
+                <div id="main-door" class="door w-full h-full rounded-t-xl bg-gradient-to-r from-pink-300 to-pink-500 border-8 border-pink-600 flex flex-col items-center justify-center p-4">
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-yellow-300 border-4 border-yellow-500"></div>
+                    <div class="absolute bottom-4 text-center text-white font-bold text-xl">點擊進入</div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <p class="text-lg text-purple-700">準備好開始文學冒險了嗎？</p>
+            </div>
+        </div>
+        
+        <!-- 選擇門頁面 -->
+        <div id="door-selection" class="hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-purple-800">選擇一扇任意門</h2>
+                <div id="treasure-count" class="bg-yellow-100 border-2 border-yellow-400 rounded-lg px-4 py-2 flex items-center">
+                    <svg class="w-6 h-6 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"></path>
+                    </svg>
+                    <span class="font-bold">寶藏卡: <span id="card-count">0</span>/4</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 松柏門 - 古文篇章 -->
+                <div class="door-container">
+                    <div class="door-frame">
+                        <div class="door bg-green-700 rounded-t-lg border-4 border-green-900 p-4 flex flex-col items-center" data-type="ancient">
+                            <svg class="w-16 h-16 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="mt-4 text-center">
+                                <h3 class="font-bold text-xl text-white">松柏門</h3>
+                                <p class="text-green-200">古文篇章</p>
+                            </div>
+                            <div class="mt-auto">
+                                <svg class="w-8 h-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 書卷門 - 成語典故 -->
+                <div class="door-container">
+                    <div class="door-frame">
+                        <div class="door bg-red-700 rounded-t-lg border-4 border-red-900 p-4 flex flex-col items-center" data-type="idiom">
+                            <svg class="w-16 h-16 text-red-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="mt-4 text-center">
+                                <h3 class="font-bold text-xl text-white">書卷門</h3>
+                                <p class="text-red-200">成語典故</p>
+                            </div>
+                            <div class="mt-auto">
+                                <svg class="w-8 h-8 text-red-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 柳門 - 詩詞世界 -->
+                <div class="door-container">
+                    <div class="door-frame">
+                        <div class="door bg-blue-700 rounded-t-lg border-4 border-blue-900 p-4 flex flex-col items-center" data-type="poetry">
+                            <svg class="w-16 h-16 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="mt-4 text-center">
+                                <h3 class="font-bold text-xl text-white">柳門</h3>
+                                <p class="text-blue-200">詩詞世界</p>
+                            </div>
+                            <div class="mt-auto">
+                                <svg class="w-8 h-8 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 雲門 - 寓言故事 -->
+                <div class="door-container">
+                    <div class="door-frame">
+                        <div class="door bg-purple-700 rounded-t-lg border-4 border-purple-900 p-4 flex flex-col items-center" data-type="fable">
+                            <svg class="w-16 h-16 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="mt-4 text-center">
+                                <h3 class="font-bold text-xl text-white">雲門</h3>
+                                <p class="text-purple-200">寓言故事</p>
+                            </div>
+                            <div class="mt-auto">
+                                <svg class="w-8 h-8 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <button id="back-to-home" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition duration-300">
+                    返回首頁
+                </button>
+            </div>
+        </div>
+        
+        <!-- 場景：松柏門 - 簡易版 -->
+        <div id="scene-ancient" class="scene-container">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-green-800">松柏門 - 論語選句</h2>
+                <button class="back-to-doors bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2 px-4 rounded-full transition duration-300">
+                    返回門廳
+                </button>
+            </div>
+            
+            <div class="bg-green-50 rounded-xl p-6 shadow-lg mb-8">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-green-700">論語選句</h3>
+                    <p class="text-lg text-green-600">孔子的智慧</p>
+                </div>
+                <div class="text-lg space-y-4">
+                    <p>孔子是中國古代偉大的思想家和教育家，他的言論和思想被弟子們記錄在《論語》一書中。</p>
+                    <p>《論語》中有許多至理名言，至今仍被人們廣泛引用，對中國文化產生了深遠的影響。</p>
+                    <p>讓我們一起來學習孔子的智慧吧！</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-green-700 mb-4">配對孔子的名言與意義</h3>
+                <p class="mb-6">將論語名句拖放到對應的解釋上。</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-green-600 mb-3">論語名句：</h4>
+                        <div id="puzzle-pieces" class="space-y-4">
+                            <div class="puzzle-piece bg-green-100 p-4 rounded-lg shadow" data-id="3">
+                                <p class="text-lg">己所不欲，勿施於人。</p>
+                            </div>
+                            <div class="puzzle-piece bg-green-100 p-4 rounded-lg shadow" data-id="1">
+                                <p class="text-lg">學而時習之，不亦說乎？</p>
+                            </div>
+                            <div class="puzzle-piece bg-green-100 p-4 rounded-lg shadow" data-id="4">
+                                <p class="text-lg">三人行，必有我師焉。</p>
+                            </div>
+                            <div class="puzzle-piece bg-green-100 p-4 rounded-lg shadow" data-id="2">
+                                <p class="text-lg">知之為知之，不知為不知，是知也。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-green-600 mb-3">名句解釋：</h4>
+                        <div id="puzzle-slots" class="space-y-4">
+                            <div class="puzzle-slot bg-green-50 p-4 rounded-lg border-2 border-dashed border-green-300" data-slot="1">
+                                <p>學習並且經常溫習所學的知識，不也是很愉快的事嗎？</p>
+                            </div>
+                            <div class="puzzle-slot bg-green-50 p-4 rounded-lg border-2 border-dashed border-green-300" data-slot="2">
+                                <p>知道的就說知道，不知道的就說不知道，這才是真正的智慧。</p>
+                            </div>
+                            <div class="puzzle-slot bg-green-50 p-4 rounded-lg border-2 border-dashed border-green-300" data-slot="3">
+                                <p>自己不想要的，不要強加給別人。</p>
+                            </div>
+                            <div class="puzzle-slot bg-green-50 p-4 rounded-lg border-2 border-dashed border-green-300" data-slot="4">
+                                <p>幾個人一起走，其中必定有可以成為我的老師的人。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 答案解釋區域 -->
+                <div id="ancient-answer" class="answer-explanation mt-8 bg-green-100 p-4 rounded-lg border border-green-300">
+                    <h4 class="font-bold text-green-700 mb-2">正確答案：</h4>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><span class="font-bold">學而時習之，不亦說乎？</span> - 學習並且經常溫習所學的知識，不也是很愉快的事嗎？</li>
+                        <li><span class="font-bold">知之為知之，不知為不知，是知也。</span> - 知道的就說知道，不知道的就說不知道，這才是真正的智慧。</li>
+                        <li><span class="font-bold">己所不欲，勿施於人。</span> - 自己不想要的，不要強加給別人。</li>
+                        <li><span class="font-bold">三人行，必有我師焉。</span> - 幾個人一起走，其中必定有可以成為我的老師的人。</li>
+                    </ul>
+                    <p class="mt-4 text-green-700">這些名句體現了孔子的教育思想、為人處世之道和謙虛好學的態度。</p>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <button id="check-ancient" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 disabled:opacity-50" disabled>
+                        確認答案
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 場景：狐假虎威 -->
+        <div id="scene-idiom" class="scene-container">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-red-800">狐假虎威</h2>
+                <button class="back-to-doors bg-red-100 hover:bg-red-200 text-red-800 font-bold py-2 px-4 rounded-full transition duration-300">
+                    返回門廳
+                </button>
+            </div>
+            
+            <div class="bg-red-50 rounded-xl p-6 shadow-lg mb-8">
+                <p class="text-lg mb-4">很久以前，森林裡住著一隻老虎和一隻狐狸。有一天，老虎抓住了狐狸，正要吃掉牠。</p>
+                <p class="text-lg mb-4">狐狸靈機一動，對老虎說：「你不能吃我！我是森林之王派來巡視森林的，如果你吃了我，森林之王會懲罰你的！」</p>
+                <p class="text-lg mb-4">老虎半信半疑，狐狸又說：「如果你不相信，你可以跟在我後面，看看森林裡的動物見到我時是什麼反應。」</p>
+                <p class="text-lg">於是，狐狸走在前面，老虎跟在後面。森林裡的動物看到狐狸和老虎一起走來，都嚇得四處逃竄。狐狸得意地對老虎說：「看，牠們多麼害怕我！」老虎信以為真，不敢吃狐狸了。</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-red-700 mb-4">找出誰才是真正的強者</h3>
+                <p class="mb-6">根據故事，將動物按照真正的力量排序（從強到弱）。</p>
+                
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <div id="characters-container" class="flex flex-wrap gap-4 justify-center">
+                            <div class="character bg-red-100 p-4 rounded-lg shadow-md flex flex-col items-center cursor-grab" data-strength="2">
+                                <svg class="w-20 h-20 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,3C8,3 4,6 4,9c0,1 0,2 1,3c1,1 2,2 3,3c0,1 0,2 -1,2c-1,0 -2,1 -2,2l0,1c0,1 1,2 2,2l0,1l10,0l0,-1c1,0 2,-1 2,-2l0,-1c0,-1 -1,-2 -2,-2c-1,0 -1,-1 -1,-2c1,-1 2,-2 3,-3c1,-1 1,-2 1,-3C20,6 16,3 12,3z"/>
+                                </svg>
+                                <p class="font-bold mt-2">狐狸</p>
+                            </div>
+                            <div class="character bg-red-100 p-4 rounded-lg shadow-md flex flex-col items-center cursor-grab" data-strength="3">
+                                <svg class="w-20 h-20 text-yellow-800" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20,10c2,1 3,3 3,5c0,1 0,2 -1,3c-1,1 -2,1 -3,1c0,1 -1,2 -2,2c-1,0 -2,0 -3,-1c-1,1 -2,1 -3,1c-1,0 -2,0 -3,-1c-1,1 -2,1 -3,1c-1,0 -2,-1 -2,-2c-1,0 -2,0 -3,-1c-1,-1 -1,-2 -1,-3c0,-2 1,-4 3,-5c0,-1 0,-2 1,-3c1,-1 2,-2 3,-2c1,0 2,0 3,1c1,-1 2,-1 3,-1c1,0 2,0 3,1c1,-1 2,-1 3,-1c1,0 2,1 3,2c1,1 1,2 1,3z"/>
+                                </svg>
+                                <p class="font-bold mt-2">老虎</p>
+                            </div>
+                            <div class="character bg-red-100 p-4 rounded-lg shadow-md flex flex-col items-center cursor-grab" data-strength="1">
+                                <svg class="w-20 h-20 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,3C8,3 5,5 5,9c0,2 1,4 3,5c0,1 0,2 -1,3c-1,1 -2,1 -3,1c0,1 0,1 1,2c1,1 2,1 3,1c1,0 3,0 4,-1c1,1 3,1 4,1c1,0 2,0 3,-1c1,-1 1,-1 1,-2c-1,0 -2,0 -3,-1c-1,-1 -1,-2 -1,-3c2,-1 3,-3 3,-5C19,5 16,3 12,3z"/>
+                                </svg>
+                                <p class="font-bold mt-2">小動物</p>
+                            </div>
+                            <div class="character bg-red-100 p-4 rounded-lg shadow-md flex flex-col items-center cursor-grab" data-strength="4">
+                                <svg class="w-20 h-20 text-yellow-600" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,2L4,5v6c0,5.5 3.8,10.7 8,12c4.2,-1.3 8,-6.5 8,-12V5L12,2z"/>
+                                </svg>
+                                <p class="font-bold mt-2">森林之王</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <h4 class="font-bold text-red-600 mb-3 text-center">力量排序（從強到弱）：</h4>
+                        <div id="strength-ranking" class="flex flex-col gap-4">
+                            <div class="strength-slot bg-red-50 p-4 rounded-lg border-2 border-dashed border-red-300 h-24 flex items-center justify-center" data-position="1">
+                                <p class="text-red-400">拖放到這裡（最強）</p>
+                            </div>
+                            <div class="strength-slot bg-red-50 p-4 rounded-lg border-2 border-dashed border-red-300 h-24 flex items-center justify-center" data-position="2">
+                                <p class="text-red-400">拖放到這裡</p>
+                            </div>
+                            <div class="strength-slot bg-red-50 p-4 rounded-lg border-2 border-dashed border-red-300 h-24 flex items-center justify-center" data-position="3">
+                                <p class="text-red-400">拖放到這裡</p>
+                            </div>
+                            <div class="strength-slot bg-red-50 p-4 rounded-lg border-2 border-dashed border-red-300 h-24 flex items-center justify-center" data-position="4">
+                                <p class="text-red-400">拖放到這裡（最弱）</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 答案解釋區域 -->
+                <div id="idiom-answer" class="answer-explanation mt-8 bg-red-100 p-4 rounded-lg border border-red-300">
+                    <h4 class="font-bold text-red-700 mb-2">正確答案：</h4>
+                    <ol class="list-decimal pl-5 space-y-2">
+                        <li><span class="font-bold">森林之王</span> - 故事中提到的最強者，連老虎都害怕的存在</li>
+                        <li><span class="font-bold">老虎</span> - 真正的強者，但被狐狸欺騙了</li>
+                        <li><span class="font-bold">狐狸</span> - 實際上不強，但靠著智慧和老虎的威勢嚇唬其他動物</li>
+                        <li><span class="font-bold">小動物</span> - 最弱小的，被狐狸和老虎嚇得四處逃竄</li>
+                    </ol>
+                    <p class="mt-4 text-red-700">「狐假虎威」的成語意思是狐狸借用老虎的威風來嚇唬其他動物，比喻依仗別人的權勢來欺壓他人。</p>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <button id="check-idiom" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 disabled:opacity-50" disabled>
+                        確認答案
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 場景：靜夜思 -->
+        <div id="scene-poetry" class="scene-container">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-blue-800">靜夜思</h2>
+                <button class="back-to-doors bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-full transition duration-300">
+                    返回門廳
+                </button>
+            </div>
+            
+            <div class="bg-blue-50 rounded-xl p-6 shadow-lg mb-8">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-blue-700">靜夜思</h3>
+                    <p class="text-lg text-blue-600">唐·李白</p>
+                </div>
+                <div class="text-xl text-center space-y-4">
+                    <p>床前明月光，</p>
+                    <p>疑是地上霜。</p>
+                    <p>舉頭望明月，</p>
+                    <p>低頭思故鄉。</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-blue-700 mb-4">配對詩句與情境描述</h3>
+                <p class="mb-6">將詩句拖放到對應的情境描述上。</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="font-bold text-blue-600 mb-3">詩句：</h4>
+                        <div id="poem-lines" class="space-y-4">
+                            <div class="poem-line bg-blue-100 p-4 rounded-lg shadow cursor-grab" data-id="3">
+                                <p class="text-lg">舉頭望明月，</p>
+                            </div>
+                            <div class="poem-line bg-blue-100 p-4 rounded-lg shadow cursor-grab" data-id="1">
+                                <p class="text-lg">床前明月光，</p>
+                            </div>
+                            <div class="poem-line bg-blue-100 p-4 rounded-lg shadow cursor-grab" data-id="4">
+                                <p class="text-lg">低頭思故鄉。</p>
+                            </div>
+                            <div class="poem-line bg-blue-100 p-4 rounded-lg shadow cursor-grab" data-id="2">
+                                <p class="text-lg">疑是地上霜。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-blue-600 mb-3">情境描述：</h4>
+                        <div id="poem-images" class="space-y-6">
+                            <div class="poem-image bg-blue-50 p-4 rounded-lg border-2 border-dashed border-blue-300" data-slot="1">
+                                <div class="flex items-center">
+                                    <div class="w-24 h-24 bg-blue-200 rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-16 h-16 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="poem-slot flex-1 min-h-[60px]">
+                                        <p>詩人在夜晚看到月光照在床前，非常明亮</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="poem-image bg-blue-50 p-4 rounded-lg border-2 border-dashed border-blue-300" data-slot="2">
+                                <div class="flex items-center">
+                                    <div class="w-24 h-24 bg-blue-200 rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-16 h-16 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="poem-slot flex-1 min-h-[60px]">
+                                        <p>月光照在地上，看起來像是一層白霜</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="poem-image bg-blue-50 p-4 rounded-lg border-2 border-dashed border-blue-300" data-slot="3">
+                                <div class="flex items-center">
+                                    <div class="w-24 h-24 bg-blue-200 rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-16 h-16 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,10.5A1.5,1.5 0 0,0 10.5,12A1.5,1.5 0 0,0 12,13.5A1.5,1.5 0 0,0 13.5,12A1.5,1.5 0 0,0 12,10.5M7.5,10.5A1.5,1.5 0 0,0 6,12A1.5,1.5 0 0,0 7.5,13.5A1.5,1.5 0 0,0 9,12A1.5,1.5 0 0,0 7.5,10.5M16.5,10.5A1.5,1.5 0 0,0 15,12A1.5,1.5 0 0,0 16.5,13.5A1.5,1.5 0 0,0 18,12A1.5,1.5 0 0,0 16.5,10.5Z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="poem-slot flex-1 min-h-[60px]">
+                                        <p>詩人抬頭看著天空中的明月</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="poem-image bg-blue-50 p-4 rounded-lg border-2 border-dashed border-blue-300" data-slot="4">
+                                <div class="flex items-center">
+                                    <div class="w-24 h-24 bg-blue-200 rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-16 h-16 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="poem-slot flex-1 min-h-[60px]">
+                                        <p>詩人低下頭，思念遠方的家鄉</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 答案解釋區域 -->
+                <div id="poetry-answer" class="answer-explanation mt-8 bg-blue-100 p-4 rounded-lg border border-blue-300">
+                    <h4 class="font-bold text-blue-700 mb-2">正確答案：</h4>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><span class="font-bold">床前明月光，</span> - 詩人在夜晚看到月光照在床前，非常明亮</li>
+                        <li><span class="font-bold">疑是地上霜。</span> - 月光照在地上，看起來像是一層白霜</li>
+                        <li><span class="font-bold">舉頭望明月，</span> - 詩人抬頭看著天空中的明月</li>
+                        <li><span class="font-bold">低頭思故鄉。</span> - 詩人低下頭，思念遠方的家鄉</li>
+                    </ul>
+                    <p class="mt-4 text-blue-700">《靜夜思》是唐代詩人李白的名作，短短四句詩，描繪了一個月夜思鄉的場景，表達了詩人對家鄉的思念之情。</p>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <button id="check-poetry" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 disabled:opacity-50" disabled>
+                        確認答案
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 場景：烏鴉喝水 -->
+        <div id="scene-fable" class="scene-container">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-purple-800">烏鴉喝水</h2>
+                <button class="back-to-doors bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold py-2 px-4 rounded-full transition duration-300">
+                    返回門廳
+                </button>
+            </div>
+            
+            <div class="bg-purple-50 rounded-xl p-6 shadow-lg mb-8">
+                <p class="text-lg mb-4">一隻口渴的烏鴉找到了一個水罐，但水罐裡的水很少，烏鴉的嘴巴夠不著水面。</p>
+                <p class="text-lg mb-4">烏鴉想了想，開始撿小石子丟進水罐裡。</p>
+                <p class="text-lg mb-4">隨著石子越來越多，水位慢慢上升，最後烏鴉終於能喝到水了。</p>
+                <p class="text-lg">這個故事告訴我們：遇到困難時，要動腦筋想辦法解決。</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-purple-700 mb-4">幫助烏鴉喝到水</h3>
+                <p class="mb-6">拖動石頭放入水罐中，觀察水位上升的物理原理。</p>
+                
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-purple-600 mb-3">可用的石頭：</h4>
+                        <div id="stones-container" class="flex flex-wrap gap-4 justify-center">
+                            <div class="stone bg-gray-300 w-16 h-16 rounded-full shadow-md flex items-center justify-center" data-volume="1">
+                                <span class="text-sm font-bold">小</span>
+                            </div>
+                            <div class="stone bg-gray-400 w-20 h-20 rounded-full shadow-md flex items-center justify-center" data-volume="2">
+                                <span class="text-sm font-bold">中</span>
+                            </div>
+                            <div class="stone bg-gray-500 w-24 h-24 rounded-full shadow-md flex items-center justify-center" data-volume="3">
+                                <span class="text-sm font-bold">大</span>
+                            </div>
+                            <div class="stone bg-gray-600 w-28 h-28 rounded-full shadow-md flex items-center justify-center" data-volume="4">
+                                <span class="text-sm font-bold text-white">特大</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="relative mx-auto w-48 h-80">
+                            <!-- 水罐 -->
+                            <div class="absolute inset-0 bg-purple-200 rounded-b-3xl rounded-t-lg border-4 border-purple-400"></div>
+                            
+                            <!-- 水 -->
+                            <div id="water" class="absolute bottom-0 left-0 right-0 bg-blue-400 rounded-b-3xl h-16 transition-all duration-1000">
+                                <div class="absolute top-0 left-0 right-0 h-4 bg-blue-300 opacity-50"></div>
+                            </div>
+                            
+                            <!-- 烏鴉 -->
+                            <div id="crow" class="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                                <svg class="w-24 h-24" viewBox="0 0 24 24" fill="black">
+                                    <path d="M22,10C22,5.03 17.97,1 13,1C8.03,1 4,5.03 4,10C4,12.12 4.91,14.05 6.34,15.5C5.96,16.11 5.56,16.78 5.17,17.5C4.5,18.77 4,20.16 4,21.5C4,22.34 4.82,23 5.5,23C6.18,23 7,22.34 7,21.5C7,21.41 6.97,21.34 6.94,21.26C7.58,20.83 8.23,20.39 8.87,19.93C9.93,21.19 11.4,22 13,22C16.73,22 19.77,18.88 20.75,14.88C21.56,14.33 22,13.25 22,12V10M13,4C15.21,4 17,5.79 17,8S15.21,12 13,12 9,10.21 9,8 10.79,4 13,4Z"/>
+                                </svg>
+                                <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-8 bg-black rounded-b-full"></div>
+                            </div>
+                            
+                            <!-- 目標水位線 -->
+                            <div class="absolute top-1/3 left-0 right-0 border-t-2 border-dashed border-red-500 flex items-center justify-center">
+                                <span class="bg-white px-2 text-xs text-red-500 font-bold">目標水位</span>
+                            </div>
+                            
+                            <!-- 石頭容器 -->
+                            <div id="jar-stones" class="absolute bottom-0 left-0 right-0 pointer-events-none"></div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <p id="water-level-text" class="text-blue-600 font-bold">水位：10%</p>
+                            <p id="stones-used" class="text-purple-600">已使用石頭：0 顆</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 答案解釋區域 -->
+                <div id="fable-answer" class="answer-explanation mt-8 bg-purple-100 p-4 rounded-lg border border-purple-300">
+                    <h4 class="font-bold text-purple-700 mb-2">物理原理解釋：</h4>
+                    <p class="mb-2">這個故事展示了「排水原理」：</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>當石頭放入水中時，會排開等同於石頭體積的水</li>
+                        <li>由於水罐的橫截面積比石頭小，所以水位會明顯上升</li>
+                        <li>石頭越大，排開的水越多，水位上升得越快</li>
+                    </ul>
+                    <p class="mt-4 text-purple-700">這個寓言故事告訴我們：遇到困難時，要動腦筋想辦法解決。烏鴉運用了物理原理和智慧解決了喝水的問題。</p>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <button id="reset-fable" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 mr-4">
+                        重置
+                    </button>
+                    <button id="check-fable" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 disabled:opacity-50" disabled>
+                        確認答案
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 寶藏卡獲得畫面 -->
+        <div id="treasure-card-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 relative">
+                <button id="close-treasure-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                
+                <div class="text-center">
+                    <div class="mb-6">
+                        <svg class="w-16 h-16 text-yellow-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H10a3 3 0 013 3v1a1 1 0 102 0v-1a5 5 0 00-5-5H8.414l1.293-1.293z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold text-purple-800 mb-2">恭喜獲得寶藏卡！</h3>
+                    <p class="text-lg mb-6" id="treasure-card-name">文學寶藏卡</p>
+                    
+                    <div class="treasure-card bg-gradient-to-br from-yellow-100 to-yellow-300 p-6 rounded-lg shadow-lg border-4 border-yellow-500 mb-6 mx-auto max-w-xs">
+                        <div id="treasure-card-icon" class="w-24 h-24 mx-auto mb-4 text-yellow-700"></div>
+                        <h4 id="treasure-card-title" class="text-xl font-bold text-yellow-800 mb-2">寶藏卡標題</h4>
+                        <p id="treasure-card-desc" class="text-yellow-700">寶藏卡描述內容</p>
+                    </div>
+                    
+                    <button id="continue-adventure" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                        繼續冒險
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 完成所有挑戰畫面 -->
+        <div id="completion-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl p-8 max-w-lg w-full mx-4">
+                <div class="text-center">
+                    <div class="mb-6">
+                        <svg class="w-20 h-20 text-yellow-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    
+                    <h3 class="text-3xl font-bold text-purple-800 mb-4">恭喜完成所有挑戰！</h3>
+                    <p class="text-xl mb-8">你已收集了全部4張文學寶藏卡，成為文學迷宮的探險大師！</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="treasure-card bg-gradient-to-br from-green-100 to-green-300 p-3 rounded-lg shadow-lg border-2 border-green-500">
+                            <div class="w-12 h-12 mx-auto mb-2 text-green-700">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h5 class="text-sm font-bold text-green-800">論語選句</h5>
+                        </div>
+                        
+                        <div class="treasure-card bg-gradient-to-br from-red-100 to-red-300 p-3 rounded-lg shadow-lg border-2 border-red-500">
+                            <div class="w-12 h-12 mx-auto mb-2 text-red-700">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h5 class="text-sm font-bold text-red-800">狐假虎威</h5>
+                        </div>
+                        
+                        <div class="treasure-card bg-gradient-to-br from-blue-100 to-blue-300 p-3 rounded-lg shadow-lg border-2 border-blue-500">
+                            <div class="w-12 h-12 mx-auto mb-2 text-blue-700">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h5 class="text-sm font-bold text-blue-800">靜夜思</h5>
+                        </div>
+                        
+                        <div class="treasure-card bg-gradient-to-br from-purple-100 to-purple-300 p-3 rounded-lg shadow-lg border-2 border-purple-500">
+                            <div class="w-12 h-12 mx-auto mb-2 text-purple-700">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h5 class="text-sm font-bold text-purple-800">烏鴉喝水</h5>
+                        </div>
+                    </div>
+                    
+                    <button id="restart-adventure" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                        重新開始冒險
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 頁腳 -->
+        <footer class="footer mt-12 pt-6 pb-8 text-center text-gray-600">
+            <p>遊戲設計與製作：呂舒婷｜<a href="#" class="text-purple-600 hover:text-purple-800 hover:underline">了解更多🔍</a></p>
+            <p class="mt-2">臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 全局變數
+            let collectedCards = 0;
+            const completedScenes = {
+                ancient: false,
+                idiom: false,
+                poetry: false,
+                fable: false
+            };
+            
+            // 主頁面交互
+            const mainDoor = document.getElementById('main-door');
+            const homeScreen = document.getElementById('home-screen');
+            const doorSelection = document.getElementById('door-selection');
+            
+            mainDoor.addEventListener('click', function() {
+                this.classList.add('opening');
+                setTimeout(() => {
+                    homeScreen.classList.add('hidden');
+                    doorSelection.classList.remove('hidden');
+                }, 1500);
+            });
+            
+            document.getElementById('back-to-home').addEventListener('click', function() {
+                doorSelection.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+                mainDoor.classList.remove('opening');
+            });
+            
+            // 門選擇交互
+            const doors = document.querySelectorAll('.door[data-type]');
+            doors.forEach(door => {
+                door.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    this.classList.add('opening');
+                    
+                    setTimeout(() => {
+                        doorSelection.classList.add('hidden');
+                        document.getElementById(`scene-${type}`).style.display = 'block';
+                        this.classList.remove('opening');
+                    }, 1000);
+                });
+            });
+            
+            // 返回門廳按鈕
+            const backButtons = document.querySelectorAll('.back-to-doors');
+            backButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const sceneContainer = this.closest('.scene-container');
+                    sceneContainer.style.display = 'none';
+                    doorSelection.classList.remove('hidden');
+                });
+            });
+            
+            // 松柏門拼圖遊戲
+            const puzzlePieces = document.querySelectorAll('.puzzle-piece');
+            const puzzleSlots = document.querySelectorAll('.puzzle-slot');
+            const checkAncientButton = document.getElementById('check-ancient');
+            const ancientAnswer = document.getElementById('ancient-answer');
+            
+            let draggedPiece = null;
+            
+            puzzlePieces.forEach(piece => {
+                piece.addEventListener('dragstart', function(e) {
+                    draggedPiece = this;
+                    this.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                });
+                
+                piece.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                });
+                
+                // 觸控設備支援
+                piece.addEventListener('touchstart', function(e) {
+                    draggedPiece = this;
+                    this.classList.add('dragging');
+                });
+                
+                piece.addEventListener('touchend', function() {
+                    this.classList.remove('dragging');
+                    const touch = event.changedTouches[0];
+                    const slot = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const puzzleSlot = slot.closest('.puzzle-slot');
+                    
+                    if (puzzleSlot) {
+                        if (puzzleSlot.children.length === 0 || !puzzleSlot.querySelector('.puzzle-piece')) {
+                            puzzleSlot.innerHTML = '';
+                            puzzleSlot.appendChild(this);
+                            updateCheckButton();
+                        }
+                    }
+                });
+                
+                // 使拼圖可拖動
+                piece.setAttribute('draggable', 'true');
+            });
+            
+            puzzleSlots.forEach(slot => {
+                slot.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('highlight');
+                });
+                
+                slot.addEventListener('dragleave', function() {
+                    this.classList.remove('highlight');
+                });
+                
+                slot.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('highlight');
+                    
+                    // 清除原有內容
+                    this.innerHTML = '';
+                    this.appendChild(draggedPiece);
+                    updateCheckButton();
+                });
+            });
+            
+            function updateCheckButton() {
+                let allSlotsFilled = true;
+                puzzleSlots.forEach(slot => {
+                    if (!slot.querySelector('.puzzle-piece')) {
+                        allSlotsFilled = false;
+                    }
+                });
+                
+                checkAncientButton.disabled = !allSlotsFilled;
+            }
+            
+            checkAncientButton.addEventListener('click', function() {
+                let correct = true;
+                puzzleSlots.forEach(slot => {
+                    const slotNumber = slot.getAttribute('data-slot');
+                    const pieceId = slot.querySelector('.puzzle-piece').getAttribute('data-id');
+                    
+                    if (slotNumber !== pieceId) {
+                        correct = false;
+                    }
+                });
+                
+                // 顯示答案解釋
+                ancientAnswer.style.display = 'block';
+                
+                if (correct) {
+                    if (!completedScenes.ancient) {
+                        completedScenes.ancient = true;
+                        showTreasureCard('ancient');
+                    }
+                } else {
+                    alert('配對不正確，請參考正確答案再試一次！');
+                }
+            });
+            
+            // 狐假虎威排序遊戲
+            const characters = document.querySelectorAll('.character');
+            const strengthSlots = document.querySelectorAll('.strength-slot');
+            const checkIdiomButton = document.getElementById('check-idiom');
+            const idiomAnswer = document.getElementById('idiom-answer');
+            
+            let draggedCharacter = null;
+            
+            characters.forEach(character => {
+                character.setAttribute('draggable', 'true');
+                
+                character.addEventListener('dragstart', function(e) {
+                    draggedCharacter = this;
+                    this.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', this.getAttribute('data-strength'));
+                });
+                
+                character.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                });
+                
+                // 觸控設備支援
+                character.addEventListener('touchstart', function(e) {
+                    draggedCharacter = this;
+                    this.classList.add('dragging');
+                });
+                
+                character.addEventListener('touchend', function() {
+                    this.classList.remove('dragging');
+                    const touch = event.changedTouches[0];
+                    const slot = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const strengthSlot = slot.closest('.strength-slot');
+                    
+                    if (strengthSlot) {
+                        if (strengthSlot.children.length <= 1 || !strengthSlot.querySelector('.character')) {
+                            strengthSlot.innerHTML = '';
+                            strengthSlot.appendChild(this);
+                            updateIdiomCheckButton();
+                        }
+                    }
+                });
+            });
+            
+            strengthSlots.forEach(slot => {
+                slot.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('highlight');
+                });
+                
+                slot.addEventListener('dragleave', function() {
+                    this.classList.remove('highlight');
+                });
+                
+                slot.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('highlight');
+                    
+                    // 清除原有內容
+                    this.innerHTML = '';
+                    this.appendChild(draggedCharacter);
+                    updateIdiomCheckButton();
+                });
+            });
+            
+            function updateIdiomCheckButton() {
+                let allSlotsFilled = true;
+                strengthSlots.forEach(slot => {
+                    if (!slot.querySelector('.character')) {
+                        allSlotsFilled = false;
+                    }
+                });
+                
+                checkIdiomButton.disabled = !allSlotsFilled;
+            }
+            
+            checkIdiomButton.addEventListener('click', function() {
+                let correct = true;
+                strengthSlots.forEach(slot => {
+                    const position = slot.getAttribute('data-position');
+                    const character = slot.querySelector('.character');
+                    const strength = character ? character.getAttribute('data-strength') : null;
+                    
+                    // 從強到弱排序：森林之王(4) > 老虎(3) > 狐狸(2) > 小動物(1)
+                    if (position === '1' && strength !== '4') correct = false;
+                    if (position === '2' && strength !== '3') correct = false;
+                    if (position === '3' && strength !== '2') correct = false;
+                    if (position === '4' && strength !== '1') correct = false;
+                });
+                
+                // 顯示答案解釋
+                idiomAnswer.style.display = 'block';
+                
+                if (correct) {
+                    if (!completedScenes.idiom) {
+                        completedScenes.idiom = true;
+                        showTreasureCard('idiom');
+                    }
+                } else {
+                    alert('排序不正確，請參考正確答案再試一次！');
+                }
+            });
+            
+            // 靜夜思配對遊戲
+            const poemLines = document.querySelectorAll('.poem-line');
+            const poemImages = document.querySelectorAll('.poem-image');
+            const checkPoetryButton = document.getElementById('check-poetry');
+            const poetryAnswer = document.getElementById('poetry-answer');
+            
+            let draggedLine = null;
+            
+            poemLines.forEach(line => {
+                line.setAttribute('draggable', 'true');
+                
+                line.addEventListener('dragstart', function(e) {
+                    draggedLine = this;
+                    this.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                });
+                
+                line.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                });
+                
+                // 觸控設備支援
+                line.addEventListener('touchstart', function(e) {
+                    draggedLine = this;
+                    this.classList.add('dragging');
+                });
+                
+                line.addEventListener('touchend', function() {
+                    this.classList.remove('dragging');
+                    const touch = event.changedTouches[0];
+                    const slot = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const poemSlot = slot.closest('.poem-slot');
+                    
+                    if (poemSlot) {
+                        const existingLine = poemSlot.querySelector('.poem-line');
+                        if (existingLine) {
+                            poemSlot.removeChild(existingLine);
+                        }
+                        poemSlot.appendChild(this);
+                        updatePoetryCheckButton();
+                    }
+                });
+            });
+            
+            poemImages.forEach(image => {
+                image.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    const slot = this.querySelector('.poem-slot');
+                    slot.classList.add('highlight');
+                });
+                
+                image.addEventListener('dragleave', function() {
+                    const slot = this.querySelector('.poem-slot');
+                    slot.classList.remove('highlight');
+                });
+                
+                image.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    const slot = this.querySelector('.poem-slot');
+                    slot.classList.remove('highlight');
+                    
+                    // 移除現有的詩句
+                    const existingLine = slot.querySelector('.poem-line');
+                    if (existingLine) {
+                        slot.removeChild(existingLine);
+                    }
+                    
+                    slot.appendChild(draggedLine);
+                    updatePoetryCheckButton();
+                });
+            });
+            
+            function updatePoetryCheckButton() {
+                let allSlotsFilled = true;
+                poemImages.forEach(image => {
+                    const slot = image.querySelector('.poem-slot');
+                    if (!slot.querySelector('.poem-line')) {
+                        allSlotsFilled = false;
+                    }
+                });
+                
+                checkPoetryButton.disabled = !allSlotsFilled;
+            }
+            
+            checkPoetryButton.addEventListener('click', function() {
+                let correct = true;
+                poemImages.forEach(image => {
+                    const slotNumber = image.getAttribute('data-slot');
+                    const slot = image.querySelector('.poem-slot');
+                    const line = slot.querySelector('.poem-line');
+                    const lineId = line ? line.getAttribute('data-id') : null;
+                    
+                    if (slotNumber !== lineId) {
+                        correct = false;
+                    }
+                });
+                
+                // 顯示答案解釋
+                poetryAnswer.style.display = 'block';
+                
+                if (correct) {
+                    if (!completedScenes.poetry) {
+                        completedScenes.poetry = true;
+                        showTreasureCard('poetry');
+                    }
+                } else {
+                    alert('配對不正確，請參考正確答案再試一次！');
+                }
+            });
+            
+            // 烏鴉喝水遊戲
+            const stones = document.querySelectorAll('.stone');
+            const waterElement = document.getElementById('water');
+            const waterLevelText = document.getElementById('water-level-text');
+            const stonesUsedText = document.getElementById('stones-used');
+            const jarStones = document.getElementById('jar-stones');
+            const checkFableButton = document.getElementById('check-fable');
+            const resetFableButton = document.getElementById('reset-fable');
+            const crow = document.getElementById('crow');
+            const fableAnswer = document.getElementById('fable-answer');
+            
+            let waterLevel = 10;
+            let stonesUsed = 0;
+            let totalVolume = 0;
+            
+            stones.forEach(stone => {
+                const clonedStone = stone.cloneNode(true);
+                
+                stone.addEventListener('click', function() {
+                    const volume = parseInt(this.getAttribute('data-volume'));
+                    const newStone = this.cloneNode(true);
+                    newStone.style.position = 'absolute';
+                    newStone.style.bottom = `${Math.random() * 20}px`;
+                    newStone.style.left = `${Math.random() * 60}%`;
+                    newStone.style.transform = `scale(${0.5 + Math.random() * 0.3}) rotate(${Math.random() * 360}deg)`;
+                    newStone.classList.add('falling');
+                    
+                    jarStones.appendChild(newStone);
+                    
+                    totalVolume += volume;
+                    stonesUsed++;
+                    
+                    // 更新水位
+                    waterLevel = 10 + totalVolume * 5;
+                    if (waterLevel > 70) waterLevel = 70;
+                    
+                    waterElement.style.height = `${waterLevel}%`;
+                    waterLevelText.textContent = `水位：${waterLevel}%`;
+                    stonesUsedText.textContent = `已使用石頭：${stonesUsed} 顆`;
+                    
+                    // 如果水位達到目標，啟用確認按鈕
+                    if (waterLevel >= 60) {
+                        checkFableButton.disabled = false;
+                        crow.style.transform = 'translateY(100px)';
+                    }
+                });
+            });
+            
+            resetFableButton.addEventListener('click', function() {
+                waterLevel = 10;
+                stonesUsed = 0;
+                totalVolume = 0;
+                
+                waterElement.style.height = '16px';
+                waterLevelText.textContent = '水位：10%';
+                stonesUsedText.textContent = '已使用石頭：0 顆';
+                
+                jarStones.innerHTML = '';
+                checkFableButton.disabled = true;
+                crow.style.transform = '';
+                fableAnswer.style.display = 'none';
+            });
+            
+            checkFableButton.addEventListener('click', function() {
+                // 顯示答案解釋
+                fableAnswer.style.display = 'block';
+                
+                if (waterLevel >= 60) {
+                    if (!completedScenes.fable) {
+                        completedScenes.fable = true;
+                        showTreasureCard('fable');
+                    }
+                } else {
+                    alert('水位還不夠高，烏鴉喝不到水！請繼續添加石頭。');
+                }
+            });
+            
+            // 寶藏卡相關
+            const treasureCardModal = document.getElementById('treasure-card-modal');
+            const cardCountElement = document.getElementById('card-count');
+            const completionModal = document.getElementById('completion-modal');
+            
+            function showTreasureCard(type) {
+                const treasureCardName = document.getElementById('treasure-card-name');
+                const treasureCardIcon = document.getElementById('treasure-card-icon');
+                const treasureCardTitle = document.getElementById('treasure-card-title');
+                const treasureCardDesc = document.getElementById('treasure-card-desc');
+                
+                switch(type) {
+                    case 'ancient':
+                        treasureCardName.textContent = '古文篇章寶藏卡';
+                        treasureCardIcon.innerHTML = '<svg class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                        treasureCardTitle.textContent = '論語選句';
+                        treasureCardDesc.textContent = '孔子的智慧言論，至今仍被人們廣泛引用。';
+                        break;
+                    case 'idiom':
+                        treasureCardName.textContent = '成語典故寶藏卡';
+                        treasureCardIcon.innerHTML = '<svg class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                        treasureCardTitle.textContent = '狐假虎威';
+                        treasureCardDesc.textContent = '比喻依仗別人的權勢來欺壓他人。';
+                        break;
+                    case 'poetry':
+                        treasureCardName.textContent = '詩詞世界寶藏卡';
+                        treasureCardIcon.innerHTML = '<svg class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                        treasureCardTitle.textContent = '靜夜思';
+                        treasureCardDesc.textContent = '李白的名作，表達了遊子思鄉之情。';
+                        break;
+                    case 'fable':
+                        treasureCardName.textContent = '寓言故事寶藏卡';
+                        treasureCardIcon.innerHTML = '<svg class="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                        treasureCardTitle.textContent = '烏鴉喝水';
+                        treasureCardDesc.textContent = '遇到困難時，要動腦筋想辦法解決。';
+                        break;
+                }
+                
+                collectedCards++;
+                cardCountElement.textContent = collectedCards;
+                
+                treasureCardModal.classList.remove('hidden');
+                
+                // 檢查是否收集了所有寶藏卡
+                if (collectedCards === 4) {
+                    document.getElementById('continue-adventure').textContent = '查看成就';
+                }
+            }
+            
+            document.getElementById('close-treasure-modal').addEventListener('click', function() {
+                treasureCardModal.classList.add('hidden');
+            });
+            
+            document.getElementById('continue-adventure').addEventListener('click', function() {
+                treasureCardModal.classList.add('hidden');
+                
+                if (collectedCards === 4) {
+                    completionModal.classList.remove('hidden');
+                } else {
+                    // 返回門廳
+                    document.querySelectorAll('.scene-container').forEach(scene => {
+                        scene.style.display = 'none';
+                    });
+                    doorSelection.classList.remove('hidden');
+                }
+            });
+            
+            document.getElementById('restart-adventure').addEventListener('click', function() {
+                completionModal.classList.add('hidden');
+                
+                // 重置遊戲
+                collectedCards = 0;
+                cardCountElement.textContent = collectedCards;
+                
+                Object.keys(completedScenes).forEach(key => {
+                    completedScenes[key] = false;
+                });
+                
+                // 返回首頁
+                document.querySelectorAll('.scene-container').forEach(scene => {
+                    scene.style.display = 'none';
+                });
+                doorSelection.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+                mainDoor.classList.remove('opening');
+                
+                // 隱藏所有答案解釋
+                document.querySelectorAll('.answer-explanation').forEach(answer => {
+                    answer.style.display = 'none';
+                });
+                
+                // 重置各場景
+                // 松柏門
+                puzzleSlots.forEach(slot => {
+                    const piece = slot.querySelector('.puzzle-piece');
+                    if (piece) {
+                        slot.removeChild(piece);
+                    }
+                });
+                document.getElementById('puzzle-pieces').innerHTML = '';
+                const puzzlePiecesContainer = document.getElementById('puzzle-pieces');
+                puzzlePieces.forEach(piece => {
+                    puzzlePiecesContainer.appendChild(piece.cloneNode(true));
+                });
+                checkAncientButton.disabled = true;
+                
+                // 狐假虎威
+                strengthSlots.forEach(slot => {
+                    const character = slot.querySelector('.character');
+                    if (character) {
+                        slot.removeChild(character);
+                    }
+                    slot.innerHTML = '<p class="text-red-400">拖放到這裡' + (slot.getAttribute('data-position') === '1' ? '（最強）' : slot.getAttribute('data-position') === '4' ? '（最弱）' : '') + '</p>';
+                });
+                const charactersContainer = document.getElementById('characters-container');
+                charactersContainer.innerHTML = '';
+                characters.forEach(character => {
+                    charactersContainer.appendChild(character.cloneNode(true));
+                });
+                checkIdiomButton.disabled = true;
+                
+                // 靜夜思
+                document.querySelectorAll('.poem-slot').forEach(slot => {
+                    const line = slot.querySelector('.poem-line');
+                    if (line) {
+                        slot.removeChild(line);
+                    }
+                });
+                const poemLinesContainer = document.getElementById('poem-lines');
+                poemLinesContainer.innerHTML = '';
+                poemLines.forEach(line => {
+                    poemLinesContainer.appendChild(line.cloneNode(true));
+                });
+                checkPoetryButton.disabled = true;
+                
+                // 烏鴉喝水
+                resetFableButton.click();
+                
+                // 重新綁定事件
+                initDragAndDrop();
+            });
+            
+            // 初始化拖放功能
+            function initDragAndDrop() {
+                // 重新綁定事件
+                document.querySelectorAll('.puzzle-piece').forEach(piece => {
+                    piece.addEventListener('dragstart', function(e) {
+                        draggedPiece = this;
+                        this.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                    });
+                    
+                    piece.addEventListener('dragend', function() {
+                        this.classList.remove('dragging');
+                    });
+                    
+                    piece.setAttribute('draggable', 'true');
+                });
+                
+                document.querySelectorAll('.character').forEach(character => {
+                    character.addEventListener('dragstart', function(e) {
+                        draggedCharacter = this;
+                        this.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', this.getAttribute('data-strength'));
+                    });
+                    
+                    character.addEventListener('dragend', function() {
+                        this.classList.remove('dragging');
+                    });
+                    
+                    character.setAttribute('draggable', 'true');
+                });
+                
+                document.querySelectorAll('.poem-line').forEach(line => {
+                    line.addEventListener('dragstart', function(e) {
+                        draggedLine = this;
+                        this.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', this.getAttribute('data-id'));
+                    });
+                    
+                    line.addEventListener('dragend', function() {
+                        this.classList.remove('dragging');
+                    });
+                    
+                    line.setAttribute('draggable', 'true');
+                });
+            }
+            
+            // 初始化
+            initDragAndDrop();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'968e013a6648f1fa',t:'MTc1NDE0MjIxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
