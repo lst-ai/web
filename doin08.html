@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-翻譯蒟蒻：亂碼拼字機</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .scrambled-letter {
+            display: inline-block;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            margin: 0 5px;
+            font-weight: bold;
+            font-size: 24px;
+            color: #5B21B6;
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn:hover {
+            transform: translateY(-5px);
+        }
+        
+        .emoji-hint {
+            font-size: 80px;
+            text-align: center;
+            margin: 20px 0;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .correct-animation {
+            animation: correctJump 1s ease;
+        }
+        
+        @keyframes correctJump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+        
+        .wrong-animation {
+            animation: wrongShake 0.5s ease;
+        }
+        
+        @keyframes wrongShake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-6 fade-in">
+            <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">LST遊戲室-翻譯蒟蒻：亂碼拼字機</h1>
+            <p class="text-xl text-white opacity-90">解開亂碼，修復翻譯蒟蒻！</p>
+        </header>
+        
+        <!-- Game Container -->
+        <div class="bg-white bg-opacity-90 rounded-2xl p-6 shadow-xl mb-6">
+            <!-- Progress Bar -->
+            <div class="flex items-center mb-4">
+                <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold mr-3">
+                    <span id="current-question">1</span>
+                </div>
+                <div class="progress-container flex-grow">
+                    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="ml-3 text-purple-800 font-bold">
+                    <span id="score">0</span>/15
+                </div>
+            </div>
+            
+            <!-- Game Content -->
+            <div id="game-content" class="text-center">
+                <!-- Will be filled by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="text-center text-white mb-4">
+            <p class="mb-2">遊戲設計與製作：呂舒婷｜了解更多🔍</p>
+            <p>臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+            <p class="text-sm opacity-70 mt-2">LST遊戲室 © 2023 - 英文拼字訓練遊戲</p>
+        </footer>
+    </div>
+
+    <script>
+        // Game data
+        const questions = [
+            // 食物類
+            { category: "食物", emoji: "🍰", scrambled: "E K A C", correct: "CAKE", options: ["CAKE", "KECA", "AKEC"] },
+            { category: "食物", emoji: "🍎", scrambled: "P L A E P", correct: "APPLE", options: ["APPLE", "PEPAL", "LEAPP"] },
+            { category: "食物", emoji: "🍕", scrambled: "Z I P A Z", correct: "PIZZA", options: ["PIZZA", "ZAPIZ", "AZZIP"] },
+            { category: "食物", emoji: "🍌", scrambled: "B A A N N", correct: "BANANA", options: ["BANANA", "NABANA", "BAANNA"] },
+            { category: "食物", emoji: "🍩", scrambled: "T U D N O", correct: "DONUT", options: ["DONUT", "TONDU", "DUTON"] },
+            
+            // 動物類
+            { category: "動物", emoji: "🐕", scrambled: "G D O", correct: "DOG", options: ["DOG", "GOD", "DGO"] },
+            { category: "動物", emoji: "🐈", scrambled: "T A C", correct: "CAT", options: ["CAT", "ACT", "ATC"] },
+            { category: "動物", emoji: "🐘", scrambled: "P E L E H A N T", correct: "ELEPHANT", options: ["ELEPHANT", "ELAPHNET", "ELPHENTA"] },
+            { category: "動物", emoji: "🐸", scrambled: "G R F O", correct: "FROG", options: ["FROG", "GROF", "FORG"] },
+            { category: "動物", emoji: "🐦", scrambled: "R D I B", correct: "BIRD", options: ["BIRD", "DRIB", "RIBD"] },
+            
+            // 顏色類
+            { category: "顏色", emoji: "🔴", scrambled: "D R E", correct: "RED", options: ["RED", "EDR", "RDE"] },
+            { category: "顏色", emoji: "🔵", scrambled: "B L U E", correct: "BLUE", options: ["BLUE", "UBLE", "LUBE"] },
+            { category: "顏色", emoji: "🟢", scrambled: "E R G N", correct: "GREEN", options: ["GREEN", "GENRE", "REGNE"] },
+            
+            // 天氣類
+            { category: "天氣", emoji: "🌧️", scrambled: "I R A N", correct: "RAIN", options: ["RAIN", "NAIR", "INAR"] },
+            { category: "天氣", emoji: "❄️", scrambled: "N S O W", correct: "SNOW", options: ["SNOW", "WONS", "OWNS"] }
+        ];
+
+        // Game state
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let gameStarted = false;
+
+        // DOM elements
+        const gameContent = document.getElementById('game-content');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreElement = document.getElementById('score');
+        const currentQuestionElement = document.getElementById('current-question');
+
+        // Initialize game
+        function initGame() {
+            showStartScreen();
+        }
+
+        // Show start screen
+        function showStartScreen() {
+            gameContent.innerHTML = `
+                <div class="py-10 fade-in">
+                    <div class="emoji-hint">🎮</div>
+                    <h2 class="text-3xl font-bold text-purple-800 mb-6">準備好修復翻譯蒟蒻了嗎？</h2>
+                    <p class="text-lg text-gray-700 mb-8">
+                        蒟蒻翻譯機出現故障，字母全都亂了！<br>
+                        看圖片提示，選出正確的英文單字，幫助修復翻譯機！
+                    </p>
+                    <button id="start-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-xl transition-all transform hover:scale-105 shadow-lg">
+                        開始遊戲
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('start-btn').addEventListener('click', startGame);
+        }
+
+        // Start game
+        function startGame() {
+            gameStarted = true;
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScore();
+            showQuestion(currentQuestionIndex);
+        }
+
+        // Show question
+        function showQuestion(index) {
+            if (index >= questions.length) {
+                showEndScreen();
+                return;
+            }
+            
+            const question = questions[index];
+            currentQuestionElement.textContent = index + 1;
+            
+            // Shuffle options
+            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+            
+            gameContent.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-purple-100 inline-block px-4 py-1 rounded-full text-purple-800 font-semibold mb-4">
+                        ${question.category}
+                    </div>
+                    
+                    <div class="emoji-hint">${question.emoji}</div>
+                    
+                    <div class="mb-6">
+                        <p class="text-gray-600 mb-3">這些字母亂成一團了！</p>
+                        <div class="scrambled-letters flex justify-center flex-wrap">
+                            ${question.scrambled.split(' ').map(letter => 
+                                `<span class="scrambled-letter">${letter}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4">選出正確的單字：</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${shuffledOptions.map(option => `
+                            <button class="option-btn bg-white border-2 border-purple-300 hover:border-purple-500 rounded-xl py-3 px-4 text-xl font-bold text-purple-800 shadow-md" data-option="${option}">
+                                ${option}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners to options
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    checkAnswer(this.getAttribute('data-option'));
+                });
+            });
+            
+            // Update progress bar
+            progressBar.style.width = `${(index / questions.length) * 100}%`;
+        }
+
+        // Check answer
+        function checkAnswer(selectedOption) {
+            const currentQuestion = questions[currentQuestionIndex];
+            const isCorrect = selectedOption === currentQuestion.correct;
+            
+            if (isCorrect) {
+                score++;
+                updateScore();
+                showCorrectScreen();
+            } else {
+                showWrongScreen();
+            }
+        }
+
+        // Show correct answer screen
+        function showCorrectScreen() {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            gameContent.innerHTML = `
+                <div class="py-10 text-center fade-in">
+                    <div class="emoji-hint">✅</div>
+                    <h2 class="text-3xl font-bold text-green-600 mb-4">修復成功！</h2>
+                    
+                    <div class="mb-8">
+                        <p class="text-xl text-gray-700 mb-4">正確單字：</p>
+                        <div class="flex justify-center" id="correct-letters">
+                            ${currentQuestion.correct.split('').map(letter => 
+                                `<span class="scrambled-letter bg-green-100 text-green-700">${letter}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <button id="next-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-xl transition-all transform hover:scale-105 shadow-lg">
+                        下一題
+                    </button>
+                </div>
+            `;
+            
+            // Animate correct letters
+            setTimeout(() => {
+                document.querySelectorAll('#correct-letters .scrambled-letter').forEach((letter, i) => {
+                    setTimeout(() => {
+                        letter.classList.add('correct-animation');
+                    }, i * 100);
+                });
+                createConfetti();
+            }, 300);
+            
+            document.getElementById('next-btn').addEventListener('click', () => {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            });
+        }
+
+        // Show wrong answer screen
+        function showWrongScreen() {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            gameContent.innerHTML = `
+                <div class="py-10 text-center fade-in">
+                    <div class="emoji-hint">💥</div>
+                    <h2 class="text-3xl font-bold text-red-600 mb-4 wrong-animation">外星語錯誤！爆炸啦！</h2>
+                    
+                    <div class="mb-8">
+                        <p class="text-xl text-gray-700 mb-4">正確單字應該是：</p>
+                        <div class="flex justify-center">
+                            ${currentQuestion.correct.split('').map(letter => 
+                                `<span class="scrambled-letter bg-red-100 text-red-700">${letter}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <button id="next-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-xl transition-all transform hover:scale-105 shadow-lg">
+                        下一題
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('next-btn').addEventListener('click', () => {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            });
+        }
+
+        // Show end screen
+        function showEndScreen() {
+            const percentage = Math.round((score / questions.length) * 100);
+            let message, emoji;
+            
+            if (percentage >= 80) {
+                message = "太棒了！你是翻譯蒟蒻修復大師！";
+                emoji = "🏆";
+            } else if (percentage >= 60) {
+                message = "做得好！蒟蒻恢復正常運作了！";
+                emoji = "🎉";
+            } else {
+                message = "蒟蒻還需要更多修復，再試一次吧！";
+                emoji = "🔧";
+            }
+            
+            gameContent.innerHTML = `
+                <div class="py-10 text-center fade-in">
+                    <div class="emoji-hint">${emoji}</div>
+                    <h2 class="text-3xl font-bold text-purple-800 mb-4">遊戲結束！</h2>
+                    
+                    <div class="mb-6">
+                        <p class="text-2xl font-bold mb-2">你的分數：${score} / ${questions.length}</p>
+                        <p class="text-xl text-gray-700">${message}</p>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="restart-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-xl transition-all transform hover:scale-105 shadow-lg">
+                            再玩一次
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('restart-btn').addEventListener('click', startGame);
+            
+            if (percentage >= 60) {
+                createConfetti();
+            }
+        }
+
+        // Update score display
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = -10 + 'px';
+                confetti.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+                
+                document.body.appendChild(confetti);
+                
+                const animationDuration = Math.random() * 2 + 1;
+                const animationDelay = Math.random() * 2;
+                
+                confetti.animate([
+                    { transform: 'translateY(0) rotate(0)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) translateX(${(Math.random() - 0.5) * 200}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                ], {
+                    duration: animationDuration * 1000,
+                    delay: animationDelay * 1000,
+                    easing: 'cubic-bezier(0,0,0.2,1)'
+                });
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, (animationDuration + animationDelay) * 1000);
+            }
+        }
+
+        // Initialize the game
+        initGame();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9695ff8914a9f201',t:'MTc1NDIyNjAyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
