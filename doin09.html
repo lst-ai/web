@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-抽屜時光機：英語時態Tense Mission</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f0e6ff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .clock-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .drawer {
+            transition: transform 0.5s ease-in-out;
+            cursor: pointer;
+        }
+        
+        .drawer:hover {
+            transform: translateY(-5px);
+        }
+        
+        .time-portal {
+            background: conic-gradient(from 0deg, #8a2be2, #4b0082, #9400d3, #8a2be2);
+            animation: rotate 8s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .option-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.6);
+        }
+        
+        .success-animation {
+            animation: success-pulse 1s ease-in-out;
+        }
+        
+        @keyframes success-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .drawer-open {
+            animation: open-drawer 1s forwards;
+        }
+        
+        @keyframes open-drawer {
+            0% { transform: scaleY(1); }
+            100% { transform: scaleY(1.3); }
+        }
+        
+        .time-travel {
+            animation: time-travel 2s forwards;
+        }
+        
+        @keyframes time-travel {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0; transform: scale(0); }
+            100% { opacity: 0; transform: scale(0); }
+        }
+        
+        .fade-in {
+            animation: fade-in 1s forwards;
+        }
+        
+        @keyframes fade-in {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .clock-hand {
+            transform-origin: bottom center;
+        }
+        
+        .hour-hand {
+            animation: rotate-hour 60s linear infinite;
+        }
+        
+        .minute-hand {
+            animation: rotate-minute 30s linear infinite;
+        }
+        
+        .second-hand {
+            animation: rotate-second 15s linear infinite;
+        }
+        
+        @keyframes rotate-hour {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes rotate-minute {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes rotate-second {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Clock Background Pattern -->
+    <div class="clock-bg">
+        <svg width="100%" height="100%" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="clockPattern" patternUnits="userSpaceOnUse" width="200" height="200" patternTransform="rotate(45)">
+                <circle cx="100" cy="100" r="80" fill="none" stroke="#8a2be2" stroke-width="2"/>
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#9400d3" stroke-width="1"/>
+                <line x1="100" y1="30" x2="100" y2="50" stroke="#4b0082" stroke-width="2"/>
+                <line x1="100" y1="150" x2="100" y2="170" stroke="#4b0082" stroke-width="2"/>
+                <line x1="30" y1="100" x2="50" y2="100" stroke="#4b0082" stroke-width="2"/>
+                <line x1="150" y1="100" x2="170" y2="100" stroke="#4b0082" stroke-width="2"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#clockPattern)"/>
+        </svg>
+    </div>
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Main Container -->
+        <div id="main-container" class="flex-1 flex flex-col items-center justify-center p-4">
+            <!-- Title Screen -->
+            <div id="title-screen" class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-purple-800 mb-2">LST遊戲室</h1>
+                <h2 class="text-3xl md:text-4xl font-bold text-purple-700 mb-6">🕰️ 抽屜時光機</h2>
+                <h3 class="text-2xl md:text-3xl font-semibold text-purple-600 mb-8">英語時態 Tense Mission</h3>
+                
+                <div class="relative mb-8">
+                    <!-- Decorative Clock -->
+                    <div class="w-48 h-48 mx-auto relative">
+                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                            <!-- Clock Face -->
+                            <circle cx="50" cy="50" r="45" fill="#f0e6ff" stroke="#8a2be2" stroke-width="2"/>
+                            <circle cx="50" cy="50" r="3" fill="#4b0082"/>
+                            
+                            <!-- Hour Markers -->
+                            <line x1="50" y1="10" x2="50" y2="15" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="50" y1="85" x2="50" y2="90" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="10" y1="50" x2="15" y2="50" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="85" y1="50" x2="90" y2="50" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="22" y1="22" x2="26" y2="26" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="74" y1="74" x2="78" y2="78" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="22" y1="78" x2="26" y2="74" stroke="#4b0082" stroke-width="2"/>
+                            <line x1="74" y1="26" x2="78" y2="22" stroke="#4b0082" stroke-width="2"/>
+                            
+                            <!-- Clock Hands -->
+                            <line class="clock-hand hour-hand" x1="50" y1="50" x2="50" y2="25" stroke="#4b0082" stroke-width="3"/>
+                            <line class="clock-hand minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="#8a2be2" stroke-width="2"/>
+                            <line class="clock-hand second-hand" x1="50" y1="50" x2="50" y2="15" stroke="#9400d3" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Floating Time Elements -->
+                    <div class="absolute top-0 left-0 w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center floating" style="animation-delay: 0.5s; left: 10%; top: 20%;">
+                        <span class="font-bold text-purple-800">Past</span>
+                    </div>
+                    <div class="absolute top-0 right-0 w-14 h-14 bg-blue-200 rounded-full flex items-center justify-center floating" style="animation-delay: 1s; right: 15%; top: 30%;">
+                        <span class="font-bold text-blue-800">Present</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-16 h-16 bg-green-200 rounded-full flex items-center justify-center floating" style="animation-delay: 1.5s; left: 20%; bottom: 10%;">
+                        <span class="font-bold text-green-800">Future</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-lg max-w-md mx-auto mb-8">
+                    <p class="text-gray-700 mb-4">你發現了一個會穿越時間的神祕抽屜。有人偷偷改寫了時間線中的重要任務！</p>
+                    <p class="text-gray-700 mb-4">你被選為「抽屜時光修正官」，要根據線索進入過去或未來，修正語言錯誤，才能讓歷史恢復正常。</p>
+                </div>
+                
+                <button id="start-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full text-xl transition duration-300 shadow-lg">
+                    開始任務
+                </button>
+                
+                <div class="mt-12 text-gray-600 text-sm">
+                    <p>遊戲設計與製作：呂舒婷｜<a href="#" class="text-purple-600 hover:text-purple-800">了解更多🔍</a></p>
+                    <p>臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+                </div>
+            </div>
+            
+            <!-- Desk Scene -->
+            <div id="desk-scene" class="hidden w-full max-w-3xl">
+                <div class="relative">
+                    <!-- Desk Background -->
+                    <div class="bg-amber-800 rounded-t-xl h-96 relative">
+                        <!-- Desk Surface -->
+                        <div class="absolute bottom-0 left-0 right-0 h-4 bg-amber-900"></div>
+                        
+                        <!-- Drawer -->
+                        <div id="drawer" class="drawer absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/4 w-64 h-32 bg-amber-700 rounded-md border-2 border-amber-900 shadow-lg">
+                            <!-- Drawer Handle -->
+                            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 w-12 h-4 bg-amber-900 rounded-full"></div>
+                            
+                            <!-- Drawer Glow -->
+                            <div class="absolute inset-0 bg-purple-500 opacity-20 rounded-md animate-pulse"></div>
+                            
+                            <!-- Small Clock on Drawer -->
+                            <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-10 h-10">
+                                <svg viewBox="0 0 100 100" class="w-full h-full">
+                                    <circle cx="50" cy="50" r="45" fill="#f0e6ff" stroke="#8a2be2" stroke-width="2"/>
+                                    <line class="clock-hand hour-hand" x1="50" y1="50" x2="50" y2="25" stroke="#4b0082" stroke-width="3"/>
+                                    <line class="clock-hand minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="#8a2be2" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <!-- Desk Items -->
+                        <div class="absolute top-10 left-10">
+                            <div class="w-16 h-20 bg-blue-200 rounded-sm shadow-md transform rotate-12"></div>
+                            <div class="w-16 h-4 bg-blue-300 rounded-sm shadow-md transform rotate-12 -mt-1"></div>
+                        </div>
+                        
+                        <div class="absolute top-16 right-12">
+                            <div class="w-8 h-12 bg-red-400 rounded-full shadow-md"></div>
+                        </div>
+                        
+                        <div class="absolute bottom-12 right-20">
+                            <div class="w-20 h-6 bg-yellow-200 rounded-sm shadow-md"></div>
+                        </div>
+                        
+                        <!-- Wall Clock -->
+                        <div class="absolute top-8 left-1/2 transform -translate-x-1/2 w-20 h-20">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle cx="50" cy="50" r="45" fill="#f0e6ff" stroke="#8a2be2" stroke-width="2"/>
+                                <circle cx="50" cy="50" r="3" fill="#4b0082"/>
+                                <line class="clock-hand hour-hand" x1="50" y1="50" x2="50" y2="25" stroke="#4b0082" stroke-width="3"/>
+                                <line class="clock-hand minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="#8a2be2" stroke-width="2"/>
+                                <line class="clock-hand second-hand" x1="50" y1="50" x2="50" y2="15" stroke="#9400d3" stroke-width="1"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8">
+                    <p class="text-xl text-purple-800 font-medium mb-4">點擊抽屜開始時間任務！</p>
+                </div>
+            </div>
+            
+            <!-- Time Portal -->
+            <div id="time-portal" class="hidden fixed inset-0 flex items-center justify-center z-50">
+                <div class="time-portal w-96 h-96 rounded-full flex items-center justify-center">
+                    <div class="bg-white w-64 h-64 rounded-full flex items-center justify-center animate-pulse">
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-purple-800">時間穿越中...</p>
+                            <p id="time-destination" class="text-xl font-medium text-purple-600 mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mission Screen -->
+            <div id="mission-screen" class="hidden w-full max-w-2xl">
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="bg-purple-100 px-4 py-2 rounded-full">
+                            <span class="text-purple-800 font-medium">任務: </span>
+                            <span id="mission-count" class="text-purple-800 font-bold">1/15</span>
+                        </div>
+                        <div class="bg-yellow-100 px-4 py-2 rounded-full">
+                            <span class="text-yellow-800 font-medium">分數: </span>
+                            <span id="score" class="text-yellow-800 font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="bg-blue-100 p-4 rounded-lg mb-4">
+                            <h3 class="text-blue-800 font-medium mb-1">時間線提示:</h3>
+                            <p id="time-hint" class="text-blue-900 font-bold text-xl"></p>
+                        </div>
+                        
+                        <div class="bg-red-100 p-4 rounded-lg">
+                            <h3 class="text-red-800 font-medium mb-1">錯誤句子:</h3>
+                            <p id="wrong-sentence" class="text-red-900 font-bold text-xl"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-gray-700 font-medium mb-3">選擇正確的動詞時態:</h3>
+                        <div id="options" class="grid grid-cols-3 gap-4">
+                            <!-- Options will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div id="grammar-tip" class="bg-green-100 p-4 rounded-lg mb-6">
+                        <h3 class="text-green-800 font-medium mb-1">語法小提示:</h3>
+                        <p id="tip-content" class="text-green-900"></p>
+                    </div>
+                </div>
+                
+                <!-- Small attribution at bottom -->
+                <div class="mt-4 text-center text-gray-600 text-xs">
+                    <p>LST遊戲室 - 呂舒婷設計</p>
+                </div>
+            </div>
+            
+            <!-- Success Screen -->
+            <div id="success-screen" class="hidden w-full max-w-2xl text-center">
+                <div class="bg-green-100 rounded-xl p-8 shadow-lg">
+                    <div class="text-6xl mb-4">✅</div>
+                    <h2 class="text-2xl font-bold text-green-800 mb-4">時間線修復成功！</h2>
+                    <p id="correct-sentence" class="text-xl text-green-700 mb-6"></p>
+                    <button id="next-mission-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                        下一個任務
+                    </button>
+                </div>
+                
+                <!-- Small attribution at bottom -->
+                <div class="mt-4 text-center text-gray-600 text-xs">
+                    <p>LST遊戲室 - 呂舒婷設計</p>
+                </div>
+            </div>
+            
+            <!-- Completion Screen -->
+            <div id="completion-screen" class="hidden w-full max-w-2xl text-center">
+                <div class="bg-purple-100 rounded-xl p-8 shadow-lg">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <h2 class="text-2xl font-bold text-purple-800 mb-4">恭喜！所有時間線已修復</h2>
+                    <p id="final-score" class="text-xl text-purple-700 mb-6"></p>
+                    <div class="bg-white p-4 rounded-lg mb-6">
+                        <h3 class="text-gray-800 font-medium mb-2">你獲得了「時態修正卡」:</h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <p class="font-bold text-blue-800">過去式</p>
+                                <p class="text-blue-700">V-ed / 不規則</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <p class="font-bold text-green-800">現在式</p>
+                                <p class="text-green-700">V / V-s</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-lg">
+                                <p class="font-bold text-yellow-800">未來式</p>
+                                <p class="text-yellow-700">will + V</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="restart-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                        重新開始
+                    </button>
+                </div>
+                
+                <!-- Attribution at bottom -->
+                <div class="mt-8 text-gray-600 text-sm">
+                    <p>遊戲設計與製作：呂舒婷｜<a href="#" class="text-purple-600 hover:text-purple-800">了解更多🔍</a></p>
+                    <p>臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const missions = [
+            // Past Tense
+            {
+                timeHint: "In 1879...",
+                wrongSentence: "Edison make the light bulb.",
+                correctSentence: "Edison made the light bulb.",
+                options: ["make", "makes", "made"],
+                correctAnswer: "made",
+                tip: "過去式：規則動詞加 -ed，不規則動詞有特殊變化 (make → made)"
+            },
+            {
+                timeHint: "Yesterday...",
+                wrongSentence: "We play soccer at the park.",
+                correctSentence: "We played soccer at the park.",
+                options: ["played", "play", "playing"],
+                correctAnswer: "played",
+                tip: "過去式：規則動詞加 -ed (play → played)"
+            },
+            {
+                timeHint: "Last week...",
+                wrongSentence: "She eat noodles.",
+                correctSentence: "She ate noodles.",
+                options: ["eat", "ate", "eats"],
+                correctAnswer: "ate",
+                tip: "過去式：不規則動詞有特殊變化 (eat → ate)"
+            },
+            {
+                timeHint: "In 1969...",
+                wrongSentence: "They land on the moon.",
+                correctSentence: "They landed on the moon.",
+                options: ["land", "landing", "landed"],
+                correctAnswer: "landed",
+                tip: "過去式：規則動詞加 -ed (land → landed)"
+            },
+            {
+                timeHint: "Ten years ago...",
+                wrongSentence: "My dad drive a taxi.",
+                correctSentence: "My dad drove a taxi.",
+                options: ["drive", "drove", "drives"],
+                correctAnswer: "drove",
+                tip: "過去式：不規則動詞有特殊變化 (drive → drove)"
+            },
+            
+            // Present Simple
+            {
+                timeHint: "Every day...",
+                wrongSentence: "He eat an apple.",
+                correctSentence: "He eats an apple.",
+                options: ["eat", "eats", "eating"],
+                correctAnswer: "eats",
+                tip: "現在式：第三人稱單數 (he/she/it) 動詞加 -s (eat → eats)"
+            },
+            {
+                timeHint: "On weekends...",
+                wrongSentence: "We goes to the zoo.",
+                correctSentence: "We go to the zoo.",
+                options: ["go", "goes", "went"],
+                correctAnswer: "go",
+                tip: "現在式：非第三人稱單數 (we/you/they) 使用動詞原形 (go)"
+            },
+            {
+                timeHint: "Today...",
+                wrongSentence: "I am play piano.",
+                correctSentence: "I am playing piano.",
+                options: ["plays", "am playing", "play"],
+                correctAnswer: "am playing",
+                tip: "現在進行式：be動詞 (am/is/are) + 動詞ing形式 (playing)"
+            },
+            {
+                timeHint: "Usually...",
+                wrongSentence: "My mom cook dinner.",
+                correctSentence: "My mom cooks dinner.",
+                options: ["cook", "cooks", "cooking"],
+                correctAnswer: "cooks",
+                tip: "現在式：第三人稱單數 (my mom) 動詞加 -s (cook → cooks)"
+            },
+            {
+                timeHint: "Now...",
+                wrongSentence: "They watch TV.",
+                correctSentence: "They are watching TV.",
+                options: ["watching", "watch", "are watching"],
+                correctAnswer: "are watching",
+                tip: "現在進行式：be動詞 (are) + 動詞ing形式 (watching)"
+            },
+            
+            // Future Tense
+            {
+                timeHint: "Tomorrow...",
+                wrongSentence: "She buy a book.",
+                correctSentence: "She will buy a book.",
+                options: ["buys", "buying", "will buy"],
+                correctAnswer: "will buy",
+                tip: "未來式：will + 動詞原形 (will buy)"
+            },
+            {
+                timeHint: "Next week...",
+                wrongSentence: "I go to the beach.",
+                correctSentence: "I will go to the beach.",
+                options: ["going", "go", "will go"],
+                correctAnswer: "will go",
+                tip: "未來式：will + 動詞原形 (will go)"
+            },
+            {
+                timeHint: "In 2050...",
+                wrongSentence: "Robots clean our houses.",
+                correctSentence: "Robots will clean our houses.",
+                options: ["cleaned", "will clean", "cleans"],
+                correctAnswer: "will clean",
+                tip: "未來式：will + 動詞原形 (will clean)"
+            },
+            {
+                timeHint: "Later...",
+                wrongSentence: "We see a movie.",
+                correctSentence: "We will see a movie.",
+                options: ["saw", "will see", "see"],
+                correctAnswer: "will see",
+                tip: "未來式：will + 動詞原形 (will see)"
+            },
+            {
+                timeHint: "Tonight...",
+                wrongSentence: "He play the guitar.",
+                correctSentence: "He will play the guitar.",
+                options: ["played", "will play", "playing"],
+                correctAnswer: "will play",
+                tip: "未來式：will + 動詞原形 (will play)"
+            }
+        ];
+
+        // Game state
+        let currentMission = 0;
+        let score = 0;
+        
+        // DOM Elements
+        const startBtn = document.getElementById('start-btn');
+        const titleScreen = document.getElementById('title-screen');
+        const deskScene = document.getElementById('desk-scene');
+        const drawer = document.getElementById('drawer');
+        const timePortal = document.getElementById('time-portal');
+        const timeDestination = document.getElementById('time-destination');
+        const missionScreen = document.getElementById('mission-screen');
+        const missionCount = document.getElementById('mission-count');
+        const timeHint = document.getElementById('time-hint');
+        const wrongSentence = document.getElementById('wrong-sentence');
+        const options = document.getElementById('options');
+        const tipContent = document.getElementById('tip-content');
+        const successScreen = document.getElementById('success-screen');
+        const correctSentence = document.getElementById('correct-sentence');
+        const nextMissionBtn = document.getElementById('next-mission-btn');
+        const completionScreen = document.getElementById('completion-screen');
+        const finalScore = document.getElementById('final-score');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreDisplay = document.getElementById('score');
+        
+        // Event Listeners
+        startBtn.addEventListener('click', startGame);
+        drawer.addEventListener('click', openDrawer);
+        nextMissionBtn.addEventListener('click', nextMission);
+        restartBtn.addEventListener('click', restartGame);
+        
+        // Functions
+        function startGame() {
+            titleScreen.classList.add('hidden');
+            deskScene.classList.remove('hidden');
+        }
+        
+        function openDrawer() {
+            drawer.classList.add('drawer-open');
+            
+            setTimeout(() => {
+                deskScene.classList.add('time-travel');
+                timePortal.classList.remove('hidden');
+                timeDestination.textContent = missions[currentMission].timeHint;
+                
+                setTimeout(() => {
+                    timePortal.classList.add('hidden');
+                    deskScene.classList.add('hidden');
+                    deskScene.classList.remove('time-travel');
+                    drawer.classList.remove('drawer-open');
+                    missionScreen.classList.remove('hidden');
+                    missionScreen.classList.add('fade-in');
+                    loadMission(currentMission);
+                }, 2000);
+            }, 1000);
+        }
+        
+        function loadMission(index) {
+            const mission = missions[index];
+            
+            missionCount.textContent = `${index + 1}/${missions.length}`;
+            timeHint.textContent = mission.timeHint;
+            wrongSentence.textContent = mission.wrongSentence;
+            tipContent.textContent = mission.tip;
+            
+            // Clear previous options
+            options.innerHTML = '';
+            
+            // Create option buttons
+            mission.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition duration-300';
+                button.textContent = option;
+                button.addEventListener('click', () => checkAnswer(option, mission.correctAnswer));
+                options.appendChild(button);
+            });
+        }
+        
+        function checkAnswer(selected, correct) {
+            if (selected === correct) {
+                score += 10;
+                scoreDisplay.textContent = score;
+                missionScreen.classList.add('hidden');
+                successScreen.classList.remove('hidden');
+                correctSentence.textContent = missions[currentMission].correctSentence;
+            } else {
+                // Visual feedback for wrong answer
+                const buttons = options.querySelectorAll('button');
+                buttons.forEach(button => {
+                    if (button.textContent === selected) {
+                        button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                        button.classList.add('bg-red-500', 'hover:bg-red-600');
+                        
+                        setTimeout(() => {
+                            button.classList.remove('bg-red-500', 'hover:bg-red-600');
+                            button.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                        }, 800);
+                    }
+                });
+            }
+        }
+        
+        function nextMission() {
+            currentMission++;
+            
+            if (currentMission < missions.length) {
+                successScreen.classList.add('hidden');
+                timePortal.classList.remove('hidden');
+                timeDestination.textContent = missions[currentMission].timeHint;
+                
+                setTimeout(() => {
+                    timePortal.classList.add('hidden');
+                    missionScreen.classList.remove('hidden');
+                    loadMission(currentMission);
+                }, 2000);
+            } else {
+                // Game completed
+                successScreen.classList.add('hidden');
+                completionScreen.classList.remove('hidden');
+                finalScore.textContent = `你的最終分數: ${score}/${missions.length * 10}`;
+            }
+        }
+        
+        function restartGame() {
+            currentMission = 0;
+            score = 0;
+            scoreDisplay.textContent = score;
+            completionScreen.classList.add('hidden');
+            titleScreen.classList.remove('hidden');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969671cd22d8f220',t:'MTc1NDIzMDcwOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
