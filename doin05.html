@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-記憶吐司超能配對</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FFF8E1;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .toast-card {
+            perspective: 1000px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            height: 140px;
+            margin-bottom: 10px;
+        }
+        
+        .toast-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .toast-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .toast-card.flipped .toast-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .toast-front, .toast-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .toast-front {
+            background: linear-gradient(135deg, #FFD79A, #F9BE64);
+            border: 4px solid #E8A44B;
+        }
+        
+        .toast-back {
+            background: linear-gradient(135deg, #FFF3D8, #FFE8B8);
+            border: 4px solid #E8A44B;
+            transform: rotateY(180deg);
+            padding: 10px;
+            overflow-y: auto;
+        }
+        
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hidden-page {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .visible-page {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .btn {
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .toast-emoji {
+            font-size: 2.5rem;
+        }
+        
+        .energy-bar {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .energy-unit {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #E8A44B;
+        }
+        
+        .energy-filled {
+            background-color: #FFB52E;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .bounce {
+            animation: bounce 0.5s ease infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .pulse {
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FFD700;
+            opacity: 0;
+        }
+        
+        /* Improved card layout */
+        #english-game-board, #chinese-game-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+        
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+            #english-game-board, #chinese-game-board {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+            
+            .toast-card {
+                height: 160px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            #english-game-board, #chinese-game-board {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .toast-card {
+                height: 180px;
+            }
+        }
+        
+        /* Chinese idiom styling */
+        .idiom-content {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #8B4513;
+        }
+        
+        .meaning-content {
+            font-size: 1rem;
+            line-height: 1.4;
+            color: #5D4037;
+        }
+        
+        /* Countdown timer */
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            pointer-events: none; /* Allow clicking through the overlay */
+        }
+        
+        .countdown-timer {
+            font-size: 8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+            animation: pulse 1s infinite;
+        }
+        
+        .countdown-message {
+            font-size: 2rem;
+            color: white;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 80%;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Toast pattern background */
+        .toast-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        
+        .toast-icon {
+            position: absolute;
+            font-size: 2.5rem;
+            transform: rotate(var(--rotate, 0deg));
+            opacity: 0.7;
+        }
+        
+        /* Footer styling */
+        .footer {
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+            background-color: rgba(255, 248, 225, 0.8);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            font-size: 0.9rem;
+            color: #8B4513;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <!-- 遊戲簡介頁 (Page 1) -->
+    <div id="intro-page" class="page visible-page p-6">
+        <!-- Toast pattern background -->
+        <div class="toast-pattern" id="toast-pattern"></div>
+        
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="flex justify-center mb-6">
+                <svg class="w-24 h-24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="20" width="80" height="60" rx="8" fill="#FFD79A"/>
+                    <rect x="20" y="10" width="60" height="20" rx="8" fill="#F9BE64"/>
+                    <path d="M30 50 L70 50" stroke="#E8A44B" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M30 60 L60 60" stroke="#E8A44B" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M30 70 L50 70" stroke="#E8A44B" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-amber-600 mb-1">LST遊戲室</h1>
+            <h2 class="text-4xl font-bold text-amber-600 mb-4">記憶吐司超能配對</h2>
+            <div class="text-lg text-gray-700 mb-8 space-y-2">
+                <p>歡迎來到《記憶吐司超能配對》！</p>
+                <p>翻開一塊塊神奇吐司，把圖像和知識配對起來，</p>
+                <p>配對成功就能獲得一塊「知識能量」！</p>
+                <p>你能全部找對嗎？</p>
+                <p class="text-amber-600 font-bold mt-4">遊戲開始前，所有吐司會先翻開10秒讓你記憶！</p>
+            </div>
+            <button id="start-btn" class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg">
+                開始遊戲
+            </button>
+        </div>
+    </div>
+
+    <!-- 模式選擇頁 (Page 2) -->
+    <div id="mode-select-page" class="page hidden-page p-6">
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
+            <h1 class="text-2xl font-bold text-amber-600 mb-1">LST遊戲室</h1>
+            <h2 class="text-3xl font-bold text-amber-600 mb-6">請選擇你想挑戰的吐司記憶任務</h2>
+            <div class="flex flex-col md:flex-row gap-6 justify-center">
+                <div class="mode-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer" id="english-mode">
+                    <div class="flex justify-center items-center mb-4 gap-3">
+                        <div class="text-5xl">🍞</div>
+                        <div class="text-4xl">+</div>
+                        <div class="text-5xl">📘</div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-blue-600 mb-2">英語模式</h3>
+                    <p class="text-gray-600">單字 ↔ 圖片配對</p>
+                    <p class="text-gray-500 text-sm mt-2">例如：「apple」↔ 🍎</p>
+                </div>
+                <div class="mode-card bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer" id="chinese-mode">
+                    <div class="flex justify-center items-center mb-4 gap-3">
+                        <div class="text-5xl">🍞</div>
+                        <div class="text-4xl">+</div>
+                        <div class="text-5xl">📜</div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-red-600 mb-2">國語模式</h3>
+                    <p class="text-gray-600">成語 ↔ 含義配對</p>
+                    <p class="text-gray-500 text-sm mt-2">例如：「畫蛇添足」↔ 做多餘的事</p>
+                </div>
+            </div>
+            <button id="back-to-intro" class="btn mt-8 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full text-lg">
+                返回首頁
+            </button>
+        </div>
+    </div>
+
+    <!-- 英語配對頁 (Page 3) -->
+    <div id="english-game-page" class="page hidden-page p-4">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-6 px-4">
+                <h2 class="text-2xl font-bold text-amber-600">LST遊戲室-英語吐司配對</h2>
+                <div class="flex items-center gap-3">
+                    <span class="text-lg font-semibold">知識能量：</span>
+                    <div id="english-energy-bar" class="energy-bar"></div>
+                </div>
+            </div>
+            <div id="english-game-board" class="p-2"></div>
+            <div class="mt-6 flex justify-center">
+                <button id="english-back-btn" class="btn bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full text-lg">
+                    返回選擇
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 國語配對頁 (Page 4) -->
+    <div id="chinese-game-page" class="page hidden-page p-4">
+        <div class="max-w-6xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-6 px-4">
+                <h2 class="text-2xl font-bold text-amber-600">LST遊戲室-國語吐司配對</h2>
+                <div class="flex items-center gap-3">
+                    <span class="text-lg font-semibold">知識能量：</span>
+                    <div id="chinese-energy-bar" class="energy-bar"></div>
+                </div>
+            </div>
+            <div id="chinese-game-board" class="p-2"></div>
+            <div class="mt-6 flex justify-center">
+                <button id="chinese-back-btn" class="btn bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full text-lg">
+                    返回選擇
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配對成功頁 (Page 5) -->
+    <div id="success-page" class="page hidden-page p-6">
+        <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="text-6xl mb-4">✨</div>
+            <h2 class="text-3xl font-bold text-green-600 mb-2">你配對成功了！</h2>
+            <p class="text-xl text-amber-500 font-bold mb-4">🎉 知識能量 +1！</p>
+            <div class="flex justify-center mb-6">
+                <div id="success-energy-bar" class="energy-bar"></div>
+            </div>
+            <div class="flex justify-center gap-4">
+                <button id="return-to-game" class="btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full">
+                    返回配對頁
+                </button>
+                <button id="next-pair" class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full">
+                    前往下一題
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配對錯誤提示頁 -->
+    <div id="error-page" class="page hidden-page p-6">
+        <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="text-6xl mb-4">🤔</div>
+            <h2 class="text-3xl font-bold text-orange-500 mb-4">再觀察一下吧</h2>
+            <p class="text-gray-600 mb-6">這兩塊吐司似乎不是一對...</p>
+            <button id="try-again" class="btn bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full">
+                繼續尋找
+            </button>
+        </div>
+    </div>
+
+    <!-- 遊戲完成頁 (Page 6) -->
+    <div id="complete-page" class="page hidden-page p-6">
+        <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="text-6xl mb-4">🎊</div>
+            <h2 class="text-3xl font-bold text-amber-600 mb-2">太棒了！</h2>
+            <p class="text-xl mb-6">你完成了所有記憶吐司挑戰！</p>
+            <div class="bg-gradient-to-r from-amber-400 to-amber-600 text-white font-bold py-3 px-4 rounded-lg mb-8">
+                <p class="text-2xl">你是一位「知識配對超人」！</p>
+            </div>
+            <div class="flex flex-col gap-4">
+                <button id="download-badge" class="btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full flex items-center justify-center gap-2">
+                    <span>下載「吐司小徽章圖」</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                </button>
+                <button id="try-other-mode" class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full">
+                    再挑戰一種模式
+                </button>
+                <button id="create-challenge" class="btn bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded-full">
+                    自製挑戰卡送給朋友！
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 倒數計時覆蓋層 -->
+    <div id="countdown-overlay" class="countdown-overlay hidden-page">
+        <div class="countdown-timer">10</div>
+        <div class="countdown-message">記住吐司位置！遊戲即將開始...</div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        遊戲設計與製作：呂舒婷｜📧 luuyobi@gmail.com
+    </div>
+
+    <script>
+        // Game data
+        const englishPairs = [
+            { id: 1, type: 'word', content: 'apple', match: 11 },
+            { id: 2, type: 'word', content: 'cat', match: 12 },
+            { id: 3, type: 'word', content: 'sun', match: 13 },
+            { id: 4, type: 'word', content: 'ball', match: 14 },
+            { id: 5, type: 'word', content: 'fish', match: 15 },
+            { id: 6, type: 'word', content: 'book', match: 16 },
+            { id: 7, type: 'word', content: 'car', match: 17 },
+            { id: 8, type: 'word', content: 'tree', match: 18 },
+            { id: 9, type: 'word', content: 'shoe', match: 19 },
+            { id: 10, type: 'word', content: 'banana', match: 20 },
+            { id: 11, type: 'image', content: '🍎', match: 1 },
+            { id: 12, type: 'image', content: '🐱', match: 2 },
+            { id: 13, type: 'image', content: '🌞', match: 3 },
+            { id: 14, type: 'image', content: '⚽️', match: 4 },
+            { id: 15, type: 'image', content: '🐟', match: 5 },
+            { id: 16, type: 'image', content: '📖', match: 6 },
+            { id: 17, type: 'image', content: '🚗', match: 7 },
+            { id: 18, type: 'image', content: '🌳', match: 8 },
+            { id: 19, type: 'image', content: '👟', match: 9 },
+            { id: 20, type: 'image', content: '🍌', match: 10 }
+        ];
+
+        const chinesePairs = [
+            { id: 1, type: 'idiom', content: '畫蛇添足', match: 11 },
+            { id: 2, type: 'idiom', content: '掩耳盜鈴', match: 12 },
+            { id: 3, type: 'idiom', content: '井底之蛙', match: 13 },
+            { id: 4, type: 'idiom', content: '拋磚引玉', match: 14 },
+            { id: 5, type: 'idiom', content: '守株待兔', match: 15 },
+            { id: 6, type: 'idiom', content: '狐假虎威', match: 16 },
+            { id: 7, type: 'idiom', content: '自相矛盾', match: 17 },
+            { id: 8, type: 'idiom', content: '畫龍點睛', match: 18 },
+            { id: 9, type: 'idiom', content: '一箭雙鵰', match: 19 },
+            { id: 10, type: 'idiom', content: '拔苗助長', match: 20 },
+            { id: 11, type: 'meaning', content: '做了多餘的事情，壞了原本的好處。', match: 1 },
+            { id: 12, type: 'meaning', content: '做壞事卻假裝別人不知道，自欺欺人。', match: 2 },
+            { id: 13, type: 'meaning', content: '見識狹窄，不知道外面的世界。', match: 3 },
+            { id: 14, type: 'meaning', content: '提出想法，引出別人更好的建議。', match: 4 },
+            { id: 15, type: 'meaning', content: '只想靠運氣，不願主動努力。', match: 5 },
+            { id: 16, type: 'meaning', content: '借用別人的權勢來欺壓他人。', match: 6 },
+            { id: 17, type: 'meaning', content: '說話前後不一致，互相抵觸。', match: 7 },
+            { id: 18, type: 'meaning', content: '在重要處加上一筆，使整體更精彩。', match: 8 },
+            { id: 19, type: 'meaning', content: '做一件事，得到兩個好結果。', match: 9 },
+            { id: 20, type: 'meaning', content: '急於求成，反而害了事情本身。', match: 10 }
+        ];
+
+        // Game state
+        let currentMode = null;
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let totalPairs = 10;
+        let currentGameData = [];
+        let energyLevel = 0;
+        let gameActive = false;
+        let allCards = [];
+
+        // DOM elements
+        const pages = {
+            intro: document.getElementById('intro-page'),
+            modeSelect: document.getElementById('mode-select-page'),
+            englishGame: document.getElementById('english-game-page'),
+            chineseGame: document.getElementById('chinese-game-page'),
+            success: document.getElementById('success-page'),
+            error: document.getElementById('error-page'),
+            complete: document.getElementById('complete-page'),
+            countdown: document.getElementById('countdown-overlay')
+        };
+
+        // Create toast pattern background
+        function createToastPattern() {
+            const toastPattern = document.getElementById('toast-pattern');
+            const toastIcons = ['🍞', '🥪', '🥖', '🥐', '🥯', '🧇'];
+            
+            for (let i = 0; i < 30; i++) {
+                const toast = document.createElement('div');
+                toast.className = 'toast-icon';
+                toast.textContent = toastIcons[Math.floor(Math.random() * toastIcons.length)];
+                
+                // Random position
+                toast.style.left = `${Math.random() * 100}%`;
+                toast.style.top = `${Math.random() * 100}%`;
+                
+                // Random rotation
+                toast.style.setProperty('--rotate', `${Math.random() * 360}deg`);
+                
+                // Random size
+                const size = Math.random() * 1.5 + 1;
+                toast.style.fontSize = `${size}rem`;
+                
+                // Random opacity
+                toast.style.opacity = `${Math.random() * 0.5 + 0.2}`;
+                
+                toastPattern.appendChild(toast);
+            }
+        }
+
+        // Navigation functions
+        function showPage(pageId) {
+            Object.values(pages).forEach(page => {
+                page.classList.add('hidden-page');
+                page.classList.remove('visible-page');
+            });
+            pages[pageId].classList.remove('hidden-page');
+            pages[pageId].classList.add('visible-page');
+        }
+
+        // Initialize energy bars
+        function initEnergyBars() {
+            const englishEnergyBar = document.getElementById('english-energy-bar');
+            const chineseEnergyBar = document.getElementById('chinese-energy-bar');
+            const successEnergyBar = document.getElementById('success-energy-bar');
+            
+            englishEnergyBar.innerHTML = '';
+            chineseEnergyBar.innerHTML = '';
+            successEnergyBar.innerHTML = '';
+            
+            for (let i = 0; i < totalPairs; i++) {
+                const unit = document.createElement('div');
+                unit.className = 'energy-unit';
+                if (i < energyLevel) {
+                    unit.classList.add('energy-filled');
+                }
+                englishEnergyBar.appendChild(unit.cloneNode(true));
+                chineseEnergyBar.appendChild(unit.cloneNode(true));
+                successEnergyBar.appendChild(unit.cloneNode(true));
+            }
+        }
+
+        // Update energy bars
+        function updateEnergyBars() {
+            const englishEnergyBar = document.getElementById('english-energy-bar');
+            const chineseEnergyBar = document.getElementById('chinese-energy-bar');
+            const successEnergyBar = document.getElementById('success-energy-bar');
+            
+            const englishUnits = englishEnergyBar.querySelectorAll('.energy-unit');
+            const chineseUnits = chineseEnergyBar.querySelectorAll('.energy-unit');
+            const successUnits = successEnergyBar.querySelectorAll('.energy-unit');
+            
+            for (let i = 0; i < totalPairs; i++) {
+                if (i < energyLevel) {
+                    englishUnits[i].classList.add('energy-filled');
+                    chineseUnits[i].classList.add('energy-filled');
+                    successUnits[i].classList.add('energy-filled');
+                } else {
+                    englishUnits[i].classList.remove('energy-filled');
+                    chineseUnits[i].classList.remove('energy-filled');
+                    successUnits[i].classList.remove('energy-filled');
+                }
+            }
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Create game board
+        function createGameBoard(mode) {
+            const gameBoard = document.getElementById(`${mode}-game-board`);
+            gameBoard.innerHTML = '';
+            allCards = [];
+            
+            currentGameData = mode === 'english' ? englishPairs : chinesePairs;
+            const shuffledData = shuffleArray(currentGameData);
+            
+            shuffledData.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'toast-card';
+                cardElement.dataset.id = card.id;
+                cardElement.dataset.match = card.match;
+                
+                let backContent = '';
+                if (card.type === 'image') {
+                    backContent = `<div class="toast-emoji text-5xl">${card.content}</div>`;
+                } else if (card.type === 'word') {
+                    backContent = `<div class="text-center p-2 text-2xl font-bold text-blue-700">${card.content}</div>`;
+                } else if (card.type === 'idiom') {
+                    backContent = `<div class="idiom-content">${card.content}</div>`;
+                } else if (card.type === 'meaning') {
+                    backContent = `<div class="meaning-content">${card.content}</div>`;
+                }
+                
+                cardElement.innerHTML = `
+                    <div class="toast-inner">
+                        <div class="toast-front flex flex-col items-center justify-center">
+                            <div class="text-4xl">❓</div>
+                            <div class="text-sm mt-2">點擊翻開</div>
+                        </div>
+                        <div class="toast-back flex items-center justify-center">
+                            ${backContent}
+                        </div>
+                    </div>
+                `;
+                
+                cardElement.addEventListener('click', () => {
+                    if (gameActive) {
+                        flipCard(cardElement);
+                    }
+                });
+                
+                gameBoard.appendChild(cardElement);
+                allCards.push(cardElement);
+            });
+            
+            // Start preview mode
+            startPreviewMode();
+        }
+
+        // Start preview mode - show all cards for 10 seconds
+        function startPreviewMode() {
+            // Make sure the game page is visible first
+            showPage(currentMode === 'english' ? 'englishGame' : 'chineseGame');
+            
+            // Flip all cards to show their content
+            setTimeout(() => {
+                allCards.forEach(card => {
+                    card.classList.add('flipped');
+                });
+                
+                // Show countdown overlay
+                pages.countdown.classList.remove('hidden-page');
+                
+                // Start countdown
+                let countdown = 10;
+                const countdownTimer = document.querySelector('.countdown-timer');
+                countdownTimer.textContent = countdown;
+                
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    countdownTimer.textContent = countdown;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        
+                        // Hide countdown overlay
+                        pages.countdown.classList.add('hidden-page');
+                        
+                        // Flip all cards back
+                        allCards.forEach(card => {
+                            card.classList.remove('flipped');
+                        });
+                        
+                        // Activate the game
+                        gameActive = true;
+                    }
+                }, 1000);
+            }, 500); // Small delay to ensure cards are rendered before flipping
+        }
+
+        // Flip card
+        function flipCard(card) {
+            // Prevent flipping if already flipped or matched
+            if (card.classList.contains('flipped') || flippedCards.length >= 2 || card.style.visibility === 'hidden') {
+                return;
+            }
+            
+            // Flip the card
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            
+            // Check for match if two cards are flipped
+            if (flippedCards.length === 2) {
+                setTimeout(checkForMatch, 1000);
+            }
+        }
+
+        // Check for match
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const match1 = parseInt(card1.dataset.match);
+            const match2 = parseInt(card2.dataset.id);
+            
+            if (match1 === match2) {
+                // Match found
+                card1.style.visibility = 'hidden';
+                card2.style.visibility = 'hidden';
+                matchedPairs++;
+                energyLevel++;
+                updateEnergyBars();
+                
+                // Show success page
+                showPage('success');
+                
+                // Check if game is complete
+                if (matchedPairs === totalPairs) {
+                    setTimeout(() => {
+                        showPage('complete');
+                        createConfetti();
+                    }, 1500);
+                }
+            } else {
+                // No match
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                showPage('error');
+            }
+            
+            flippedCards = [];
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const confettiContainer = document.getElementById('complete-page');
+            const colors = ['#FFD700', '#FF6347', '#4169E1', '#32CD32', '#FF69B4', '#9370DB'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.top = `-10px`;
+                confetti.style.width = `${Math.random() * 10 + 5}px`;
+                confetti.style.height = `${Math.random() * 10 + 5}px`;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.opacity = '1';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                confettiContainer.appendChild(confetti);
+                
+                const animationDuration = Math.random() * 3 + 2;
+                const horizontalMovement = Math.random() * 100 - 50;
+                
+                confetti.animate([
+                    { transform: `translateY(0) translateX(0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) translateX(${horizontalMovement}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: animationDuration * 1000,
+                    easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+                });
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, animationDuration * 1000);
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            flippedCards = [];
+            matchedPairs = 0;
+            energyLevel = 0;
+            gameActive = false;
+            updateEnergyBars();
+        }
+
+        // Initialize game
+        function initGame() {
+            // Create toast pattern background
+            createToastPattern();
+            
+            // Set up event listeners
+            document.getElementById('start-btn').addEventListener('click', () => {
+                showPage('modeSelect');
+            });
+            
+            document.getElementById('back-to-intro').addEventListener('click', () => {
+                showPage('intro');
+            });
+            
+            document.getElementById('english-mode').addEventListener('click', () => {
+                currentMode = 'english';
+                resetGame();
+                createGameBoard('english');
+                initEnergyBars();
+            });
+            
+            document.getElementById('chinese-mode').addEventListener('click', () => {
+                currentMode = 'chinese';
+                resetGame();
+                createGameBoard('chinese');
+                initEnergyBars();
+            });
+            
+            document.getElementById('english-back-btn').addEventListener('click', () => {
+                showPage('modeSelect');
+            });
+            
+            document.getElementById('chinese-back-btn').addEventListener('click', () => {
+                showPage('modeSelect');
+            });
+            
+            document.getElementById('return-to-game').addEventListener('click', () => {
+                showPage(`${currentMode}Game`);
+            });
+            
+            document.getElementById('next-pair').addEventListener('click', () => {
+                showPage(`${currentMode}Game`);
+            });
+            
+            document.getElementById('try-again').addEventListener('click', () => {
+                showPage(`${currentMode}Game`);
+            });
+            
+            document.getElementById('try-other-mode').addEventListener('click', () => {
+                showPage('modeSelect');
+            });
+            
+            document.getElementById('download-badge').addEventListener('click', () => {
+                // Create a toast badge SVG
+                const svgData = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="95" fill="#FFD79A" stroke="#E8A44B" stroke-width="5"/>
+                    <path d="M50,70 L150,70 C155,70 160,75 160,80 L160,140 C160,145 155,150 150,150 L50,150 C45,150 40,145 40,140 L40,80 C40,75 45,70 50,70 Z" fill="#F9BE64" stroke="#E8A44B" stroke-width="3"/>
+                    <path d="M60,90 L140,90" stroke="#E8A44B" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M60,110 L120,110" stroke="#E8A44B" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M60,130 L100,130" stroke="#E8A44B" stroke-width="4" stroke-linecap="round"/>
+                    <text x="100" y="40" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#8B4513">LST遊戲室-記憶吐司超能配對</text>
+                    <text x="100" y="180" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#8B4513">知識配對超人</text>
+                </svg>`;
+                
+                // Create a download link
+                const link = document.createElement('a');
+                link.href = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
+                link.download = '吐司小徽章.svg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert('恭喜你獲得吐司小徽章！');
+            });
+            
+            document.getElementById('create-challenge').addEventListener('click', () => {
+                alert('自製挑戰功能即將推出！');
+            });
+            
+            // Initialize energy bars
+            initEnergyBars();
+        }
+
+        // Start the game when page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9694c32386baf1f4',t:'MTc1NDIxMzA2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
