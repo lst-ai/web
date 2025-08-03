@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-翻譯蒟蒻：我是誰？外星模仿秀</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+        }
+        
+        .animal-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .animal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .animal-svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .bounce {
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        
+        .feedback-overlay {
+            background-color: rgba(0,0,0,0.7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .feedback-overlay.show {
+            opacity: 1;
+        }
+        
+        .feedback-content {
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        
+        .feedback-content.show {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-center">
+            <h1 class="text-3xl font-bold text-white">LST遊戲室-翻譯蒟蒻：我是誰？外星模仿秀</h1>
+            <p class="text-white mt-2">Listen to the clues and guess which animal is speaking!</p>
+        </div>
+        
+        <!-- Game Container -->
+        <div id="game-container" class="p-6">
+            <!-- Game Introduction -->
+            <div id="game-intro" class="text-center py-8">
+                <div class="text-7xl mb-6 mx-auto">👽🐾</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">歡迎來到外星模仿秀！</h2>
+                
+                <div class="bg-blue-50 p-6 rounded-lg mb-8 max-w-2xl mx-auto text-left">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">🎮 遊戲概念：</h3>
+                    <p class="text-gray-700 text-lg">
+                        外星人吃了地球動物資料晶片，開始模仿牠們的聲音、動作、特徵，小朋友你要根據牠的自我介紹，判斷牠模仿的是什麼動物。加油！
+                    </p>
+                </div>
+                
+                <div class="bg-yellow-50 p-6 rounded-lg mb-8 max-w-2xl mx-auto text-left">
+                    <h3 class="text-xl font-bold text-yellow-700 mb-3">🎯 學習目標：</h3>
+                    <ul class="text-gray-700 text-lg list-disc pl-6 space-y-2">
+                        <li>英語動物單字</li>
+                        <li>句型練習：I am / I have / I can / I like...</li>
+                    </ul>
+                </div>
+                
+                <button id="start-game-btn" class="bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 px-8 rounded-lg font-bold text-xl hover:from-green-600 hover:to-blue-600 transition shadow-lg">
+                    開始遊戲
+                </button>
+            </div>
+            
+            <!-- Game Play Area (initially hidden) -->
+            <div id="game-play" class="hidden">
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-6">
+                    <div id="progress-bar" class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+                
+                <!-- Question Counter -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-lg font-semibold text-gray-700">
+                        Question: <span id="current-question">1</span>/<span id="total-questions">12</span>
+                    </div>
+                    <div class="text-lg font-semibold text-gray-700">
+                        Score: <span id="score">0</span>
+                    </div>
+                </div>
+                
+                <!-- Question Area -->
+                <div class="bg-blue-50 p-6 rounded-lg mb-6 shadow-inner">
+                    <div class="flex items-start">
+                        <div class="mr-4 text-4xl">👽</div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800 mb-2">Who am I?</h2>
+                            <div id="clues" class="text-lg text-gray-700 space-y-1">
+                                <p>I have long ears.</p>
+                                <p>I like carrots.</p>
+                                <p>I can jump.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Answer Options -->
+                <div id="options" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Options will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-gray-100 p-4 text-center border-t border-gray-200">
+            <p class="text-gray-700">
+                遊戲設計與製作：呂舒婷｜<a href="#" class="text-blue-600 hover:underline">了解更多🔍</a>
+            </p>
+            <p class="text-gray-700 mt-1">
+                臉書搜尋：呂舒婷｜📧 <a href="mailto:luuyobi@gmail.com" class="text-blue-600 hover:underline">luuyobi@gmail.com</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Feedback Overlay -->
+    <div id="feedback-overlay" class="fixed inset-0 flex items-center justify-center z-50 feedback-overlay hidden">
+        <div id="feedback-content" class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl feedback-content">
+            <div id="feedback-correct" class="hidden">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h2 class="text-2xl font-bold text-green-600">你猜對啦！</h2>
+                </div>
+                <div id="correct-animal-info" class="text-center mb-6">
+                    <div id="correct-animal-emoji" class="text-7xl mb-2 bounce"></div>
+                    <h3 id="correct-animal-name" class="text-xl font-bold"></h3>
+                </div>
+                <div id="correct-animal-speech" class="bg-green-50 p-4 rounded-lg text-gray-700 mb-6">
+                    <p>Hello! I'm a rabbit. I have long ears and I love to eat carrots!</p>
+                </div>
+                <button id="next-btn" class="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-lg font-bold hover:from-green-600 hover:to-blue-600 transition">
+                    下一題
+                </button>
+            </div>
+            
+            <div id="feedback-wrong" class="hidden">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">🤔</div>
+                    <h2 class="text-2xl font-bold text-red-500">我才不是那種動物呢！</h2>
+                </div>
+                <div id="wrong-animal-info" class="text-center mb-6">
+                    <div id="wrong-animal-emoji" class="text-7xl mb-2 shake"></div>
+                    <p class="text-lg text-gray-700">I'm not a <span id="wrong-animal-name"></span>!</p>
+                </div>
+                <button id="try-again-btn" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white py-3 rounded-lg font-bold hover:from-red-600 hover:to-orange-600 transition">
+                    再試一次
+                </button>
+            </div>
+            
+            <div id="game-complete" class="hidden">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <h2 class="text-2xl font-bold text-purple-600">遊戲完成！</h2>
+                </div>
+                <div class="text-center mb-6">
+                    <p class="text-lg text-gray-700">你的最終得分：</p>
+                    <p id="final-score" class="text-4xl font-bold text-purple-600">12/12</p>
+                </div>
+                <button id="restart-btn" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 rounded-lg font-bold hover:from-purple-600 hover:to-indigo-600 transition">
+                    再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const questions = [
+            {
+                clues: ["I have long ears.", "I like carrots.", "I can jump."],
+                correctAnswer: {name: "Rabbit", emoji: "🐰"},
+                options: [
+                    {name: "Rabbit", emoji: "🐰"},
+                    {name: "Elephant", emoji: "🐘"},
+                    {name: "Turtle", emoji: "🐢"}
+                ]
+            },
+            {
+                clues: ["I have a long neck.", "I eat leaves.", "I am tall."],
+                correctAnswer: {name: "Giraffe", emoji: "🦒"},
+                options: [
+                    {name: "Giraffe", emoji: "🦒"},
+                    {name: "Cow", emoji: "🐄"},
+                    {name: "Horse", emoji: "🐎"}
+                ]
+            },
+            {
+                clues: ["I can fly.", "I have colorful feathers.", "I sing in the morning."],
+                correctAnswer: {name: "Bird", emoji: "🐦"},
+                options: [
+                    {name: "Bird", emoji: "🐦"},
+                    {name: "Penguin", emoji: "🐧"},
+                    {name: "Wolf", emoji: "🐺"}
+                ]
+            },
+            {
+                clues: ["I swim fast.", "I have fins.", "I live in water."],
+                correctAnswer: {name: "Fish", emoji: "🐟"},
+                options: [
+                    {name: "Fish", emoji: "🐟"},
+                    {name: "Crocodile", emoji: "🐊"},
+                    {name: "Dolphin", emoji: "🐬"}
+                ]
+            },
+            {
+                clues: ["I have black and white stripes.", "I can run fast."],
+                correctAnswer: {name: "Zebra", emoji: "🦓"},
+                options: [
+                    {name: "Zebra", emoji: "🦓"},
+                    {name: "Panda", emoji: "🐼"},
+                    {name: "Tiger", emoji: "🐯"}
+                ]
+            },
+            {
+                clues: ["I am small.", "I like cheese.", "I have a long tail."],
+                correctAnswer: {name: "Mouse", emoji: "🐭"},
+                options: [
+                    {name: "Mouse", emoji: "🐭"},
+                    {name: "Squirrel", emoji: "🐿️"},
+                    {name: "Cat", emoji: "🐱"}
+                ]
+            },
+            {
+                clues: ["I am big.", "I have a trunk.", "I love peanuts."],
+                correctAnswer: {name: "Elephant", emoji: "🐘"},
+                options: [
+                    {name: "Elephant", emoji: "🐘"},
+                    {name: "Bear", emoji: "🐻"},
+                    {name: "Buffalo", emoji: "🐃"}
+                ]
+            },
+            {
+                clues: ["I am slow.", "I carry my home on my back.", "I have a hard shell."],
+                correctAnswer: {name: "Turtle", emoji: "🐢"},
+                options: [
+                    {name: "Turtle", emoji: "🐢"},
+                    {name: "Snail", emoji: "🐌"},
+                    {name: "Snake", emoji: "🐍"}
+                ]
+            },
+            {
+                clues: ["I can hop.", "I have a pocket.", "I live in Australia."],
+                correctAnswer: {name: "Kangaroo", emoji: "🦘"},
+                options: [
+                    {name: "Kangaroo", emoji: "🦘"},
+                    {name: "Rabbit", emoji: "🐰"},
+                    {name: "Bear", emoji: "🐻"}
+                ]
+            },
+            {
+                clues: ["I make honey.", "I can fly.", "I say \"buzz\"."],
+                correctAnswer: {name: "Bee", emoji: "🐝"},
+                options: [
+                    {name: "Bee", emoji: "🐝"},
+                    {name: "Butterfly", emoji: "🦋"},
+                    {name: "Ladybug", emoji: "🐞"}
+                ]
+            },
+            {
+                clues: ["I howl at night.", "I look like a dog."],
+                correctAnswer: {name: "Wolf", emoji: "🐺"},
+                options: [
+                    {name: "Wolf", emoji: "🐺"},
+                    {name: "Fox", emoji: "🦊"},
+                    {name: "Dog", emoji: "🐶"}
+                ]
+            },
+            {
+                clues: ["I live in cold places.", "I cannot fly.", "I slide on ice."],
+                correctAnswer: {name: "Penguin", emoji: "🐧"},
+                options: [
+                    {name: "Penguin", emoji: "🐧"},
+                    {name: "Dolphin", emoji: "🐬"},
+                    {name: "Bird", emoji: "🐦"}
+                ]
+            }
+        ];
+
+        // Animal speeches for correct answers
+        const animalSpeeches = {
+            "Rabbit": "Hello! I'm a rabbit. I have long ears and I love to eat carrots and jump around!",
+            "Giraffe": "Hi there! I'm a giraffe. My long neck helps me reach leaves high up in trees!",
+            "Bird": "Tweet tweet! I'm a bird. I love flying in the sky and singing beautiful songs!",
+            "Fish": "Bubble bubble! I'm a fish. I swim in water and use my fins to move around!",
+            "Zebra": "Hello! I'm a zebra. My black and white stripes make me unique and help me hide from predators!",
+            "Mouse": "Squeak! I'm a mouse. I'm small and quick, and cheese is my favorite food!",
+            "Elephant": "Trumpet! I'm an elephant. I'm very big and use my trunk to grab food and spray water!",
+            "Turtle": "Hi there! I'm a turtle. I move slowly but my shell keeps me safe wherever I go!",
+            "Kangaroo": "G'day mate! I'm a kangaroo from Australia. I carry my babies in my pouch and hop around!",
+            "Bee": "Buzz buzz! I'm a bee. I fly from flower to flower collecting nectar to make honey!",
+            "Wolf": "Awoooo! I'm a wolf. I live in packs and howl at the moon at night!",
+            "Penguin": "Hello! I'm a penguin. I love sliding on ice and swimming in cold water!"
+        };
+
+        // Game state
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledOptions = [];
+
+        // DOM elements
+        const gameIntro = document.getElementById('game-intro');
+        const gamePlay = document.getElementById('game-play');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const cluesElement = document.getElementById('clues');
+        const optionsElement = document.getElementById('options');
+        const currentQuestionElement = document.getElementById('current-question');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const scoreElement = document.getElementById('score');
+        const progressBarElement = document.getElementById('progress-bar');
+        const feedbackOverlay = document.getElementById('feedback-overlay');
+        const feedbackContent = document.getElementById('feedback-content');
+        const feedbackCorrect = document.getElementById('feedback-correct');
+        const feedbackWrong = document.getElementById('feedback-wrong');
+        const gameComplete = document.getElementById('game-complete');
+        const correctAnimalEmoji = document.getElementById('correct-animal-emoji');
+        const correctAnimalName = document.getElementById('correct-animal-name');
+        const correctAnimalSpeech = document.getElementById('correct-animal-speech');
+        const wrongAnimalEmoji = document.getElementById('wrong-animal-emoji');
+        const wrongAnimalName = document.getElementById('wrong-animal-name');
+        const nextBtn = document.getElementById('next-btn');
+        const tryAgainBtn = document.getElementById('try-again-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const finalScoreElement = document.getElementById('final-score');
+
+        // Start game button
+        startGameBtn.addEventListener('click', () => {
+            gameIntro.classList.add('hidden');
+            gamePlay.classList.remove('hidden');
+            initGame();
+        });
+
+        // Initialize game
+        function initGame() {
+            totalQuestionsElement.textContent = questions.length;
+            updateQuestion();
+        }
+
+        // Update question display
+        function updateQuestion() {
+            const question = questions[currentQuestionIndex];
+            
+            // Update question counter and progress bar
+            currentQuestionElement.textContent = currentQuestionIndex + 1;
+            const progressPercentage = ((currentQuestionIndex) / questions.length) * 100;
+            progressBarElement.style.width = `${progressPercentage}%`;
+            
+            // Update clues
+            cluesElement.innerHTML = '';
+            question.clues.forEach(clue => {
+                const p = document.createElement('p');
+                p.textContent = clue;
+                cluesElement.appendChild(p);
+            });
+            
+            // Shuffle options
+            shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+            
+            // Update options
+            optionsElement.innerHTML = '';
+            shuffledOptions.forEach((option, index) => {
+                const optionCard = document.createElement('div');
+                optionCard.className = 'animal-card bg-white rounded-xl shadow-md overflow-hidden hover:bg-blue-50 transition';
+                optionCard.innerHTML = `
+                    <div class="p-6 text-center">
+                        <div class="text-7xl mb-4">${option.emoji}</div>
+                        <h3 class="text-xl font-bold text-gray-800">${option.name}</h3>
+                    </div>
+                `;
+                optionCard.addEventListener('click', () => checkAnswer(option));
+                optionsElement.appendChild(optionCard);
+            });
+        }
+
+        // Check answer
+        function checkAnswer(selectedOption) {
+            const question = questions[currentQuestionIndex];
+            
+            if (selectedOption.name === question.correctAnswer.name) {
+                // Correct answer
+                score++;
+                scoreElement.textContent = score;
+                
+                // Show correct feedback
+                correctAnimalEmoji.textContent = selectedOption.emoji;
+                correctAnimalName.textContent = selectedOption.name;
+                correctAnimalSpeech.innerHTML = `<p>${animalSpeeches[selectedOption.name]}</p>`;
+                
+                showFeedback('correct');
+            } else {
+                // Wrong answer
+                wrongAnimalEmoji.textContent = selectedOption.emoji;
+                wrongAnimalName.textContent = selectedOption.name;
+                
+                showFeedback('wrong');
+            }
+        }
+
+        // Show feedback overlay
+        function showFeedback(type) {
+            feedbackOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                feedbackOverlay.classList.add('show');
+                feedbackContent.classList.add('show');
+            }, 10);
+            
+            feedbackCorrect.classList.add('hidden');
+            feedbackWrong.classList.add('hidden');
+            gameComplete.classList.add('hidden');
+            
+            if (type === 'correct') {
+                feedbackCorrect.classList.remove('hidden');
+            } else if (type === 'wrong') {
+                feedbackWrong.classList.remove('hidden');
+            } else if (type === 'complete') {
+                gameComplete.classList.remove('hidden');
+                finalScoreElement.textContent = `${score}/${questions.length}`;
+            }
+        }
+
+        // Hide feedback overlay
+        function hideFeedback() {
+            feedbackOverlay.classList.remove('show');
+            feedbackContent.classList.remove('show');
+            setTimeout(() => {
+                feedbackOverlay.classList.add('hidden');
+            }, 300);
+        }
+
+        // Move to next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= questions.length) {
+                // Game complete
+                showFeedback('complete');
+            } else {
+                hideFeedback();
+                updateQuestion();
+            }
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', nextQuestion);
+        
+        tryAgainBtn.addEventListener('click', () => {
+            hideFeedback();
+        });
+        
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            hideFeedback();
+            updateQuestion();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9695fcc5814ef228',t:'MTc1NDIyNTkxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
