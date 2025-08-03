@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-時光機修復師</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f9ff;
+            overflow-x: hidden;
+        }
+        
+        .time-portal {
+            background: radial-gradient(circle, #4f46e5 0%, #3b82f6 50%, #1e40af 100%);
+            box-shadow: 0 0 30px #4f46e5;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 30px #4f46e5; }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px #4f46e5; }
+            100% { transform: scale(1); box-shadow: 0 0 30px #4f46e5; }
+        }
+        
+        .time-vortex {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(from 0deg, #4f46e5, #3b82f6, #60a5fa, #93c5fd, #60a5fa, #3b82f6, #4f46e5);
+            border-radius: 50%;
+            animation: spin 8s linear infinite;
+            opacity: 0.8;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .drawer {
+            background: linear-gradient(to bottom, #854d0e, #a16207);
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), 0 5px 10px rgba(0,0,0,0.5);
+        }
+        
+        .drawer-handle {
+            background: linear-gradient(to bottom, #fcd34d, #fbbf24);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .timeline {
+            background: linear-gradient(to right, #3b82f6, #60a5fa, #93c5fd);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            cursor: grab;
+        }
+        
+        .card:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        
+        .card.correct {
+            box-shadow: 0 0 15px #10b981;
+        }
+        
+        .card.incorrect {
+            box-shadow: 0 0 15px #ef4444;
+        }
+        
+        .time-node {
+            transition: all 0.3s ease;
+        }
+        
+        .time-node:hover {
+            transform: scale(1.2);
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .success-animation {
+            animation: success 1s ease-in-out;
+        }
+        
+        @keyframes success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .error-animation {
+            animation: error 0.5s ease-in-out;
+        }
+        
+        @keyframes error {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        
+        .scene-transition {
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .character {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+        }
+        
+        .tutorial-highlight {
+            animation: highlight 2s ease-in-out infinite;
+        }
+        
+        @keyframes highlight {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .slide-out {
+            animation: slideOut 0.5s ease-in forwards;
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-100%); opacity: 0; }
+        }
+        
+        .info-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transform: rotateY(180deg);
+            backface-visibility: hidden;
+            transition: transform 0.6s;
+            z-index: 2;
+            overflow-y: auto;
+        }
+        
+        .card-front {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            transition: transform 0.6s;
+            z-index: 1;
+        }
+        
+        .card-container {
+            position: relative;
+            perspective: 1000px;
+            height: 100%;
+        }
+        
+        .card-container.flipped .card-front {
+            transform: rotateY(180deg);
+        }
+        
+        .card-container.flipped .info-card {
+            transform: rotateY(0deg);
+        }
+        
+        .timeline-card {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+            width: 80px;
+            text-align: center;
+        }
+        
+        .timeline-card-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container" class="min-h-screen flex flex-col items-center justify-center p-4">
+        <!-- Initial Screen -->
+        <div id="start-screen" class="flex flex-col items-center justify-center w-full max-w-4xl">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-700 mb-6 text-center">LST遊戲室-時光機修復師</h1>
+            <div class="text-center mb-8">
+                <p class="text-xl text-gray-700 mb-2">🎮 類型：互動排序 × 知識冒險 × 歷史+生物統整學習</p>
+                <p class="text-xl text-gray-700">📚 學習領域：歷史（事件演進）、生物（演化時序）</p>
+            </div>
+            
+            <div class="relative w-64 h-64 mb-8">
+                <div class="time-portal absolute inset-0 rounded-full z-10"></div>
+                <div class="time-vortex z-20"></div>
+                <div class="drawer absolute bottom-0 left-1/2 transform -translate-x-1/2 w-40 h-16 rounded-t-lg z-30"></div>
+                <div class="drawer-handle absolute bottom-8 left-1/2 transform -translate-x-1/2 w-12 h-4 rounded-full z-40"></div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mb-8">
+                <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">啟動時光機</h2>
+                <div class="mb-4">
+                    <label for="player-name" class="block text-gray-700 mb-2">輸入你的時空修復師代號：</label>
+                    <input type="text" id="player-name" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="例如：時空修復師001">
+                </div>
+                <button id="start-btn" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700 transition duration-300 text-lg">啟動時光引擎</button>
+            </div>
+            
+            <div class="text-center text-gray-600 text-sm">
+                <p>遊戲設計與製作：呂舒婷</p>
+            </div>
+        </div>
+
+        <!-- Mission Screen -->
+        <div id="mission-screen" class="hidden flex flex-col items-center justify-center w-full max-w-4xl">
+            <div class="bg-blue-100 border-2 border-blue-500 p-6 rounded-lg shadow-lg w-full max-w-2xl mb-8">
+                <h2 class="text-2xl font-bold text-center text-red-600 mb-4">⚠️ 時空錯位警報 ⚠️</h2>
+                <p class="text-xl text-center">我們把事件順序弄亂了，快幫忙修復歷史／演化時間線！</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <div class="bg-gradient-to-br from-amber-100 to-amber-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-all cursor-pointer" onclick="selectMission('history')">
+                    <h3 class="text-2xl font-bold text-amber-800 mb-3">🏛️ 歷史任務區</h3>
+                    <p class="text-gray-700">修復被打亂的歷史事件順序，讓時間線恢復正常！</p>
+                    <div class="mt-4 flex justify-end">
+                        <span class="text-amber-700 font-bold">選擇 →</span>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-emerald-100 to-emerald-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-all cursor-pointer" onclick="selectMission('biology')">
+                    <h3 class="text-2xl font-bold text-emerald-800 mb-3">🦕 生物演化區</h3>
+                    <p class="text-gray-700">重建生物演化的正確順序，探索生命的奧秘！</p>
+                    <div class="mt-4 flex justify-end">
+                        <span class="text-emerald-700 font-bold">選擇 →</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Screen -->
+        <div id="tutorial-screen" class="hidden w-full max-w-4xl">
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="tutorial-title" class="text-2xl font-bold text-blue-700"></h2>
+                    <div class="text-sm text-gray-500">
+                        <span id="tutorial-progress">1</span>/3
+                    </div>
+                </div>
+                
+                <div id="tutorial-content" class="relative">
+                    <!-- Tutorial slides will be inserted here -->
+                </div>
+                
+                <div class="flex justify-between mt-6">
+                    <button id="tutorial-back-btn" class="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition">返回</button>
+                    <button id="tutorial-next-btn" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">繼續</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden w-full max-w-4xl">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 id="mission-title" class="text-2xl font-bold text-blue-700"></h2>
+                    <p id="mission-description" class="text-gray-600"></p>
+                </div>
+                <div class="flex items-center">
+                    <div class="mr-4">
+                        <p class="text-sm text-gray-600">修復進度</p>
+                        <div class="bg-gray-200 h-4 w-40 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="bg-blue-600 h-full rounded-full progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="hint-btn" class="bg-yellow-500 text-white py-1 px-3 rounded-md hover:bg-yellow-600 transition">提示</button>
+                        <button id="show-answer-btn" class="bg-purple-500 text-white py-1 px-3 rounded-md hover:bg-purple-600 transition">正確答案</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="game-background" class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-lg shadow-lg mb-8">
+                <div id="timeline-container" class="mb-8">
+                    <div class="timeline h-4 rounded-full mb-4 relative">
+                        <div id="timeline-nodes" class="absolute inset-0 flex justify-between items-center px-4">
+                            <!-- Timeline nodes will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="cards-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <!-- Cards will be added here dynamically -->
+                </div>
+            </div>
+            
+            <div id="feedback-container" class="hidden bg-white p-4 rounded-lg shadow-md mb-6">
+                <p id="feedback-text" class="text-center text-lg"></p>
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="back-btn" class="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition">返回任務選擇</button>
+                <button id="next-btn" class="hidden bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">下一關</button>
+            </div>
+        </div>
+        
+        <!-- Success Screen -->
+        <div id="success-screen" class="hidden flex flex-col items-center justify-center w-full max-w-4xl">
+            <div class="bg-gradient-to-br from-green-100 to-green-200 p-8 rounded-lg shadow-lg w-full max-w-2xl text-center">
+                <div class="text-6xl mb-4">🎉</div>
+                <h2 class="text-3xl font-bold text-green-700 mb-4">時間線修復成功！</h2>
+                <p class="text-xl text-gray-700 mb-6">恭喜你成功修復了時間線，歷史/演化秩序已恢復正常！</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="continue-btn" class="bg-blue-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-blue-700 transition">繼續修復其他時間線</button>
+                    <button id="restart-btn" class="bg-gray-600 text-white py-2 px-6 rounded-lg font-bold hover:bg-gray-700 transition">重新開始</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hint Modal -->
+        <div id="hint-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                <h3 class="text-xl font-bold text-blue-700 mb-4">修復提示</h3>
+                <p id="hint-text" class="text-gray-700 mb-6"></p>
+                <div class="flex justify-end">
+                    <button id="close-hint" class="bg-blue-600 text-white py-1 px-4 rounded-md hover:bg-blue-700 transition">了解</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Answer Modal -->
+        <div id="answer-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+                <h3 class="text-xl font-bold text-purple-700 mb-4">正確答案</h3>
+                <div id="answer-content" class="text-gray-700 mb-6">
+                    <!-- Answer content will be inserted here -->
+                </div>
+                <div class="flex justify-end">
+                    <button id="close-answer" class="bg-purple-600 text-white py-1 px-4 rounded-md hover:bg-purple-700 transition">了解</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const gameData = {
+            history: [
+                {
+                    title: "中國古代史",
+                    description: "將朝代拖曳到正確的時間順序",
+                    items: [
+                        { 
+                            id: "h1-1", 
+                            text: "商朝", 
+                            correct: 1, 
+                            image: "👑", 
+                            hint: "中國最早的有文字記載的朝代之一",
+                            info: "商朝（約公元前1600年-前1046年）是中國歷史上第二個朝代，也是第一個有直接文字記載的朝代。商朝發明了漢字的早期形式——甲骨文，並建立了完整的青銅器文明。商朝的統治者信奉祖先崇拜，並通過占卜來決定重要事務。"
+                        },
+                        { 
+                            id: "h1-2", 
+                            text: "秦始皇", 
+                            correct: 2, 
+                            image: "🏯", 
+                            hint: "統一中國，建立中央集權制度",
+                            info: "秦朝（公元前221年-前206年）由秦始皇嬴政建立，是中國歷史上第一個統一的多民族中央集權國家。秦始皇推行郡縣制、統一文字、貨幣、度量衡，修建長城和馳道，奠定了中國兩千多年政治制度的基礎。雖然秦朝只存在了15年，但其影響深遠。"
+                        },
+                        { 
+                            id: "h1-3", 
+                            text: "三國", 
+                            correct: 3, 
+                            image: "⚔️", 
+                            hint: "魏、蜀、吳三國鼎立的時期",
+                            info: "三國時期（公元220年-280年）是漢朝末年至晉朝初年的歷史階段，以魏、蜀、吳三國鼎立為特徵。這一時期湧現出諸葛亮、曹操、關羽等歷史名人，也是中國軍事、科技和文化發展的重要時期。《三國演義》是以這段歷史為背景的著名文學作品。"
+                        },
+                        { 
+                            id: "h1-4", 
+                            text: "唐朝", 
+                            correct: 4, 
+                            image: "🐎", 
+                            hint: "中國歷史上最強盛的朝代之一，文化藝術發達",
+                            info: "唐朝（公元618年-907年）是中國歷史上最強盛的朝代之一，也是世界上最強大的國家之一。唐朝的國力強盛，疆域遼闊，文化繁榮，是中國古代文明的鼎盛時期。唐詩、唐三彩等藝術形式在這一時期達到高峰，長安（今西安）成為當時世界上最大、最繁華的國際大都市。"
+                        },
+                        { 
+                            id: "h1-5", 
+                            text: "清朝", 
+                            correct: 5, 
+                            image: "👲", 
+                            hint: "中國最後一個封建王朝",
+                            info: "清朝（公元1644年-1912年）是中國歷史上最後一個封建王朝，由滿族建立。清朝前期，康熙、雍正、乾隆三代盛世使國家達到鼎盛；後期，面臨西方列強入侵和內部革命運動的雙重壓力，最終在1912年被辛亥革命推翻，結束了中國兩千多年的封建帝制。"
+                        }
+                    ],
+                    background: "ancient-china",
+                    hint: "想想看：秦始皇是在三國之前還是之後？唐朝是中國的哪個時期？"
+                },
+                {
+                    title: "世界重大發明史",
+                    description: "排出正確的發明時間順序",
+                    items: [
+                        { 
+                            id: "h2-1", 
+                            text: "印刷術", 
+                            correct: 1, 
+                            image: "📚", 
+                            hint: "中國古代四大發明之一，宋朝畢昇發明活字印刷",
+                            info: "印刷術是中國古代四大發明之一，最早的雕版印刷出現在唐朝，而活字印刷則由北宋的畢昇在11世紀發明。印刷術的發明大大降低了書籍的成本，促進了知識的傳播，對世界文明的發展產生了深遠的影響。"
+                        },
+                        { 
+                            id: "h2-2", 
+                            text: "電報", 
+                            correct: 2, 
+                            image: "📡", 
+                            hint: "19世紀的通訊革命，摩斯密碼的應用",
+                            info: "電報是19世紀的重大發明，由美國人塞繆爾·摩爾斯在1837年發明。電報使用摩斯密碼通過電線傳輸信息，極大地改變了人類的通訊方式，使遠距離即時通訊成為可能。電報的發明被認為是現代通訊技術的開端。"
+                        },
+                        { 
+                            id: "h2-3", 
+                            text: "電燈", 
+                            correct: 3, 
+                            image: "💡", 
+                            hint: "愛迪生在1879年發明了實用的白熾燈",
+                            info: "雖然電燈的概念早在19世紀初就已出現，但直到1879年，美國發明家托馬斯·愛迪生才發明了實用的碳絲白熾燈。電燈的發明徹底改變了人類的生活方式，延長了人們的活動時間，促進了工業生產和社會發展。"
+                        },
+                        { 
+                            id: "h2-4", 
+                            text: "網際網路", 
+                            correct: 4, 
+                            image: "🌐", 
+                            hint: "20世紀後期開始普及，改變了全球通訊方式",
+                            info: "網際網路的雛形ARPANET誕生於1969年，但直到1990年代，隨著萬維網(WWW)的發明和瀏覽器的普及，網際網路才開始進入尋常百姓家。網際網路徹底改變了人類獲取信息、交流和商業的方式，被認為是繼印刷術之後最偉大的信息革命。"
+                        }
+                    ],
+                    background: "inventions",
+                    hint: "印刷術是中國古代四大發明之一，而網際網路是最近幾十年才出現的技術。"
+                },
+                {
+                    title: "台灣民主歷程",
+                    description: "修正台灣史時間線",
+                    items: [
+                        { 
+                            id: "h3-1", 
+                            text: "二二八事件", 
+                            correct: 1, 
+                            image: "📅", 
+                            hint: "1947年發生的歷史事件",
+                            info: "二二八事件發生於1947年2月28日，起因是台灣民眾與當時政府之間的衝突，導致大規模的社會動盪和人員傷亡。這一事件對台灣社會產生了深遠的影響，成為台灣現代史上的重要轉折點，也是台灣人民集體記憶的一部分。"
+                        },
+                        { 
+                            id: "h3-2", 
+                            text: "白色恐怖", 
+                            correct: 2, 
+                            image: "🔒", 
+                            hint: "1949年後的政治迫害時期",
+                            info: "白色恐怖是指1949年後台灣進入戒嚴時期，政府以「肅清匪諜」為名，大規模逮捕和審判被認為是政治異己的人士。這一時期持續了數十年，許多人因政治原因被逮捕、監禁甚至處決，對台灣社會造成了深遠的影響。"
+                        },
+                        { 
+                            id: "h3-3", 
+                            text: "解除戒嚴", 
+                            correct: 3, 
+                            image: "🔓", 
+                            hint: "1987年7月15日，結束長達38年的戒嚴",
+                            info: "1987年7月15日，台灣當局宣布解除實施長達38年的戒嚴令，這標誌著台灣政治自由化的重要里程碑。解嚴後，台灣社會各方面都發生了巨大變化，政黨活動、言論出版、集會結社等自由逐漸開放，為後來的民主化進程奠定了基礎。"
+                        },
+                        { 
+                            id: "h3-4", 
+                            text: "總統直選", 
+                            correct: 4, 
+                            image: "🗳️", 
+                            hint: "1996年首次由人民直接選舉總統",
+                            info: "1996年3月23日，台灣舉行了首次總統直接選舉，這是台灣民主化進程中的重要里程碑。通過直接選舉，台灣人民首次有機會直接選擇自己的國家領導人，標誌著台灣民主制度的成熟和完善。此後，台灣每四年舉行一次總統選舉，民主制度不斷鞏固和發展。"
+                        }
+                    ],
+                    background: "taiwan",
+                    hint: "二二八事件發生在1947年，而總統直選是在解嚴之後才實現的。"
+                }
+            ],
+            biology: [
+                {
+                    title: "古生物演化",
+                    description: "修正生物出現順序",
+                    items: [
+                        { 
+                            id: "b1-1", 
+                            text: "魚類", 
+                            correct: 1, 
+                            image: "🐟", 
+                            hint: "最早出現的脊椎動物",
+                            info: "魚類是最早出現的脊椎動物，約在5億年前的奧陶紀出現。早期的魚類沒有顎，稱為無顎類，如七鰓鰻。之後演化出有顎的魚類，包括軟骨魚類（如鯊魚）和硬骨魚類。魚類的出現標誌著脊椎動物演化的開始，為後來的兩棲類、爬蟲類等高等脊椎動物奠定了基礎。"
+                        },
+                        { 
+                            id: "b1-2", 
+                            text: "三葉蟲", 
+                            correct: 2, 
+                            image: "🦐", 
+                            hint: "古生代的海洋節肢動物",
+                            info: "三葉蟲是古生代海洋中的節肢動物，出現於寒武紀早期（約5.2億年前），在奧陶紀達到鼎盛，最終在二疊紀末期（約2.5億年前）滅絕。三葉蟲因身體可分為頭、胸、尾三部分而得名，是研究古生物學和地層學的重要化石。三葉蟲的化石在全球各地都有發現，種類繁多，形態各異。"
+                        },
+                        { 
+                            id: "b1-3", 
+                            text: "恐龍", 
+                            correct: 3, 
+                            image: "🦖", 
+                            hint: "中生代的主要陸地動物",
+                            info: "恐龍是中生代（約2.5億年前至6500萬年前）的主要陸地脊椎動物，特別是在侏羅紀和白堊紀時期稱霸地球。恐龍分為蜥臀目（如霸王龍、迅猛龍）和鳥臀目（如三角龍、劍龍）兩大類。恐龍在白堊紀末期因小行星撞擊等原因大規模滅絕，但有一支演化為現代的鳥類。"
+                        },
+                        { 
+                            id: "b1-4", 
+                            text: "哺乳類", 
+                            correct: 4, 
+                            image: "🐘", 
+                            hint: "恐龍滅絕後繁盛的動物類群",
+                            info: "哺乳類起源於約2億年前的三疊紀，但在恐龍統治地球的時期，大多數哺乳類體型較小，生態位有限。恐龍滅絕後，哺乳類迅速輻射演化，適應了各種生態環境，成為新生代的主要陸地脊椎動物。哺乳類的特徵包括體溫恆定、胎生、哺乳、被毛覆蓋等，現存約有5,500種。"
+                        },
+                        { 
+                            id: "b1-5", 
+                            text: "人類", 
+                            correct: 5, 
+                            image: "👨‍👩‍👧‍👦", 
+                            hint: "演化史上最近出現的物種",
+                            info: "現代人類（智人，Homo sapiens）約在20-30萬年前在非洲出現，是演化史上相對較晚出現的物種。人類屬於靈長目人科，與黑猩猩、大猩猩等共享共同祖先。人類的特徵包括直立行走、大腦容量大、使用複雜工具和語言等。約7萬年前，現代人類開始走出非洲，逐漸擴散到全球各地，成為地球上分布最廣的大型哺乳動物。"
+                        }
+                    ],
+                    background: "prehistoric",
+                    hint: "魚類是最早出現的脊椎動物，而人類是在哺乳類演化之後才出現的。"
+                },
+                {
+                    title: "人類演化",
+                    description: "繪出正確人類演化圖",
+                    items: [
+                        { 
+                            id: "b2-1", 
+                            text: "原始猿", 
+                            correct: 1, 
+                            image: "🐒", 
+                            hint: "約2000萬年前出現的人類祖先",
+                            info: "原始猿出現於約2000萬年前的中新世早期，是人類和其他類人猿的共同祖先。這些早期靈長類動物生活在樹上，以水果和葉子為食，已經具備一些類人猿的特徵，如較大的腦容量和靈活的手指。隨著氣候變化和森林減少，一些原始猿開始適應地面生活，最終演化出直立行走的能力。"
+                        },
+                        { 
+                            id: "b2-2", 
+                            text: "南方古猿", 
+                            correct: 2, 
+                            image: "🦍", 
+                            hint: "約400萬年前出現，能直立行走",
+                            info: "南方古猿出現於約400萬年前的非洲，是人類演化過程中的重要一環。南方古猿已經能夠直立行走，但腦容量仍然較小（約400-500立方厘米）。著名的化石「露西」就是南方古猿的一種。南方古猿有多個種類，其中一支最終演化為人屬（Homo），包括現代人類的祖先。"
+                        },
+                        { 
+                            id: "b2-3", 
+                            text: "尼安德塔人", 
+                            correct: 3, 
+                            image: "👤", 
+                            hint: "約30萬年前出現的人種，已滅絕",
+                            info: "尼安德塔人（Homo neanderthalensis）是約30萬年前至4萬年前生活在歐洲和西亞的古人類。他們適應寒冷氣候，身體強壯，腦容量甚至超過現代人。尼安德塔人使用複雜工具，有火的使用和埋葬死者的習慣，具有一定的文化和社會組織。研究表明，現代人類與尼安德塔人曾有基因交流，現代歐亞人群基因組中含有約1-4%的尼安德塔人DNA。"
+                        },
+                        { 
+                            id: "b2-4", 
+                            text: "現代智人", 
+                            correct: 4, 
+                            image: "👨‍👩‍👧‍👦", 
+                            hint: "約20萬年前出現，即現代人類",
+                            info: "現代智人（Homo sapiens）約在20萬年前出現於非洲，是目前地球上唯一存活的人屬物種。智人的特徵包括大腦容量大（約1300-1400立方厘米）、額頭高聳、下巴突出等。約7萬年前，智人開始走出非洲，逐漸擴散到全球各地。智人發展出複雜的語言、抽象思維和文化傳承能力，創造了農業、城市、文字、科學等文明成果，徹底改變了地球的面貌。"
+                        }
+                    ],
+                    background: "human-evolution",
+                    hint: "原始猿是最早的人類祖先，而現代智人是最近才出現的人種。"
+                },
+                {
+                    title: "海陸演化",
+                    description: "推出演化遷移路徑圖",
+                    items: [
+                        { 
+                            id: "b3-1", 
+                            text: "魚類", 
+                            correct: 1, 
+                            image: "🐟", 
+                            hint: "最早出現的脊椎動物，生活在水中",
+                            info: "魚類是最早出現的脊椎動物，約在5億年前的奧陶紀出現。早期魚類完全適應水生環境，通過鰓呼吸，用鰭游泳。到了泥盆紀（約4億年前），一些肉鰭魚演化出肺和肌肉發達的鰭，能在淺水區支撐身體，這為後來脊椎動物登陸奠定了基礎。這些特殊的魚類被稱為「肺魚」和「總鰭魚」，是兩棲類的祖先。"
+                        },
+                        { 
+                            id: "b3-2", 
+                            text: "兩棲類", 
+                            correct: 2, 
+                            image: "🐸", 
+                            hint: "能在水陸兩棲的脊椎動物",
+                            info: "兩棲類約在3.7億年前的泥盆紀晚期從肉鰭魚演化而來，是第一批能夠在陸地上生活的脊椎動物。早期兩棲類如蚓螈，已經具備四肢和肺，但仍需回到水中繁殖。兩棲類的出現是脊椎動物演化史上的重大突破，開啟了陸地生活的新篇章。現代兩棲類包括蛙、蟾蜍、蠑螈和蚓螈等，大多數仍保持「水中產卵，陸地生活」的生活方式。"
+                        },
+                        { 
+                            id: "b3-3", 
+                            text: "爬蟲類", 
+                            correct: 3, 
+                            image: "🦎", 
+                            hint: "完全適應陸地生活的脊椎動物",
+                            info: "爬蟲類約在3.1億年前的石炭紀晚期從兩棲類演化而來，是第一批完全適應陸地生活的脊椎動物。爬蟲類的關鍵演化特徵是羊膜卵，卵內有保護胚胎的膜和提供營養的卵黃，使它們能夠在陸地上繁殖而不必回到水中。爬蟲類還演化出角質鱗片，防止體內水分流失。爬蟲類在中生代達到鼎盛，恐龍、翼龍和海生爬蟲類統治了陸地、空中和海洋。現代爬蟲類包括蜥蜴、蛇、龜和鱷等。"
+                        },
+                        { 
+                            id: "b3-4", 
+                            text: "哺乳類", 
+                            correct: 4, 
+                            image: "🐘", 
+                            hint: "體溫恆定，胎生哺乳的脊椎動物",
+                            info: "哺乳類起源於約2億年前的三疊紀，從一群被稱為「哺乳型爬蟲類」的動物演化而來。哺乳類的關鍵特徵包括體溫恆定（恆溫）、被毛覆蓋、胎生和哺乳。早期哺乳類體型較小，主要在夜間活動，在恐龍統治的時代處於生態系統的邊緣。恐龍滅絕後，哺乳類迅速輻射演化，適應了各種生態環境，成為新生代的主要陸地脊椎動物。現代哺乳類包括單孔類（如鴨嘴獸）、有袋類（如袋鼠）和胎盤類（如人類、大象、鯨等）。"
+                        }
+                    ],
+                    background: "land-evolution",
+                    hint: "生命起源於水中，魚類是最早的脊椎動物，之後才有兩棲類上岸。"
+                }
+            ]
+        };
+
+        // Tutorial data
+        const tutorialData = {
+            history: [
+                {
+                    title: "歷史時間線的秘密",
+                    content: `
+                        <div class="flex flex-col md:flex-row items-center mb-6">
+                            <div class="md:w-1/3 mb-4 md:mb-0 flex justify-center">
+                                <div class="character floating">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="40" r="30" fill="#3b82f6"/>
+                                        <circle cx="40" cy="35" r="5" fill="white"/>
+                                        <circle cx="60" cy="35" r="5" fill="white"/>
+                                        <path d="M40,50 Q50,60 60,50" stroke="white" stroke-width="3" fill="none"/>
+                                        <rect x="35" y="70" width="30" height="40" fill="#3b82f6"/>
+                                        <rect x="20" y="75" width="15" height="5" fill="#3b82f6"/>
+                                        <rect x="65" y="75" width="15" height="5" fill="#3b82f6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="md:w-2/3 md:pl-6">
+                                <h3 class="text-xl font-bold text-blue-700 mb-2">哈囉，時空修復師！</h3>
+                                <p class="mb-4">我是時空博士，很高興你能加入我們的時間修復團隊！</p>
+                                <p>我們的時光機發生了故障，導致歷史事件的順序全部混亂了。如果不盡快修復，歷史將會永遠錯亂！</p>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="font-bold mb-2">你知道嗎？</p>
+                            <p>歷史是由無數事件按照時間順序排列而成的。了解這些事件的先後順序，能幫助我們理解人類文明的發展脈絡。</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "中國歷史大冒險",
+                    content: `
+                        <div class="bg-amber-50 p-4 rounded-lg mb-6">
+                            <h3 class="text-lg font-bold text-amber-800 mb-2">中國古代朝代順序</h3>
+                            <div class="flex flex-wrap justify-center gap-4 mb-4">
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-amber-50" onclick="showCardInfo('商朝', '商朝（約公元前1600年-前1046年）是中國歷史上第二個朝代，也是第一個有直接文字記載的朝代。商朝發明了漢字的早期形式——甲骨文，並建立了完整的青銅器文明。商朝的統治者信奉祖先崇拜，並通過占卜來決定重要事務。')">
+                                    <div class="text-3xl mb-1">👑</div>
+                                    <div class="font-bold">商朝</div>
+                                    <div class="text-sm text-gray-600">約公元前1600年-前1046年</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-amber-50" onclick="showCardInfo('秦朝', '秦朝（公元前221年-前206年）由秦始皇嬴政建立，是中國歷史上第一個統一的多民族中央集權國家。秦始皇推行郡縣制、統一文字、貨幣、度量衡，修建長城和馳道，奠定了中國兩千多年政治制度的基礎。雖然秦朝只存在了15年，但其影響深遠。')">
+                                    <div class="text-3xl mb-1">🏯</div>
+                                    <div class="font-bold">秦朝</div>
+                                    <div class="text-sm text-gray-600">公元前221年-前206年</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-amber-50" onclick="showCardInfo('三國時期', '三國時期（公元220年-280年）是漢朝末年至晉朝初年的歷史階段，以魏、蜀、吳三國鼎立為特徵。這一時期湧現出諸葛亮、曹操、關羽等歷史名人，也是中國軍事、科技和文化發展的重要時期。《三國演義》是以這段歷史為背景的著名文學作品。')">
+                                    <div class="text-3xl mb-1">⚔️</div>
+                                    <div class="font-bold">三國時期</div>
+                                    <div class="text-sm text-gray-600">公元220年-280年</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap justify-center gap-4">
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-amber-50" onclick="showCardInfo('唐朝', '唐朝（公元618年-907年）是中國歷史上最強盛的朝代之一，也是世界上最強大的國家之一。唐朝的國力強盛，疆域遼闊，文化繁榮，是中國古代文明的鼎盛時期。唐詩、唐三彩等藝術形式在這一時期達到高峰，長安（今西安）成為當時世界上最大、最繁華的國際大都市。')">
+                                    <div class="text-3xl mb-1">🐎</div>
+                                    <div class="font-bold">唐朝</div>
+                                    <div class="text-sm text-gray-600">公元618年-907年</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-amber-50" onclick="showCardInfo('清朝', '清朝（公元1644年-1912年）是中國歷史上最後一個封建王朝，由滿族建立。清朝前期，康熙、雍正、乾隆三代盛世使國家達到鼎盛；後期，面臨西方列強入侵和內部革命運動的雙重壓力，最終在1912年被辛亥革命推翻，結束了中國兩千多年的封建帝制。')">
+                                    <div class="text-3xl mb-1">👲</div>
+                                    <div class="font-bold">清朝</div>
+                                    <div class="text-sm text-gray-600">公元1644年-1912年</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="character mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="40" r="30" fill="#3b82f6"/>
+                                    <circle cx="40" cy="35" r="5" fill="white"/>
+                                    <circle cx="60" cy="35" r="5" fill="white"/>
+                                    <path d="M40,50 Q50,60 60,50" stroke="white" stroke-width="3" fill="none"/>
+                                </svg>
+                            </div>
+                            <div class="bg-blue-100 p-4 rounded-lg flex-1">
+                                <p>看看這些朝代！商朝是最早的，然後是秦朝統一中國，再到三國時期的分裂，唐朝的繁榮，最後是清朝的結束。每個朝代都有其獨特的貢獻和故事！</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "修復時間線的方法",
+                    content: `
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-blue-700 mb-2">如何修復時間線</h3>
+                            <p class="mb-4">要修復時間線，你需要將混亂的事件卡片拖曳到時間線上的正確位置。</p>
+                            
+                            <div class="bg-gray-100 p-4 rounded-lg mb-4">
+                                <div class="flex justify-center mb-4">
+                                    <div class="timeline h-4 rounded-full relative w-3/4">
+                                        <div class="absolute inset-0 flex justify-between items-center px-4">
+                                            <div class="time-node w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center text-blue-700 font-bold tutorial-highlight">1</div>
+                                            <div class="time-node w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center text-blue-700 font-bold">2</div>
+                                            <div class="time-node w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center text-blue-700 font-bold">3</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-center gap-4">
+                                    <div class="card bg-white p-3 rounded-lg shadow-md flex flex-col items-center tutorial-highlight">
+                                        <div class="text-3xl mb-1">👑</div>
+                                        <div class="text-center font-bold">商朝</div>
+                                    </div>
+                                    <div class="card bg-white p-3 rounded-lg shadow-md flex flex-col items-center">
+                                        <div class="text-3xl mb-1">🏯</div>
+                                        <div class="text-center font-bold">秦朝</div>
+                                    </div>
+                                    <div class="card bg-white p-3 rounded-lg shadow-md flex flex-col items-center">
+                                        <div class="text-3xl mb-1">⚔️</div>
+                                        <div class="text-center font-bold">三國</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="character mr-4 mt-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="40" r="30" fill="#3b82f6"/>
+                                        <circle cx="40" cy="35" r="5" fill="white"/>
+                                        <circle cx="60" cy="35" r="5" fill="white"/>
+                                        <path d="M40,50 Q50,55 60,50" stroke="white" stroke-width="3" fill="none"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="mb-2">操作方法：</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li>觀察卡片上的歷史事件</li>
+                                        <li>思考它們的正確時間順序</li>
+                                        <li>將卡片拖曳到時間線上對應的位置</li>
+                                        <li>全部放置正確後，時間線就修復了！</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <p class="font-bold flex items-center"><span class="text-xl mr-2">💡</span>小提示</p>
+                            <p>如果不確定順序，可以點擊「提示」按鈕獲得幫助。記住，了解歷史事件的背景和影響，能幫助你更準確地排序！</p>
+                            <p class="mt-2">如果想直接查看正確答案，可以點擊「正確答案」按鈕。但先自己嘗試會更有成就感哦！</p>
+                        </div>
+                    `
+                }
+            ],
+            biology: [
+                {
+                    title: "生命演化的奧秘",
+                    content: `
+                        <div class="flex flex-col md:flex-row items-center mb-6">
+                            <div class="md:w-1/3 mb-4 md:mb-0 flex justify-center">
+                                <div class="character floating">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="40" r="30" fill="#047857"/>
+                                        <circle cx="40" cy="35" r="5" fill="white"/>
+                                        <circle cx="60" cy="35" r="5" fill="white"/>
+                                        <path d="M40,50 Q50,60 60,50" stroke="white" stroke-width="3" fill="none"/>
+                                        <rect x="35" y="70" width="30" height="40" fill="#047857"/>
+                                        <rect x="20" y="75" width="15" height="5" fill="#047857"/>
+                                        <rect x="65" y="75" width="15" height="5" fill="#047857"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="md:w-2/3 md:pl-6">
+                                <h3 class="text-xl font-bold text-green-700 mb-2">歡迎來到生物演化區！</h3>
+                                <p class="mb-4">我是演化博士，很高興你能來幫助我們修復生物演化的時間線！</p>
+                                <p>地球上的生命經歷了數十億年的演化，從單細胞生物到複雜的多細胞生物，每個物種都有其獨特的演化歷程。</p>
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-bold mb-2">你知道嗎？</p>
+                            <p>生物演化是漫長而神奇的過程。通過了解不同生物的出現順序，我們能更好地理解生命如何在地球上繁衍和發展。</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "從海洋到陸地的旅程",
+                    content: `
+                        <div class="bg-emerald-50 p-4 rounded-lg mb-6">
+                            <h3 class="text-lg font-bold text-emerald-800 mb-2">生物演化的關鍵階段</h3>
+                            <div class="flex flex-wrap justify-center gap-4 mb-4">
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-emerald-50" onclick="showCardInfo('魚類', '魚類是最早出現的脊椎動物，約在5億年前的奧陶紀出現。早期魚類完全適應水生環境，通過鰓呼吸，用鰭游泳。到了泥盆紀（約4億年前），一些肉鰭魚演化出肺和肌肉發達的鰭，能在淺水區支撐身體，這為後來脊椎動物登陸奠定了基礎。這些特殊的魚類被稱為「肺魚」和「總鰭魚」，是兩棲類的祖先。')">
+                                    <div class="text-3xl mb-1">🐟</div>
+                                    <div class="font-bold">魚類</div>
+                                    <div class="text-sm text-gray-600">約5億年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-emerald-50" onclick="showCardInfo('兩棲類', '兩棲類約在3.7億年前的泥盆紀晚期從肉鰭魚演化而來，是第一批能夠在陸地上生活的脊椎動物。早期兩棲類如蚓螈，已經具備四肢和肺，但仍需回到水中繁殖。兩棲類的出現是脊椎動物演化史上的重大突破，開啟了陸地生活的新篇章。現代兩棲類包括蛙、蟾蜍、蠑螈和蚓螈等，大多數仍保持「水中產卵，陸地生活」的生活方式。')">
+                                    <div class="text-3xl mb-1">🐸</div>
+                                    <div class="font-bold">兩棲類</div>
+                                    <div class="text-sm text-gray-600">約3.7億年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-emerald-50" onclick="showCardInfo('爬蟲類', '爬蟲類約在3.1億年前的石炭紀晚期從兩棲類演化而來，是第一批完全適應陸地生活的脊椎動物。爬蟲類的關鍵演化特徵是羊膜卵，卵內有保護胚胎的膜和提供營養的卵黃，使它們能夠在陸地上繁殖而不必回到水中。爬蟲類還演化出角質鱗片，防止體內水分流失。爬蟲類在中生代達到鼎盛，恐龍、翼龍和海生爬蟲類統治了陸地、空中和海洋。現代爬蟲類包括蜥蜴、蛇、龜和鱷等。')">
+                                    <div class="text-3xl mb-1">🦎</div>
+                                    <div class="font-bold">爬蟲類</div>
+                                    <div class="text-sm text-gray-600">約3.1億年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap justify-center gap-4">
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-emerald-50" onclick="showCardInfo('恐龍', '恐龍是中生代（約2.5億年前至6500萬年前）的主要陸地脊椎動物，特別是在侏羅紀和白堊紀時期稱霸地球。恐龍分為蜥臀目（如霸王龍、迅猛龍）和鳥臀目（如三角龍、劍龍）兩大類。恐龍在白堊紀末期因小行星撞擊等原因大規模滅絕，但有一支演化為現代的鳥類。')">
+                                    <div class="text-3xl mb-1">🦖</div>
+                                    <div class="font-bold">恐龍</div>
+                                    <div class="text-sm text-gray-600">約2.3億年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-md text-center cursor-pointer hover:bg-emerald-50" onclick="showCardInfo('哺乳類', '哺乳類起源於約2億年前的三疊紀，從一群被稱為「哺乳型爬蟲類」的動物演化而來。哺乳類的關鍵特徵包括體溫恆定（恆溫）、被毛覆蓋、胎生和哺乳。早期哺乳類體型較小，主要在夜間活動，在恐龍統治的時代處於生態系統的邊緣。恐龍滅絕後，哺乳類迅速輻射演化，適應了各種生態環境，成為新生代的主要陸地脊椎動物。現代哺乳類包括單孔類（如鴨嘴獸）、有袋類（如袋鼠）和胎盤類（如人類、大象、鯨等）。')">
+                                    <div class="text-3xl mb-1">🐘</div>
+                                    <div class="font-bold">哺乳類</div>
+                                    <div class="text-sm text-gray-600">約2億年前開始繁盛</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="character mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="40" r="30" fill="#047857"/>
+                                    <circle cx="40" cy="35" r="5" fill="white"/>
+                                    <circle cx="60" cy="35" r="5" fill="white"/>
+                                    <path d="M40,50 Q50,60 60,50" stroke="white" stroke-width="3" fill="none"/>
+                                </svg>
+                            </div>
+                            <div class="bg-green-100 p-4 rounded-lg flex-1">
+                                <p>生命最初起源於海洋！魚類是最早的脊椎動物，之後兩棲類勇敢地踏上陸地，爬蟲類則完全適應了陸地生活。恐龍曾經稱霸地球，而哺乳類在恐龍滅絕後才大規模繁盛起來。</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "人類的演化之路",
+                    content: `
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-green-700 mb-2">人類演化的關鍵階段</h3>
+                            <div class="relative h-64 mb-4">
+                                <div class="absolute left-0 bottom-0 w-1/4 flex flex-col items-center cursor-pointer" onclick="showCardInfo('原始猿', '原始猿出現於約2000萬年前的中新世早期，是人類和其他類人猿的共同祖先。這些早期靈長類動物生活在樹上，以水果和葉子為食，已經具備一些類人猿的特徵，如較大的腦容量和靈活的手指。隨著氣候變化和森林減少，一些原始猿開始適應地面生活，最終演化出直立行走的能力。')">
+                                    <div class="text-4xl mb-2">🐒</div>
+                                    <div class="text-center font-bold">原始猿</div>
+                                    <div class="text-xs text-gray-600">約2000萬年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="absolute left-1/4 bottom-0 w-1/4 flex flex-col items-center cursor-pointer" onclick="showCardInfo('南方古猿', '南方古猿出現於約400萬年前的非洲，是人類演化過程中的重要一環。南方古猿已經能夠直立行走，但腦容量仍然較小（約400-500立方厘米）。著名的化石「露西」就是南方古猿的一種。南方古猿有多個種類，其中一支最終演化為人屬（Homo），包括現代人類的祖先。')">
+                                    <div class="text-4xl mb-2">🦍</div>
+                                    <div class="text-center font-bold">南方古猿</div>
+                                    <div class="text-xs text-gray-600">約400萬年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="absolute left-2/4 bottom-0 w-1/4 flex flex-col items-center cursor-pointer" onclick="showCardInfo('尼安德塔人', '尼安德塔人（Homo neanderthalensis）是約30萬年前至4萬年前生活在歐洲和西亞的古人類。他們適應寒冷氣候，身體強壯，腦容量甚至超過現代人。尼安德塔人使用複雜工具，有火的使用和埋葬死者的習慣，具有一定的文化和社會組織。研究表明，現代人類與尼安德塔人曾有基因交流，現代歐亞人群基因組中含有約1-4%的尼安德塔人DNA。')">
+                                    <div class="text-4xl mb-2">👤</div>
+                                    <div class="text-center font-bold">尼安德塔人</div>
+                                    <div class="text-xs text-gray-600">約30萬年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="absolute left-3/4 bottom-0 w-1/4 flex flex-col items-center cursor-pointer" onclick="showCardInfo('現代智人', '現代智人（Homo sapiens）約在20萬年前出現於非洲，是目前地球上唯一存活的人屬物種。智人的特徵包括大腦容量大（約1300-1400立方厘米）、額頭高聳、下巴突出等。約7萬年前，智人開始走出非洲，逐漸擴散到全球各地。智人發展出複雜的語言、抽象思維和文化傳承能力，創造了農業、城市、文字、科學等文明成果，徹底改變了地球的面貌。')">
+                                    <div class="text-4xl mb-2">👨‍👩‍👧‍👦</div>
+                                    <div class="text-center font-bold">現代智人</div>
+                                    <div class="text-xs text-gray-600">約20萬年前</div>
+                                    <div class="text-xs text-blue-600 mt-1">點擊了解更多</div>
+                                </div>
+                                <div class="absolute left-0 top-0 w-full h-1/2">
+                                    <svg width="100%" height="100%" viewBox="0 0 400 100">
+                                        <path d="M50,80 C100,40 150,60 200,40 C250,20 300,30 350,20" stroke="#047857" stroke-width="3" fill="none"/>
+                                        <circle cx="50" cy="80" r="5" fill="#047857"/>
+                                        <circle cx="150" cy="60" r="5" fill="#047857"/>
+                                        <circle cx="250" cy="30" r="5" fill="#047857"/>
+                                        <circle cx="350" cy="20" r="5" fill="#047857"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 p-4 rounded-lg mb-4">
+                                <p class="font-bold mb-2">人類演化的關鍵特徵：</p>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li>直立行走</li>
+                                    <li>大腦容量增加</li>
+                                    <li>工具使用能力</li>
+                                    <li>語言和社會組織的發展</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="character mr-4 mt-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="40" r="30" fill="#047857"/>
+                                    <circle cx="40" cy="35" r="5" fill="white"/>
+                                    <circle cx="60" cy="35" r="5" fill="white"/>
+                                    <path d="M40,50 Q50,55 60,50" stroke="white" stroke-width="3" fill="none"/>
+                                </svg>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg flex-1">
+                                <p class="font-bold flex items-center"><span class="text-xl mr-2">💡</span>準備好了嗎？</p>
+                                <p>現在你已經了解了生物演化的基本知識，準備好修復時間線了嗎？記住，演化是一個漸進的過程，每個物種都是在前一個物種的基礎上演化而來的！</p>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        };
+
+        // Game state
+        let currentPlayer = "";
+        let currentMissionType = "";
+        let currentMissionIndex = 0;
+        let currentMission = null;
+        let progress = 0;
+        let cardsPlaced = [];
+        let tutorialIndex = 0;
+
+        // DOM Elements
+        const startScreen = document.getElementById("start-screen");
+        const missionScreen = document.getElementById("mission-screen");
+        const tutorialScreen = document.getElementById("tutorial-screen");
+        const gameScreen = document.getElementById("game-screen");
+        const successScreen = document.getElementById("success-screen");
+        const hintModal = document.getElementById("hint-modal");
+        const answerModal = document.getElementById("answer-modal");
+        const playerNameInput = document.getElementById("player-name");
+        const startBtn = document.getElementById("start-btn");
+        const backBtn = document.getElementById("back-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const hintBtn = document.getElementById("hint-btn");
+        const showAnswerBtn = document.getElementById("show-answer-btn");
+        const closeHintBtn = document.getElementById("close-hint");
+        const closeAnswerBtn = document.getElementById("close-answer");
+        const continueBtn = document.getElementById("continue-btn");
+        const restartBtn = document.getElementById("restart-btn");
+        const missionTitle = document.getElementById("mission-title");
+        const missionDescription = document.getElementById("mission-description");
+        const timelineNodes = document.getElementById("timeline-nodes");
+        const cardsContainer = document.getElementById("cards-container");
+        const progressBar = document.getElementById("progress-bar");
+        const feedbackContainer = document.getElementById("feedback-container");
+        const feedbackText = document.getElementById("feedback-text");
+        const hintText = document.getElementById("hint-text");
+        const answerContent = document.getElementById("answer-content");
+        const gameBackground = document.getElementById("game-background");
+        const tutorialTitle = document.getElementById("tutorial-title");
+        const tutorialContent = document.getElementById("tutorial-content");
+        const tutorialProgress = document.getElementById("tutorial-progress");
+        const tutorialBackBtn = document.getElementById("tutorial-back-btn");
+        const tutorialNextBtn = document.getElementById("tutorial-next-btn");
+
+        // Event Listeners
+        startBtn.addEventListener("click", startGame);
+        backBtn.addEventListener("click", showMissionScreen);
+        nextBtn.addEventListener("click", loadNextMission);
+        hintBtn.addEventListener("click", showHint);
+        showAnswerBtn.addEventListener("click", showAnswer);
+        closeHintBtn.addEventListener("click", closeHint);
+        closeAnswerBtn.addEventListener("click", closeAnswer);
+        continueBtn.addEventListener("click", showMissionScreen);
+        restartBtn.addEventListener("click", resetGame);
+        tutorialBackBtn.addEventListener("click", handleTutorialBack);
+        tutorialNextBtn.addEventListener("click", handleTutorialNext);
+
+        // Functions
+        function startGame() {
+            currentPlayer = playerNameInput.value.trim() || "時空修復師" + Math.floor(Math.random() * 1000);
+            startScreen.classList.add("hidden");
+            missionScreen.classList.remove("hidden");
+            
+            // Play time machine sound effect
+            playSound("time-machine");
+        }
+
+        function selectMission(type) {
+            currentMissionType = type;
+            currentMissionIndex = 0;
+            progress = 0;
+            tutorialIndex = 0;
+            updateProgressBar();
+            
+            // Show tutorial first
+            missionScreen.classList.add("hidden");
+            showTutorial();
+        }
+
+        function showTutorial() {
+            const tutorials = tutorialData[currentMissionType];
+            const currentTutorial = tutorials[tutorialIndex];
+            
+            tutorialTitle.textContent = currentTutorial.title;
+            tutorialContent.innerHTML = currentTutorial.content;
+            tutorialProgress.textContent = tutorialIndex + 1;
+            
+            // Update buttons
+            tutorialBackBtn.textContent = tutorialIndex === 0 ? "返回任務選擇" : "上一頁";
+            tutorialNextBtn.textContent = tutorialIndex === tutorials.length - 1 ? "開始任務" : "下一頁";
+            
+            tutorialScreen.classList.remove("hidden");
+            gameScreen.classList.add("hidden");
+        }
+
+        function handleTutorialBack() {
+            if (tutorialIndex === 0) {
+                // Go back to mission selection
+                tutorialScreen.classList.add("hidden");
+                missionScreen.classList.remove("hidden");
+            } else {
+                // Go to previous tutorial slide
+                tutorialIndex--;
+                showTutorial();
+            }
+        }
+
+        function handleTutorialNext() {
+            const tutorials = tutorialData[currentMissionType];
+            
+            if (tutorialIndex === tutorials.length - 1) {
+                // Start the game
+                tutorialScreen.classList.add("hidden");
+                loadMission();
+                gameScreen.classList.remove("hidden");
+            } else {
+                // Go to next tutorial slide
+                tutorialIndex++;
+                showTutorial();
+            }
+        }
+
+        function loadMission() {
+            // Fixed: Access the correct data structure
+            const missions = gameData[currentMissionType];
+            currentMission = missions[currentMissionIndex];
+            
+            missionTitle.textContent = currentMission.title;
+            missionDescription.textContent = currentMission.description;
+            
+            // Set background based on mission
+            setBackground(currentMission.background);
+            
+            // Clear previous cards and timeline
+            cardsContainer.innerHTML = "";
+            timelineNodes.innerHTML = "";
+            cardsPlaced = [];
+            
+            // Create timeline nodes
+            for (let i = 0; i < currentMission.items.length; i++) {
+                const node = document.createElement("div");
+                node.className = "time-node w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center text-blue-700 font-bold timeline-card-container";
+                node.textContent = i + 1;
+                node.dataset.position = i + 1;
+                node.addEventListener("dragover", allowDrop);
+                node.addEventListener("drop", dropCard);
+                timelineNodes.appendChild(node);
+            }
+            
+            // Create cards (shuffled)
+            const shuffledItems = [...currentMission.items].sort(() => Math.random() - 0.5);
+            shuffledItems.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "card h-40 relative";
+                
+                const cardContainer = document.createElement("div");
+                cardContainer.className = "card-container w-full h-full";
+                
+                const cardFront = document.createElement("div");
+                cardFront.className = "card-front bg-white p-4 rounded-lg shadow-md flex flex-col items-center justify-center";
+                cardFront.id = item.id;
+                cardFront.dataset.correct = item.correct;
+                cardFront.draggable = true;
+                cardFront.addEventListener("dragstart", dragStart);
+                cardFront.addEventListener("click", () => flipCard(cardContainer));
+                
+                const emoji = document.createElement("div");
+                emoji.className = "text-4xl mb-2";
+                emoji.textContent = item.image;
+                
+                const text = document.createElement("div");
+                text.className = "text-center font-bold";
+                text.textContent = item.text;
+                
+                const infoHint = document.createElement("div");
+                infoHint.className = "text-xs text-blue-600 mt-2";
+                infoHint.textContent = "點擊查看詳情";
+                
+                cardFront.appendChild(emoji);
+                cardFront.appendChild(text);
+                cardFront.appendChild(infoHint);
+                
+                const infoCard = document.createElement("div");
+                infoCard.className = "info-card";
+                
+                const infoTitle = document.createElement("h3");
+                infoTitle.className = "font-bold text-lg mb-2 text-blue-700";
+                infoTitle.textContent = item.text;
+                
+                const infoEmoji = document.createElement("div");
+                infoEmoji.className = "text-3xl mb-2 text-center";
+                infoEmoji.textContent = item.image;
+                
+                const infoText = document.createElement("p");
+                infoText.className = "text-sm";
+                infoText.textContent = item.info;
+                
+                const backButton = document.createElement("button");
+                backButton.className = "mt-4 bg-blue-600 text-white text-xs py-1 px-2 rounded";
+                backButton.textContent = "返回卡片";
+                backButton.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    flipCard(cardContainer);
+                });
+                
+                infoCard.appendChild(infoTitle);
+                infoCard.appendChild(infoEmoji);
+                infoCard.appendChild(infoText);
+                infoCard.appendChild(backButton);
+                
+                cardContainer.appendChild(cardFront);
+                cardContainer.appendChild(infoCard);
+                card.appendChild(cardContainer);
+                cardsContainer.appendChild(card);
+            });
+            
+            // Hide feedback and next button
+            feedbackContainer.classList.add("hidden");
+            nextBtn.classList.add("hidden");
+        }
+
+        function flipCard(cardContainer) {
+            cardContainer.classList.toggle("flipped");
+        }
+
+        function showCardInfo(title, info) {
+            const modal = document.createElement("div");
+            modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+            
+            const content = document.createElement("div");
+            content.className = "bg-white p-6 rounded-lg shadow-lg max-w-md w-full";
+            
+            const header = document.createElement("h3");
+            header.className = "text-xl font-bold text-blue-700 mb-4";
+            header.textContent = title;
+            
+            const text = document.createElement("p");
+            text.className = "text-gray-700 mb-6";
+            text.textContent = info;
+            
+            const button = document.createElement("button");
+            button.className = "bg-blue-600 text-white py-1 px-4 rounded-md hover:bg-blue-700 transition";
+            button.textContent = "了解";
+            button.addEventListener("click", () => {
+                document.body.removeChild(modal);
+            });
+            
+            const buttonContainer = document.createElement("div");
+            buttonContainer.className = "flex justify-end";
+            buttonContainer.appendChild(button);
+            
+            content.appendChild(header);
+            content.appendChild(text);
+            content.appendChild(buttonContainer);
+            modal.appendChild(content);
+            
+            document.body.appendChild(modal);
+        }
+
+        function setBackground(background) {
+            // Set background based on mission theme
+            switch(background) {
+                case "ancient-china":
+                    gameBackground.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f9ff\"/><path d=\"M30,20 L50,10 L70,20 L70,40 L50,50 L30,40 Z\" fill=\"none\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/></svg>')";
+                    break;
+                case "inventions":
+                    gameBackground.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f9ff\"/><circle cx=\"50\" cy=\"50\" r=\"20\" fill=\"none\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/><line x1=\"50\" y1=\"30\" x2=\"50\" y2=\"10\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/></svg>')";
+                    break;
+                case "taiwan":
+                    gameBackground.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f9ff\"/><path d=\"M30,70 Q50,30 70,70\" fill=\"none\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/></svg>')";
+                    break;
+                case "prehistoric":
+                    gameBackground.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f9ff\"/><path d=\"M10,70 L30,60 L50,65 L70,55 L90,70\" fill=\"none\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/></svg>')";
+                    break;
+                case "human-evolution":
+                    gameBackground.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f9ff\"/><path d=\"M20,80 L40,70 L60,60 L80,40\" fill=\"none\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/></svg>')";
+                    break;
+                case "land-evolution":
+                    gameBackground.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f9ff\"/><path d=\"M10,80 C30,80 30,40 50,40 C70,40 70,20 90,20\" fill=\"none\" stroke=\"%23bfdbfe\" stroke-width=\"1\"/></svg>')";
+                    break;
+                default:
+                    gameBackground.style.backgroundImage = "none";
+            }
+        }
+
+        function dragStart(e) {
+            e.dataTransfer.setData("text/plain", e.target.id);
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function dropCard(e) {
+            e.preventDefault();
+            const cardId = e.dataTransfer.getData("text/plain");
+            const card = document.getElementById(cardId);
+            
+            // Find the drop target (the timeline node)
+            let dropTarget = e.target;
+            while (dropTarget && !dropTarget.classList.contains('time-node')) {
+                dropTarget = dropTarget.parentElement;
+            }
+            
+            if (!dropTarget) return;
+            
+            const position = parseInt(dropTarget.dataset.position);
+            
+            // Check if this position already has a card
+            if (cardsPlaced.some(item => item.position === position)) {
+                showFeedback("這個位置已經有卡片了！", "error");
+                return;
+            }
+            
+            // Place card
+            cardsPlaced.push({
+                id: cardId,
+                position: position,
+                correct: parseInt(card.dataset.correct) === position
+            });
+            
+            // Update UI
+            card.parentElement.classList.add("opacity-50");
+            
+            // Create timeline card
+            const timelineCard = document.createElement("div");
+            timelineCard.className = "timeline-card";
+            
+            const cardEmoji = document.createElement("div");
+            cardEmoji.className = "text-xl";
+            cardEmoji.textContent = card.querySelector("div").textContent;
+            
+            const cardText = document.createElement("div");
+            cardText.className = "text-xs font-bold";
+            cardText.textContent = card.querySelector("div:nth-child(2)").textContent;
+            
+            timelineCard.appendChild(cardEmoji);
+            timelineCard.appendChild(cardText);
+            dropTarget.appendChild(timelineCard);
+            
+            // Check if all cards are placed
+            if (cardsPlaced.length === currentMission.items.length) {
+                checkAnswer();
+            }
+        }
+
+        function checkAnswer() {
+            const allCorrect = cardsPlaced.every(item => item.correct);
+            
+            if (allCorrect) {
+                // Success
+                progress++;
+                updateProgressBar();
+                showFeedback("太棒了！你成功修復了這段時間線！", "success");
+                playSound("success");
+                
+                // Show next button if there are more missions
+                const missions = gameData[currentMissionType];
+                if (currentMissionIndex < missions.length - 1) {
+                    nextBtn.classList.remove("hidden");
+                } else {
+                    // Show success screen if all missions in this category are complete
+                    setTimeout(() => {
+                        gameScreen.classList.add("hidden");
+                        successScreen.classList.remove("hidden");
+                    }, 2000);
+                }
+            } else {
+                // Error
+                showFeedback("時間線還是混亂的，再試一次吧！", "error");
+                playSound("error");
+                
+                // Reset cards
+                setTimeout(() => {
+                    resetCards();
+                }, 1500);
+            }
+        }
+
+        function resetCards() {
+            // Clear timeline nodes
+            const nodes = timelineNodes.querySelectorAll(".time-node");
+            nodes.forEach(node => {
+                const timelineCard = node.querySelector(".timeline-card");
+                if (timelineCard) {
+                    node.removeChild(timelineCard);
+                }
+            });
+            
+            // Reset card opacity
+            cardsPlaced.forEach(item => {
+                const card = document.getElementById(item.id);
+                if (card && card.parentElement) {
+                    card.parentElement.classList.remove("opacity-50");
+                }
+            });
+            
+            // Clear placed cards array
+            cardsPlaced = [];
+            
+            // Hide feedback
+            feedbackContainer.classList.add("hidden");
+        }
+
+        function showFeedback(message, type) {
+            feedbackText.textContent = message;
+            feedbackContainer.className = "bg-white p-4 rounded-lg shadow-md mb-6";
+            
+            if (type === "success") {
+                feedbackContainer.classList.add("bg-green-100", "border", "border-green-500", "success-animation");
+                feedbackText.className = "text-center text-lg text-green-700";
+            } else {
+                feedbackContainer.classList.add("bg-red-100", "border", "border-red-500", "error-animation");
+                feedbackText.className = "text-center text-lg text-red-700";
+            }
+            
+            feedbackContainer.classList.remove("hidden");
+        }
+
+        function loadNextMission() {
+            currentMissionIndex++;
+            loadMission();
+        }
+
+        function showMissionScreen() {
+            gameScreen.classList.add("hidden");
+            successScreen.classList.add("hidden");
+            tutorialScreen.classList.add("hidden");
+            missionScreen.classList.remove("hidden");
+        }
+
+        function resetGame() {
+            currentMissionType = "";
+            currentMissionIndex = 0;
+            progress = 0;
+            cardsPlaced = [];
+            
+            successScreen.classList.add("hidden");
+            startScreen.classList.remove("hidden");
+        }
+
+        function updateProgressBar() {
+            const missions = gameData[currentMissionType];
+            const percentage = (progress / missions.length) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function showHint() {
+            hintText.textContent = currentMission.hint;
+            hintModal.classList.remove("hidden");
+        }
+
+        function closeHint() {
+            hintModal.classList.add("hidden");
+        }
+
+        function showAnswer() {
+            // Create answer content
+            let html = `<p class="mb-4">正確的順序是：</p><div class="flex flex-col space-y-2">`;
+            
+            // Sort items by correct position
+            const sortedItems = [...currentMission.items].sort((a, b) => a.correct - b.correct);
+            
+            // Add each item to the answer
+            sortedItems.forEach((item, index) => {
+                html += `
+                <div class="flex items-center bg-white p-2 rounded-lg shadow-sm">
+                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3">${index + 1}</div>
+                    <div class="text-2xl mr-3">${item.image}</div>
+                    <div>
+                        <div class="font-bold">${item.text}</div>
+                        <div class="text-xs text-gray-600">${item.info.substring(0, 60)}...</div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            answerContent.innerHTML = html;
+            answerModal.classList.remove("hidden");
+        }
+
+        function closeAnswer() {
+            answerModal.classList.add("hidden");
+        }
+
+        function playSound(type) {
+            // This would be implemented with actual audio files in a real implementation
+            console.log(`Playing ${type} sound`);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96949e0d456bf220',t:'MTc1NDIxMTU1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
