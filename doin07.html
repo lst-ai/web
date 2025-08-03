@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>☎️LST遊戲室-《如果電話亭：未來實驗室》</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+        }
+        
+        .phone-booth {
+            background-color: #dc2626;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.6);
+            transition: all 0.5s ease;
+        }
+        
+        .phone-booth:hover {
+            box-shadow: 0 0 50px rgba(220, 38, 38, 0.8);
+            transform: translateY(-5px);
+        }
+        
+        .card {
+            perspective: 1000px;
+            transition: transform 0.6s;
+        }
+        
+        .card-inner {
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        
+        .card:hover .card-inner {
+            transform: rotateY(10deg);
+        }
+        
+        .card-front, .card-back {
+            backface-visibility: hidden;
+        }
+        
+        .typing-animation {
+            overflow: hidden;
+            border-right: 2px solid #f8fafc;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #f8fafc }
+        }
+        
+        .glow-button {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px #60a5fa, 0 0 20px #60a5fa;
+            }
+            to {
+                box-shadow: 0 0 20px #3b82f6, 0 0 30px #3b82f6;
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.8s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .consequence-animation {
+            transition: all 0.8s ease;
+        }
+        
+        .phone-ring {
+            animation: ring 0.8s ease infinite;
+        }
+        
+        @keyframes ring {
+            0% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+            100% { transform: rotate(-5deg); }
+        }
+        
+        .page {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .active {
+            display: flex;
+            opacity: 1;
+            z-index: 10;
+        }
+        
+        .scenario-card {
+            transition: all 0.3s ease;
+        }
+        
+        .scenario-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .rotate-slow {
+            animation: rotateSlow 10s linear infinite;
+        }
+        
+        @keyframes rotateSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            from { opacity: 0.2; }
+            to { opacity: 0.8; }
+        }
+        
+        .highlight-text {
+            background: linear-gradient(120deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #3b82f6;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #1e40af;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f59e0b;
+            opacity: 0;
+        }
+        
+        /* 新增複製成功提示樣式 */
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #10B981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .copy-toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景星星 -->
+    <div class="stars" id="stars"></div>
+
+    <!-- 複製成功提示 -->
+    <div id="copy-toast" class="copy-toast">報告已複製到剪貼簿！可以貼到Padlet分享給全班了！</div>
+
+    <!-- 導引首頁 -->
+    <div id="intro-page" class="page active min-h-screen flex flex-col items-center justify-center p-4">
+        <div class="max-w-2xl text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">☎️LST遊戲室-《如果電話亭：未來實驗室》</h1>
+            <div class="space-y-4">
+                <p class="typing-animation text-xl md:text-2xl">你發現了一台神祕的紅色電話亭。</p>
+                <p class="typing-animation text-xl md:text-2xl" style="animation-delay: 2s;">傳說只要拿起話筒，就能預見未來……</p>
+                <p class="typing-animation text-xl md:text-2xl" style="animation-delay: 4s;">準備好進入《未來實驗室》，改變世界的命運了嗎？</p>
+            </div>
+        </div>
+        
+        <div class="phone-booth w-64 h-96 rounded-t-lg flex flex-col items-center justify-center relative mb-10 floating">
+            <div class="absolute top-4 w-56 h-6 bg-yellow-400 flex items-center justify-center">
+                <span class="text-black font-bold text-sm">未來實驗室</span>
+            </div>
+            <div class="w-40 h-60 bg-blue-900 rounded-lg flex items-center justify-center">
+                <div class="phone-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button id="enter-booth" class="glow-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 text-lg">
+                    進入電話亭
+                </button>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-4 right-4 text-sm text-blue-300 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>LST遊戲室 - 核心能力：假設語句、因果關係、未來推理</span>
+        </div>
+        
+        <div class="absolute bottom-4 left-4 text-sm text-blue-300">
+            遊戲設計與製作：呂舒婷｜了解更多🔍<br>
+            臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com
+        </div>
+    </div>
+
+    <!-- 第一頁：獲得「如果情境卡」 -->
+    <div id="card-selection-page" class="page min-h-screen flex flex-col items-center justify-start p-4 pt-10">
+        <div class="w-full max-w-6xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">請接聽電話，抽取一張「如果假設卡」</h2>
+                <div class="bg-blue-900/50 px-4 py-2 rounded-lg">
+                    <div class="text-sm text-blue-300">遊戲進度</div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-48 bg-blue-900 rounded-full h-2">
+                            <div class="progress-bar w-1/4 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                        </div>
+                        <span class="text-sm">1/4</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-900/30 p-6 rounded-lg mb-8">
+                <div class="flex items-start space-x-4">
+                    <div class="text-yellow-400 text-2xl">💡</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">學習提示</h3>
+                        <p>「如果」句型是一種假設語句，幫助我們想像不同的可能性。選擇一張卡片，思考這個假設情境可能帶來的變化。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="phone-booth w-64 h-80 rounded-t-lg flex flex-col items-center justify-center relative mb-10">
+            <div class="absolute top-4 w-56 h-6 bg-yellow-400 flex items-center justify-center">
+                <span class="text-black font-bold text-sm">未來實驗室</span>
+            </div>
+            <div class="w-40 h-60 bg-blue-900 rounded-lg flex items-center justify-center">
+                <button id="answer-phone" class="phone-ring">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div id="cards-container" class="hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mt-8">
+            <!-- 卡片將由 JavaScript 動態生成 -->
+        </div>
+    </div>
+
+    <!-- 第二頁：寫作表達任務 -->
+    <div id="writing-page" class="page min-h-screen flex flex-col items-center justify-start p-4 pt-10">
+        <div class="max-w-4xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">寫作表達任務</h2>
+                <div class="bg-blue-900/50 px-4 py-2 rounded-lg">
+                    <div class="text-sm text-blue-300">遊戲進度</div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-48 bg-blue-900 rounded-full h-2">
+                            <div class="progress-bar w-2/4 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                        </div>
+                        <span class="text-sm">2/4</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-900/50 p-6 rounded-lg mb-6">
+                <div id="selected-card-display" class="text-2xl font-bold text-center mb-4 text-yellow-300"></div>
+                <p class="text-lg mb-6">請根據這張「如果卡片」，寫下你想像的世界會變成什麼樣子？至少要寫出三個可能的改變，並用「如果……就……」的句型練習。</p>
+            </div>
+            
+            <div class="bg-blue-900/30 p-6 rounded-lg mb-8">
+                <div class="flex items-start space-x-4">
+                    <div class="text-yellow-400 text-2xl">✏️</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">寫作提示</h3>
+                        <p>好的假設句能幫助我們進行邏輯推理。思考這個假設會對自然環境、人類生活和社會結構帶來什麼影響？</p>
+                        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-blue-800/30 p-3 rounded-lg">
+                                <span class="font-bold">環境影響</span>: 氣候、生態、資源
+                            </div>
+                            <div class="bg-blue-800/30 p-3 rounded-lg">
+                                <span class="font-bold">人類生活</span>: 健康、工作、娛樂
+                            </div>
+                            <div class="bg-blue-800/30 p-3 rounded-lg">
+                                <span class="font-bold">社會結構</span>: 文化、法律、經濟
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-blue-800/30 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-blue-300">句型引導 1</h3>
+                        <div class="tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="tooltiptext">這個句型用來表達直接的因果關係</span>
+                        </div>
+                    </div>
+                    <p class="mb-2">如果……，那麼……</p>
+                    <textarea id="sentence1" class="w-full h-32 p-3 rounded bg-slate-800 text-white border border-blue-500" placeholder="請輸入你的想法..."></textarea>
+                </div>
+                
+                <div class="bg-blue-800/30 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-blue-300">句型引導 2</h3>
+                        <div class="tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="tooltiptext">這個句型用來解釋原因和結果</span>
+                        </div>
+                    </div>
+                    <p class="mb-2">因為……，所以……</p>
+                    <textarea id="sentence2" class="w-full h-32 p-3 rounded bg-slate-800 text-white border border-blue-500" placeholder="請輸入你的想法..."></textarea>
+                </div>
+                
+                <div class="bg-blue-800/30 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-blue-300">句型引導 3</h3>
+                        <div class="tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="tooltiptext">這個句型用來表達你的預測</span>
+                        </div>
+                    </div>
+                    <p class="mb-2">我想……會……</p>
+                    <textarea id="sentence3" class="w-full h-32 p-3 rounded bg-slate-800 text-white border border-blue-500" placeholder="請輸入你的想法..."></textarea>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <button id="submit-writing" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 text-lg flex items-center">
+                    <span>進入實驗室模擬</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第三頁：實驗室模擬畫面 -->
+    <div id="simulation-page" class="page min-h-screen flex flex-col items-center justify-start p-4 pt-10">
+        <div class="max-w-4xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">未來實驗室模擬</h2>
+                <div class="bg-blue-900/50 px-4 py-2 rounded-lg">
+                    <div class="text-sm text-blue-300">遊戲進度</div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-48 bg-blue-900 rounded-full h-2">
+                            <div class="progress-bar w-3/4 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                        </div>
+                        <span class="text-sm">3/4</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-900/30 p-6 rounded-lg mb-8">
+                <div class="flex items-start space-x-4">
+                    <div class="text-yellow-400 text-2xl">🔬</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">實驗室說明</h3>
+                        <p>我們將模擬你的假設在未來世界可能產生的連鎖反應。觀察每個階段的變化，思考這些改變之間的因果關係。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="simulation-card" class="bg-blue-900/50 p-6 rounded-lg mb-8 max-w-4xl w-full">
+            <div id="simulation-scenario" class="text-2xl font-bold text-center mb-6 text-yellow-300"></div>
+            
+            <div class="flex flex-col items-center space-y-8">
+                <div id="simulation-step1" class="consequence-animation w-full bg-slate-800/80 p-6 rounded-lg flex flex-col items-center">
+                    <div class="text-xl font-bold mb-4">第一階段影響</div>
+                    <div class="flex items-center justify-center space-x-4">
+                        <div id="step1-icon" class="text-6xl pulse"></div>
+                        <div id="step1-text" class="text-lg"></div>
+                    </div>
+                </div>
+                
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                
+                <div id="simulation-step2" class="consequence-animation w-full bg-slate-800/80 p-6 rounded-lg flex flex-col items-center opacity-50">
+                    <div class="text-xl font-bold mb-4">第二階段影響</div>
+                    <div class="flex items-center justify-center space-x-4">
+                        <div id="step2-icon" class="text-6xl"></div>
+                        <div id="step2-text" class="text-lg"></div>
+                    </div>
+                </div>
+                
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                
+                <div id="simulation-step3" class="consequence-animation w-full bg-slate-800/80 p-6 rounded-lg flex flex-col items-center opacity-50">
+                    <div class="text-xl font-bold mb-4">第三階段影響</div>
+                    <div class="flex items-center justify-center space-x-4">
+                        <div id="step3-icon" class="text-6xl"></div>
+                        <div id="step3-text" class="text-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex space-x-4">
+            <button id="next-step" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 text-lg flex items-center">
+                <span>下一步</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+            <button id="go-to-report" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 text-lg hidden flex items-center">
+                <span>完成報告書</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 第四頁：未來報告書 -->
+    <div id="report-page" class="page min-h-screen flex flex-col items-center justify-start p-4 pt-10">
+        <div class="max-w-4xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">未來報告書</h2>
+                <div class="bg-blue-900/50 px-4 py-2 rounded-lg">
+                    <div class="text-sm text-blue-300">遊戲進度</div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-48 bg-blue-900 rounded-full h-2">
+                            <div class="progress-bar w-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                        </div>
+                        <span class="text-sm">4/4</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-900/30 p-6 rounded-lg mb-8">
+                <div class="flex items-start space-x-4">
+                    <div class="text-yellow-400 text-2xl">📝</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">報告書說明</h3>
+                        <p>恭喜你完成未來實驗！現在請整理你的發現，提出對未來可能問題的建議。完成後可以與全班分享你的研究成果。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="max-w-4xl w-full bg-blue-900/50 p-8 rounded-lg">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">未來實驗室研究報告</h3>
+                <div class="text-sm text-blue-300">報告編號: LST-<span id="report-id"></span></div>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="bg-slate-800/80 p-4 rounded-lg">
+                    <h4 class="font-bold mb-2 text-blue-300">假設情境</h4>
+                    <p id="report-scenario" class="text-lg"></p>
+                </div>
+                
+                <div class="bg-slate-800/80 p-4 rounded-lg">
+                    <h4 class="font-bold mb-2 text-blue-300">我的預測</h4>
+                    <div id="report-predictions" class="space-y-2">
+                        <p id="report-sentence1" class="text-lg"></p>
+                        <p id="report-sentence2" class="text-lg"></p>
+                        <p id="report-sentence3" class="text-lg"></p>
+                    </div>
+                </div>
+                
+                <div class="bg-slate-800/80 p-4 rounded-lg">
+                    <h4 class="font-bold mb-2 text-blue-300">可能影響</h4>
+                    <ul id="report-impacts" class="list-disc pl-5 space-y-1">
+                        <!-- 動態生成 -->
+                    </ul>
+                </div>
+                
+                <div class="bg-slate-800/80 p-4 rounded-lg">
+                    <h4 class="font-bold mb-2 text-blue-300">我的建議</h4>
+                    <textarea id="report-suggestions" class="w-full h-24 p-3 rounded bg-slate-700 text-white border border-blue-500" placeholder="請輸入你對未來的建議..."></textarea>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+                <button id="copy-report" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 text-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>複製報告</span>
+                </button>
+                <a href="https://ylcdo.padlet.org/Lu/lst-padlet-nzaimu265o7q30af" target="_blank" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 text-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    <span>發表給全班</span>
+                </a>
+                <button id="restart-game" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 text-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>重新開始</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="completion-badge" class="mt-8 bg-gradient-to-r from-blue-500 to-purple-600 p-1 rounded-lg hidden">
+            <div class="bg-blue-900 p-4 rounded-lg flex items-center space-x-4">
+                <div class="text-4xl">🏆</div>
+                <div>
+                    <h4 class="font-bold text-lg">恭喜完成未來實驗！</h4>
+                    <p>你已經成功運用假設語句進行未來推理，展現了優秀的問題解決能力！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 情境卡資料
+        const scenarioCards = [
+            { id: 1, text: "如果地球永遠是白天，會發生什麼事？", theme: "氣候變遷 / 作物生長", 
+              steps: [
+                { icon: "🌞", text: "地表溫度持續升高，沒有夜晚降溫" },
+                { icon: "🌱", text: "植物無法進行正常光合作用循環，大量作物枯萎" },
+                { icon: "🐾", text: "夜行動物失去棲息環境，生態系統崩潰" }
+              ],
+              impacts: ["人類作息失調，醫療需求增加", "能源消耗大增", "生物多樣性大幅下降"]
+            },
+            { id: 2, text: "如果人類不用睡覺了，會怎樣？", theme: "生理健康 / 社會節奏", 
+              steps: [
+                { icon: "⏰", text: "人類活動時間增加一倍，工作時間延長" },
+                { icon: "🏙️", text: "城市變成24小時不停運轉，能源消耗增加" },
+                { icon: "🧠", text: "大腦缺乏休息時間，心理健康問題增加" }
+              ],
+              impacts: ["工作與休閒界線模糊", "夜間經濟蓬勃發展", "精神壓力增加"]
+            },
+            { id: 3, text: "如果沒有水，會怎樣？", theme: "水資源 / 生態影響", 
+              steps: [
+                { icon: "💧", text: "飲用水短缺，人類無法維持基本生存需求" },
+                { icon: "🚿", text: "衛生條件惡化，疾病快速傳播" },
+                { icon: "🍚", text: "農作物無法生長，全球糧食危機" }
+              ],
+              impacts: ["生物大量滅絕", "人類遷徙衝突增加", "科技轉向水資源創造"]
+            },
+            { id: 4, text: "如果動物都會說話……", theme: "人與動物關係 / 社會語言", 
+              steps: [
+                { icon: "🗣️", text: "動物能表達自己的需求和感受" },
+                { icon: "🥩", text: "肉食文化受到挑戰，素食主義興起" },
+                { icon: "⚖️", text: "動物權利法律體系建立，新社會秩序形成" }
+              ],
+              impacts: ["跨物種溝通帶來新知識", "寵物與主人關係改變", "生態保育觀念提升"]
+            },
+            { id: 5, text: "如果每個人都只能說實話……", theme: "人際關係 / 社會秩序", 
+              steps: [
+                { icon: "🤐", text: "社交禮節崩潰，人際關係變得直接而殘酷" },
+                { icon: "🏛️", text: "政治制度重組，謊言政治不復存在" },
+                { icon: "💔", text: "人們學習接受真相，建立新的溝通方式" }
+              ],
+              impacts: ["廣告和行銷產業轉型", "心理健康問題增加", "社會信任度提高"]
+            },
+            { id: 6, text: "如果一年只有夏天……", theme: "自然氣候 / 文化活動", 
+              steps: [
+                { icon: "🌡️", text: "全球氣溫持續高溫，極地冰層完全融化" },
+                { icon: "🌊", text: "海平面上升，沿海城市被淹沒" },
+                { icon: "🏝️", text: "人類遷移至高海拔地區，新文明形成" }
+              ],
+              impacts: ["季節性文化活動消失", "農業模式改變", "生物適應性挑戰"]
+            },
+            { id: 7, text: "如果網路永遠停用……", theme: "科技依賴 / 人際互動", 
+              steps: [
+                { icon: "📵", text: "全球通訊系統崩潰，資訊傳遞變得緩慢" },
+                { icon: "📚", text: "實體書籍和面對面教育重新流行" },
+                { icon: "🤝", text: "社區互動增加，本地經濟復興" }
+              ],
+              impacts: ["數位產業崩潰", "知識獲取不平等加劇", "面對面社交技能提升"]
+            },
+            { id: 8, text: "如果所有植物都會走路……", theme: "植物生態 / 人類生活", 
+              steps: [
+                { icon: "🌳", text: "植物能夠遷移尋找最佳生長環境" },
+                { icon: "🏙️", text: "城市綠化自動調整，空氣品質改善" },
+                { icon: "🏡", text: "家庭園藝需要新的管理方式，植物圍欄興起" }
+              ],
+              impacts: ["農業模式徹底改變", "植物權利議題出現", "生態系統自我調節能力增強"]
+            },
+            { id: 9, text: "如果地球倒轉方向旋轉……", theme: "晝夜顛倒 / 交通系統", 
+              steps: [
+                { icon: "🌓", text: "日出日落方向改變，東西方概念顛倒" },
+                { icon: "🧭", text: "導航系統需要重新校準，交通混亂" },
+                { icon: "🌪️", text: "全球氣候模式改變，極端天氣增加" }
+              ],
+              impacts: ["時區系統重組", "海洋洋流改變", "生物遷徙模式混亂"]
+            },
+            { id: 10, text: "如果作業都由 AI 幫你寫……", theme: "教育未來 / 自主學習", 
+              steps: [
+                { icon: "🤖", text: "學生不再親自完成作業，知識吸收減少" },
+                { icon: "📝", text: "教育系統轉向實踐和討論為主的評估方式" },
+                { icon: "🧠", text: "創造力和批判性思考成為核心教育目標" }
+              ],
+              impacts: ["教師角色轉變為引導者", "學習評估方式革新", "知識獲取與應用能力差距擴大"]
+            },
+            { id: 11, text: "如果只有小孩能決定法律……", theme: "公民素養 / 社會制度", 
+              steps: [
+                { icon: "👶", text: "法律變得簡單直接，更注重公平感受" },
+                { icon: "🍭", text: "娛樂和教育產業蓬勃發展，工作時間縮短" },
+                { icon: "🏫", text: "學校成為社會中心，教育資源大幅增加" }
+              ],
+              impacts: ["長期規劃能力下降", "社會福利制度改革", "代際權力結構顛倒"]
+            },
+            { id: 12, text: "如果地球上只剩下一種食物……", theme: "飲食習慣 / 健康風險", 
+              steps: [
+                { icon: "🍽️", text: "營養不均衡問題普遍，健康風險增加" },
+                { icon: "🧪", text: "科學家努力從單一食物中提取多種營養" },
+                { icon: "🌍", text: "全球農業系統簡化，生物多樣性下降" }
+              ],
+              impacts: ["飲食文化消失", "食品加工技術革新", "健康不平等加劇"]
+            }
+        ];
+        
+        let currentScenario = null;
+        let simulationStep = 0;
+        
+        // 頁面切換函數 - 修改為直接顯示目標頁面，不顯示星空圖
+        function showPage(pageId) {
+            // 先將所有頁面設為不可見
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 立即顯示目標頁面，不需要延遲
+            document.getElementById(pageId).classList.add('active');
+            
+            // 更新進度條
+            const progressBars = document.querySelectorAll('.progress-bar');
+            if (pageId === 'card-selection-page') {
+                progressBars.forEach(bar => bar.style.width = '25%');
+            } else if (pageId === 'writing-page') {
+                progressBars.forEach(bar => bar.style.width = '50%');
+            } else if (pageId === 'simulation-page') {
+                progressBars.forEach(bar => bar.style.width = '75%');
+            } else if (pageId === 'report-page') {
+                progressBars.forEach(bar => bar.style.width = '100%');
+                document.getElementById('completion-badge').classList.remove('hidden');
+                createConfetti();
+            }
+        }
+        
+        // 顯示複製成功提示
+        function showCopyToast() {
+            const toast = document.getElementById('copy-toast');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 生成隨機報告ID
+        function generateReportId() {
+            return Math.floor(100000 + Math.random() * 900000);
+        }
+        
+        // 創建背景星星
+        function createStars() {
+            const stars = document.getElementById('stars');
+            const count = 100;
+            
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                const size = Math.random() * 3 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                
+                stars.appendChild(star);
+            }
+        }
+        
+        // 創建慶祝特效
+        function createConfetti() {
+            const container = document.getElementById('report-page');
+            const confettiCount = 50;
+            const colors = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.top = `-20px`;
+                confetti.style.width = `${Math.random() * 10 + 5}px`;
+                confetti.style.height = `${Math.random() * 10 + 5}px`;
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                const animationDuration = Math.random() * 3 + 2;
+                confetti.style.animation = `fall ${animationDuration}s linear forwards`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                
+                // 添加動畫
+                const keyframes = `
+                    @keyframes fall {
+                        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+                        10% { opacity: 1; }
+                        100% { transform: translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg); opacity: 0; }
+                    }
+                `;
+                
+                const style = document.createElement('style');
+                style.innerHTML = keyframes;
+                document.head.appendChild(style);
+                
+                container.appendChild(confetti);
+                
+                // 自動移除
+                setTimeout(() => {
+                    confetti.remove();
+                    style.remove();
+                }, animationDuration * 1000 + 2000);
+            }
+        }
+        
+        // 初始化頁面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 創建背景星星
+            createStars();
+            
+            // 設置報告ID
+            document.getElementById('report-id').textContent = generateReportId();
+            
+            // 進入電話亭按鈕
+            document.getElementById('enter-booth').addEventListener('click', function() {
+                showPage('card-selection-page');
+            });
+            
+            // 接聽電話按鈕
+            document.getElementById('answer-phone').addEventListener('click', function() {
+                const cardsContainer = document.getElementById('cards-container');
+                cardsContainer.innerHTML = '';
+                cardsContainer.classList.remove('hidden');
+                
+                // 生成卡片
+                scenarioCards.forEach(card => {
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'scenario-card bg-blue-800/50 hover:bg-blue-700/70 p-4 rounded-lg cursor-pointer transition-all';
+                    cardElement.innerHTML = `
+                        <div class="card">
+                            <div class="card-inner">
+                                <div class="card-front">
+                                    <div class="text-center p-4">
+                                        <div class="text-lg font-bold mb-2">${card.text}</div>
+                                        <div class="text-sm text-blue-300">${card.theme}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    cardElement.addEventListener('click', function() {
+                        currentScenario = card;
+                        document.getElementById('selected-card-display').textContent = card.text;
+                        document.getElementById('report-scenario').textContent = card.text;
+                        showPage('writing-page');
+                    });
+                    
+                    cardsContainer.appendChild(cardElement);
+                });
+            });
+            
+            // 提交寫作按鈕
+            document.getElementById('submit-writing').addEventListener('click', function() {
+                const sentence1 = document.getElementById('sentence1').value;
+                const sentence2 = document.getElementById('sentence2').value;
+                const sentence3 = document.getElementById('sentence3').value;
+                
+                // 檢查是否有填寫內容
+                if (!sentence1 || !sentence2 || !sentence3) {
+                    alert('請完成所有句型練習！');
+                    return;
+                }
+                
+                // 將寫作內容填入報告
+                document.getElementById('report-sentence1').textContent = sentence1;
+                document.getElementById('report-sentence2').textContent = sentence2;
+                document.getElementById('report-sentence3').textContent = sentence3;
+                
+                // 設置模擬頁面
+                document.getElementById('simulation-scenario').textContent = currentScenario.text;
+                document.getElementById('step1-icon').textContent = currentScenario.steps[0].icon;
+                document.getElementById('step1-text').textContent = currentScenario.steps[0].text;
+                document.getElementById('step2-icon').textContent = currentScenario.steps[1].icon;
+                document.getElementById('step2-text').textContent = currentScenario.steps[1].text;
+                document.getElementById('step3-icon').textContent = currentScenario.steps[2].icon;
+                document.getElementById('step3-text').textContent = currentScenario.steps[2].text;
+                
+                // 設置影響
+                const impactsList = document.getElementById('report-impacts');
+                impactsList.innerHTML = '';
+                currentScenario.impacts.forEach(impact => {
+                    const li = document.createElement('li');
+                    li.textContent = impact;
+                    impactsList.appendChild(li);
+                });
+                
+                simulationStep = 0;
+                showPage('simulation-page');
+            });
+            
+            // 模擬下一步按鈕
+            document.getElementById('next-step').addEventListener('click', function() {
+                simulationStep++;
+                
+                if (simulationStep === 1) {
+                    document.getElementById('simulation-step2').classList.remove('opacity-50');
+                    document.getElementById('simulation-step2').classList.add('fade-in');
+                    document.getElementById('step2-icon').classList.add('pulse');
+                } else if (simulationStep === 2) {
+                    document.getElementById('simulation-step3').classList.remove('opacity-50');
+                    document.getElementById('simulation-step3').classList.add('fade-in');
+                    document.getElementById('step3-icon').classList.add('pulse');
+                    document.getElementById('next-step').classList.add('hidden');
+                    document.getElementById('go-to-report').classList.remove('hidden');
+                }
+            });
+            
+            // 前往報告書按鈕
+            document.getElementById('go-to-report').addEventListener('click', function() {
+                showPage('report-page');
+            });
+            
+            // 複製報告按鈕 - 修正為複製整個頁面的文字
+            document.getElementById('copy-report').addEventListener('click', function() {
+                // 獲取報告頁面的所有內容
+                const scenario = document.getElementById('report-scenario').textContent;
+                const sentence1 = document.getElementById('report-sentence1').textContent;
+                const sentence2 = document.getElementById('report-sentence2').textContent;
+                const sentence3 = document.getElementById('report-sentence3').textContent;
+                const impacts = Array.from(document.getElementById('report-impacts').children).map(li => `- ${li.textContent}`).join('\n');
+                const suggestions = document.getElementById('report-suggestions').value;
+                const reportId = document.getElementById('report-id').textContent;
+                
+                // 格式化報告文字
+                const reportText = `
+☎️LST遊戲室-《如果電話亭：未來實驗室》
+【未來實驗室研究報告】報告編號: LST-${reportId}
+
+假設情境：${scenario}
+
+我的預測：
+1. ${sentence1}
+2. ${sentence2}
+3. ${sentence3}
+
+可能影響：
+${impacts}
+
+我的建議：
+${suggestions}
+
+---
+遊戲設計與製作：呂舒婷｜了解更多🔍
+臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com
+                `;
+                
+                // 使用現代剪貼簿API複製文字
+                navigator.clipboard.writeText(reportText)
+                    .then(() => {
+                        // 顯示成功提示，而不是使用alert
+                        showCopyToast();
+                    })
+                    .catch(err => {
+                        // 如果API失敗，使用備用方法
+                        const textarea = document.createElement('textarea');
+                        textarea.value = reportText;
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        showCopyToast();
+                    });
+            });
+            
+            // 重新開始按鈕
+            document.getElementById('restart-game').addEventListener('click', function() {
+                // 重置所有表單
+                document.getElementById('sentence1').value = '';
+                document.getElementById('sentence2').value = '';
+                document.getElementById('sentence3').value = '';
+                document.getElementById('report-suggestions').value = '';
+                
+                // 重置模擬步驟
+                document.getElementById('simulation-step2').classList.add('opacity-50');
+                document.getElementById('simulation-step2').classList.remove('fade-in');
+                document.getElementById('step2-icon').classList.remove('pulse');
+                document.getElementById('simulation-step3').classList.add('opacity-50');
+                document.getElementById('simulation-step3').classList.remove('fade-in');
+                document.getElementById('step3-icon').classList.remove('pulse');
+                document.getElementById('next-step').classList.remove('hidden');
+                document.getElementById('go-to-report').classList.add('hidden');
+                
+                // 隱藏完成徽章
+                document.getElementById('completion-badge').classList.add('hidden');
+                
+                // 重置報告ID
+                document.getElementById('report-id').textContent = generateReportId();
+                
+                // 返回首頁
+                showPage('intro-page');
+            });
+            
+            // 添加鍵盤快捷鍵
+            document.addEventListener('keydown', function(e) {
+                // Enter 鍵進入下一步
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    const activePage = document.querySelector('.page.active');
+                    
+                    if (activePage.id === 'intro-page') {
+                        document.getElementById('enter-booth').click();
+                    } else if (activePage.id === 'card-selection-page') {
+                        // 不做任何事，因為需要選擇卡片
+                    } else if (activePage.id === 'writing-page') {
+                        document.getElementById('submit-writing').click();
+                    } else if (activePage.id === 'simulation-page') {
+                        if (!document.getElementById('next-step').classList.contains('hidden')) {
+                            document.getElementById('next-step').click();
+                        } else {
+                            document.getElementById('go-to-report').click();
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96966385f649f1f0',t:'MTc1NDIzMDEyNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
