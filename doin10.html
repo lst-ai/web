@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-🕰️ 《抽屜式時光機》歷史篡改調查局</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        * {
+            font-family: 'Noto Sans TC', sans-serif;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f0e6d2;
+            overflow-x: hidden;
+        }
+        
+        .drawer {
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            cursor: pointer;
+        }
+        
+        .drawer:hover {
+            transform: translateY(10px);
+        }
+        
+        .time-machine {
+            opacity: 0;
+            transition: opacity 0.5s, transform 1s;
+            transform: scale(0.8);
+        }
+        
+        .time-portal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, #4a00e0, #8e2de2);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .time-portal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .portal-inner {
+            width: 80vmin;
+            height: 80vmin;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #4a00e0, #8e2de2, #4a00e0);
+            animation: rotate 4s linear infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 50px rgba(142, 45, 226, 0.8);
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .mission-card {
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .mission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            background-color: #8e2de2;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(142, 45, 226, 0.2);
+        }
+        
+        .btn-primary:hover {
+            background-color: #7928ca;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(142, 45, 226, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: #f0e6d2;
+            color: #4a5568;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e2d8c4;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .option {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .option:hover {
+            border-color: #8e2de2;
+            background-color: #f9f5ff;
+        }
+        
+        .option.selected {
+            border-color: #8e2de2;
+            background-color: #f3e8ff;
+        }
+        
+        .option.correct {
+            border-color: #48bb78;
+            background-color: #f0fff4;
+        }
+        
+        .option.incorrect {
+            border-color: #f56565;
+            background-color: #fff5f5;
+        }
+        
+        .history-scene {
+            position: relative;
+            height: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .badge {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            animation: badge-glow 2s infinite alternate;
+        }
+        
+        @keyframes badge-glow {
+            from { filter: drop-shadow(0 0 5px rgba(142, 45, 226, 0.5)); }
+            to { filter: drop-shadow(0 0 15px rgba(142, 45, 226, 0.8)); }
+        }
+        
+        .repair-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .repair-animation.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .repair-flash {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            animation: flash 2s forwards;
+        }
+        
+        @keyframes flash {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(15); opacity: 1; }
+            100% { transform: scale(30); opacity: 0; }
+        }
+        
+        .drawer-handle {
+            width: 60px;
+            height: 10px;
+            background-color: #8B4513;
+            border-radius: 5px;
+            margin: 0 auto;
+        }
+        
+        .achievement {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #8e2de2;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 40;
+            transition: bottom 0.5s;
+        }
+        
+        .achievement.show {
+            bottom: 20px;
+        }
+        
+        /* Scene-specific styles */
+        .scene-edison {
+            background: linear-gradient(to bottom, #1a202c 60%, #2d3748 100%);
+        }
+        
+        .scene-qin {
+            background: linear-gradient(to bottom, #f6e05e 0%, #dd6b20 100%);
+        }
+        
+        .scene-wright {
+            background: linear-gradient(to bottom, #90cdf4 0%, #2b6cb0 100%);
+        }
+        
+        .scene-newton {
+            background: linear-gradient(to bottom, #c6f6d5 0%, #38a169 100%);
+        }
+        
+        .scene-tesla {
+            background: linear-gradient(to bottom, #a3bffa 0%, #4c51bf 100%);
+        }
+        
+        .scene-paper {
+            background: linear-gradient(to bottom, #fefcbf 0%, #d69e2e 100%);
+        }
+        
+        .scene-columbus {
+            background: linear-gradient(to bottom, #bee3f8 0%, #3182ce 100%);
+        }
+        
+        .scene-mlk {
+            background: linear-gradient(to bottom, #e9d8fd 0%, #805ad5 100%);
+        }
+        
+        .scene-gandhi {
+            background: linear-gradient(to bottom, #fed7d7 0%, #e53e3e 100%);
+        }
+        
+        .scene-gutenberg {
+            background: linear-gradient(to bottom, #e2e8f0 0%, #718096 100%);
+        }
+        
+        .light-bulb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 90px;
+            background-color: rgba(255, 255, 190, 0.1);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 20px rgba(255, 255, 190, 0.1);
+            transition: all 1s;
+        }
+        
+        .light-bulb.lit {
+            background-color: rgba(255, 255, 190, 0.9);
+            box-shadow: 0 0 50px rgba(255, 255, 190, 0.8);
+        }
+        
+        .candle {
+            position: absolute;
+            bottom: 30px;
+            width: 20px;
+            height: 60px;
+            background-color: #f6e05e;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .candle::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 7px;
+            width: 6px;
+            height: 15px;
+            background-color: #f56565;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 10px #f56565, 0 0 20px #f56565;
+            animation: flicker 1s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% { transform: scaleY(1); }
+            50% { transform: scaleY(0.9); }
+            100% { transform: scaleY(1.1); }
+        }
+        
+        .character {
+            position: absolute;
+            bottom: 20px;
+            width: 80px;
+            height: 120px;
+            transition: opacity 1s;
+        }
+        
+        .edison {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150'%3E%3Crect x='35' y='30' width='30' height='40' rx='15' fill='%23d69e2e'/%3E%3Ccircle cx='50' cy='25' r='20' fill='%23f6e05e'/%3E%3Crect x='35' y='70' width='30' height='60' fill='%23718096'/%3E%3Crect x='25' y='70' width='10' height='40' fill='%23718096'/%3E%3Crect x='65' y='70' width='10' height='40' fill='%23718096'/%3E%3Crect x='35' y='130' width='10' height='20' fill='%23000'/%3E%3Crect x='55' y='130' width='10' height='20' fill='%23000'/%3E%3C/svg%3E") no-repeat center center;
+            left: 60%;
+            opacity: 0;
+        }
+        
+        .qin-emperor {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150'%3E%3Crect x='30' y='50' width='40' height='60' fill='%23dd6b20'/%3E%3Cpolygon points='30,50 70,50 80,30 20,30' fill='%23f6e05e'/%3E%3Ccircle cx='50' cy='20' r='15' fill='%23f6e05e'/%3E%3Crect x='35' y='110' width='10' height='30' fill='%23000'/%3E%3Crect x='55' y='110' width='10' height='30' fill='%23000'/%3E%3C/svg%3E") no-repeat center center;
+            left: 60%;
+            opacity: 0;
+        }
+        
+        .wright-brothers {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 100'%3E%3Cline x1='10' y1='50' x2='140' y2='50' stroke='%23718096' stroke-width='5'/%3E%3Cline x1='75' y1='20' x2='75' y2='80' stroke='%23718096' stroke-width='5'/%3E%3Cpath d='M30,50 Q75,20 120,50' stroke='%23a0aec0' stroke-width='3' fill='transparent'/%3E%3Cpath d='M30,50 Q75,80 120,50' stroke='%23a0aec0' stroke-width='3' fill='transparent'/%3E%3Ccircle cx='75' cy='50' r='10' fill='%23718096'/%3E%3C/svg%3E") no-repeat center center;
+            width: 150px;
+            height: 100px;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+        }
+        
+        .newton {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150'%3E%3Ccircle cx='50' cy='25' r='20' fill='%23f6e05e'/%3E%3Crect x='35' y='45' width='30' height='60' fill='%23718096'/%3E%3Crect x='25' y='55' width='10' height='40' fill='%23718096'/%3E%3Crect x='65' y='55' width='10' height='40' fill='%23718096'/%3E%3Crect x='35' y='105' width='10' height='20' fill='%23000'/%3E%3Crect x='55' y='105' width='10' height='20' fill='%23000'/%3E%3Ccircle cx='50' cy='25' r='20' fill='%23f6e05e'/%3E%3Cpath d='M40,20 L45,30 L55,30 L60,20' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") no-repeat center center;
+            left: 60%;
+            opacity: 0;
+        }
+        
+        .tesla {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150'%3E%3Ccircle cx='50' cy='25' r='20' fill='%23f6e05e'/%3E%3Crect x='35' y='45' width='30' height='60' fill='%234c51bf'/%3E%3Crect x='25' y='55' width='10' height='40' fill='%234c51bf'/%3E%3Crect x='65' y='55' width='10' height='40' fill='%234c51bf'/%3E%3Crect x='35' y='105' width='10' height='20' fill='%23000'/%3E%3Crect x='55' y='105' width='10' height='20' fill='%23000'/%3E%3Cpath d='M35,25 L65,25' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M40,20 L45,30 L55,30 L60,20' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") no-repeat center center;
+            left: 60%;
+            opacity: 0;
+        }
+        
+        .apple {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #f56565;
+            border-radius: 50%;
+            top: 50px;
+            left: 40%;
+            opacity: 0;
+            transition: all 1s;
+        }
+        
+        .apple::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 13px;
+            width: 4px;
+            height: 10px;
+            background-color: #68d391;
+            border-radius: 2px;
+        }
+        
+        .apple.falling {
+            animation: fall 1s forwards;
+            opacity: 1;
+        }
+        
+        @keyframes fall {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100px); }
+        }
+        
+        .lightning {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 0;
+            background-color: #f6e05e;
+            opacity: 0;
+            transition: all 0.5s;
+        }
+        
+        .lightning.active {
+            height: 100%;
+            opacity: 1;
+            box-shadow: 0 0 20px #f6e05e;
+        }
+        
+        .chinese-text {
+            position: absolute;
+            font-size: 24px;
+            color: #000;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .text-unified {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .text-different {
+            top: 30%;
+            left: 20%;
+            transform: rotate(-15deg);
+        }
+        
+        .text-different-2 {
+            top: 40%;
+            left: 70%;
+            transform: rotate(15deg);
+        }
+        
+        .text-different-3 {
+            top: 60%;
+            left: 30%;
+            transform: rotate(5deg);
+        }
+        
+        .report-card {
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .report-stamp {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(142, 45, 226, 0.1);
+            border: 2px solid #8e2de2;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: rotate(-15deg);
+        }
+        
+        /* Drawer animation enhancement */
+        .desk {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        
+        .desk-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background-color: #8B4513;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .desk-body {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background-color: #A0522D;
+        }
+        
+        .drawer-container {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 120px;
+            background-color: #8B4513;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .drawer-front {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #CD853F;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        
+        .drawer-front:hover {
+            transform: translateY(5px);
+        }
+        
+        .drawer-knob {
+            width: 20px;
+            height: 20px;
+            background-color: #8B4513;
+            border-radius: 50%;
+            margin-top: 10px;
+        }
+        
+        .drawer-inside {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #5D4037;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .time-machine-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 1s ease;
+        }
+        
+        .time-machine-container.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .time-machine-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(142, 45, 226, 0.6) 0%, rgba(142, 45, 226, 0) 70%);
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { opacity: 0.5; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .desk-leg-left {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 20px;
+            height: 70px;
+            background-color: #8B4513;
+        }
+        
+        .desk-leg-right {
+            position: absolute;
+            bottom: 0;
+            right: 10%;
+            width: 20px;
+            height: 70px;
+            background-color: #8B4513;
+        }
+        
+        .creator-info {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .creator-info a {
+            color: #8e2de2;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .creator-info a:hover {
+            color: #7928ca;
+            text-decoration: underline;
+        }
+        
+        .scene-emoji {
+            font-size: 80px;
+            opacity: 0;
+            transition: all 1s;
+        }
+        
+        .scene-emoji.visible {
+            opacity: 1;
+            animation: bounce 1s;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-30px);}
+            60% {transform: translateY(-15px);}
+        }
+        
+        .ship {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            bottom: 40px;
+            left: -150px;
+            opacity: 0;
+            transition: all 2s;
+        }
+        
+        .ship.sailing {
+            left: 120%;
+            opacity: 1;
+        }
+        
+        .paper-scroll {
+            position: absolute;
+            width: 100px;
+            height: 120px;
+            background-color: #f8fafc;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: all 1s;
+        }
+        
+        .paper-scroll.visible {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        
+        .paper-scroll::before,
+        .paper-scroll::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 10px;
+            background-color: #e2e8f0;
+            left: 0;
+        }
+        
+        .paper-scroll::before {
+            top: 0;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .paper-scroll::after {
+            bottom: 0;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .printing-press {
+            position: absolute;
+            width: 140px;
+            height: 100px;
+            background-color: #4a5568;
+            border-radius: 5px;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .printing-press.visible {
+            opacity: 1;
+        }
+        
+        .printing-press::before {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 5px;
+            background-color: #2d3748;
+            top: 30px;
+            left: 20px;
+            animation: press 2s infinite alternate;
+        }
+        
+        @keyframes press {
+            from { transform: translateY(0); }
+            to { transform: translateY(20px); }
+        }
+        
+        .printed-page {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background-color: #fff;
+            top: 60px;
+            left: 40px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .printed-page.visible {
+            opacity: 1;
+        }
+        
+        .speech-bubble {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            background-color: #fff;
+            border-radius: 20px;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #fff transparent;
+        }
+        
+        .speech-bubble.visible {
+            opacity: 1;
+        }
+        
+        .flag {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            background-color: #ed8936;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .flag::before {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 100px;
+            background-color: #718096;
+            left: -5px;
+            top: 0;
+        }
+        
+        .flag.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen">
+        <!-- Home Screen -->
+        <div id="home-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
+            <h1 class="text-4xl font-bold text-center mb-6">LST遊戲室-🕰️ 《抽屜式時光機》歷史篡改調查局</h1>
+            <p class="text-xl text-center max-w-lg mb-8">你發現書桌抽屜裡藏著一台神祕時光機。有人穿越時間，把歷史悄悄改寫了！你被徵召進入「歷史篡改調查局」，要前往不同年代，查出錯誤並修復歷史！</p>
+            
+            <!-- Enhanced desk with drawer -->
+            <div class="desk mb-8">
+                <div class="desk-top"></div>
+                <div class="desk-body"></div>
+                <div class="drawer-container">
+                    <div class="drawer-inside">
+                        <div class="time-machine-container" id="time-machine-container">
+                            <div class="time-machine-glow"></div>
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="45" fill="#8e2de2" />
+                                <circle cx="50" cy="50" r="35" fill="#4a00e0" />
+                                <circle cx="50" cy="50" r="25" fill="#3c0ca4" />
+                                <path d="M50,15 L50,50 L75,50" stroke="white" stroke-width="3" fill="none" />
+                                <circle cx="50" cy="50" r="5" fill="white" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="drawer-front" id="drawer-front">
+                        <p class="text-white text-center">點擊抽屜，啟動時光機</p>
+                        <div class="drawer-knob"></div>
+                    </div>
+                </div>
+                <div class="desk-leg-left"></div>
+                <div class="desk-leg-right"></div>
+            </div>
+            
+            <button id="start-btn" class="btn-primary hidden">啟動時光機</button>
+            
+            <!-- Creator information -->
+            <div class="creator-info mt-auto">
+                <p>遊戲設計與製作：呂舒婷｜<a href="https://www.facebook.com/search/top?q=呂舒婷" target="_blank">了解更多🔍</a></p>
+                <p>臉書搜尋：呂舒婷｜📧 <a href="mailto:luuyobi@gmail.com">luuyobi@gmail.com</a></p>
+            </div>
+        </div>
+        
+        <!-- Time Portal Animation -->
+        <div id="time-portal" class="time-portal">
+            <div class="portal-inner">
+                <div class="text-white text-3xl font-bold">時空穿梭中...</div>
+            </div>
+        </div>
+        
+        <!-- Mission Selection Screen -->
+        <div id="mission-select" class="min-h-screen py-8 px-4 hidden">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold">LST遊戲室-🕰️ 《抽屜式時光機》歷史篡改調查局</h1>
+                    <div class="flex items-center">
+                        <span class="mr-2">已完成任務:</span>
+                        <span id="missions-completed" class="font-bold text-xl">0</span>
+                        <span class="mx-1">/</span>
+                        <span id="total-missions" class="font-bold text-xl">10</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Mission cards will be generated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mission Screen -->
+        <div id="mission-screen" class="min-h-screen py-8 px-4 hidden">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="back-to-missions" class="btn-secondary">返回任務列表</button>
+                    <h2 id="mission-title" class="text-2xl font-bold">任務標題</h2>
+                    <div class="w-32"></div> <!-- Spacer for alignment -->
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-4">時代背景</h3>
+                    <p id="mission-background" class="text-lg mb-6">時代背景描述...</p>
+                    
+                    <div id="history-scene" class="history-scene mb-6">
+                        <!-- Scene elements will be added dynamically -->
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-xl font-bold mb-4">篡改後的歷史</h3>
+                        <p id="altered-history" class="text-lg mb-6">篡改後的歷史描述...</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-4">🔍 調查任務</h3>
+                    <p class="mb-6">請找出歷史中的錯誤，並選擇正確的答案：</p>
+                    
+                    <div id="question-container" class="mb-6">
+                        <p id="question" class="text-lg font-medium mb-4">問題將顯示在這裡...</p>
+                        
+                        <div id="options-container">
+                            <!-- Options will be generated here -->
+                        </div>
+                    </div>
+                    
+                    <button id="check-answer" class="btn-primary w-full">確認答案</button>
+                </div>
+                
+                <div id="result-container" class="bg-white rounded-xl shadow-lg p-6 mb-8 hidden">
+                    <h3 id="result-title" class="text-xl font-bold mb-4">結果</h3>
+                    <p id="result-message" class="text-lg mb-6">結果訊息...</p>
+                    <button id="continue-btn" class="btn-primary w-full">繼續</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Screen -->
+        <div id="report-screen" class="min-h-screen py-8 px-4 hidden">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="back-to-missions-from-report" class="btn-secondary">返回任務列表</button>
+                    <h2 class="text-2xl font-bold">任務報告書</h2>
+                    <div class="w-32"></div> <!-- Spacer for alignment -->
+                </div>
+                
+                <div class="report-card" id="report-content">
+                    <div class="report-header">
+                        <div>
+                            <h3 id="report-mission-title" class="text-xl font-bold">任務標題</h3>
+                            <p id="report-date" class="text-gray-600">日期: 2023年10月15日</p>
+                        </div>
+                        <div class="report-stamp">
+                            <span class="text-purple-700 font-bold transform rotate-15">已修復</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-bold mb-2">篡改的歷史：</h4>
+                        <p id="report-altered" class="p-3 bg-red-100 rounded-lg">篡改後的歷史描述...</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-bold mb-2">正確的歷史：</h4>
+                        <p id="report-correct" class="p-3 bg-green-100 rounded-lg">正確的歷史描述...</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-bold mb-2">歷史知識要點：</h4>
+                        <ul id="report-key-points" class="list-disc pl-5">
+                            <li>知識點 1</li>
+                            <li>知識點 2</li>
+                        </ul>
+                    </div>
+                    
+                    <button id="download-pdf" class="btn-primary">下載學習單 PDF</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Achievement Badge Screen -->
+        <div id="badge-screen" class="min-h-screen py-8 px-4 hidden flex flex-col items-center justify-center">
+            <div class="badge mb-8">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="90" fill="#8e2de2" />
+                    <circle cx="100" cy="100" r="80" fill="#f0e6d2" />
+                    <circle cx="100" cy="100" r="70" fill="#8e2de2" />
+                    <path d="M100,40 L115,85 L165,85 L125,115 L140,160 L100,130 L60,160 L75,115 L35,85 L85,85 Z" fill="#f0e6d2" />
+                    <circle cx="100" cy="100" r="20" fill="#f0e6d2" />
+                </svg>
+            </div>
+            
+            <h2 class="text-3xl font-bold mb-4">恭喜獲得成就！</h2>
+            <p class="text-xl mb-8">「歷史修正官」徽章</p>
+            <p class="text-center max-w-md mb-8">你已成功完成5個任務，成為歷史篡改調查局的優秀調查員！繼續努力，修復更多被篡改的歷史！</p>
+            
+            <button id="continue-from-badge" class="btn-primary">繼續任務</button>
+        </div>
+        
+        <!-- Repair Animation -->
+        <div id="repair-animation" class="repair-animation">
+            <div class="repair-flash"></div>
+        </div>
+        
+        <!-- Achievement Notification -->
+        <div id="achievement" class="achievement">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span id="achievement-text">成就解鎖：歷史修正官徽章！</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game state
+            const gameState = {
+                missionsCompleted: 0,
+                currentMission: null,
+                selectedOption: null,
+                missions: [
+                    {
+                        id: 1,
+                        title: "愛迪生與燈泡之謎",
+                        background: "19世紀末，科技發展迅速，人們的生活方式正在改變。",
+                        alteredHistory: "1879 年，美國晚上還是點蠟燭照明…… 因為沒有人發明燈泡！",
+                        correctHistory: "1879年，愛迪生（Thomas Alva Edison）成功改良了白熾燈泡，為人類照明技術帶來革命性的進步。",
+                        question: "以下誰是發明電燈的關鍵人物？",
+                        options: [
+                            "馬丁路德金（Martin Luther King Jr.）",
+                            "愛迪生（Thomas Alva Edison）",
+                            "哥倫布（Christopher Columbus）"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "愛迪生（Thomas Alva Edison）在1879年成功改良了白熾燈泡，使其能夠持續發光更長時間",
+                            "雖然愛迪生不是第一個發明燈泡的人，但他的改良使燈泡成為實用的商業產品",
+                            "電燈的發明徹底改變了人類的生活方式，延長了人們的活動時間"
+                        ],
+                        sceneType: "edison",
+                        emoji: "💡",
+                        completed: false
+                    },
+                    {
+                        id: 2,
+                        title: "秦始皇的文字統一",
+                        background: "公元前221年，秦始皇統一了中國，建立了中國歷史上第一個統一的多民族國家。",
+                        alteredHistory: "秦始皇讓每個地方用不同文字，寫信都看不懂。",
+                        correctHistory: "秦始皇（Qin Shi Huang）統一了文字、貨幣與度量衡，促進了全國的交流與發展。",
+                        question: "秦始皇在統一中國後做了什麼重要的改革？",
+                        options: [
+                            "讓各地區使用不同的文字",
+                            "統一了文字、貨幣與度量衡",
+                            "禁止人民學習寫字"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "秦始皇（Qin Shi Huang）統一了文字，採用小篆作為標準文字",
+                            "統一貨幣、度量衡有助於促進全國經濟和文化交流",
+                            "這些統一措施對中國歷史發展產生了深遠影響"
+                        ],
+                        sceneType: "qin",
+                        emoji: "📜",
+                        completed: false
+                    },
+                    {
+                        id: 3,
+                        title: "萊特兄弟的飛行夢",
+                        background: "20世紀初，人類一直夢想著能像鳥兒一樣在天空中飛翔。",
+                        alteredHistory: "萊特兄弟發明的是潛水艇，而不是飛機。",
+                        correctHistory: "1903年，萊特兄弟（Wright Brothers, Orville and Wilbur）成功試飛了第一架動力飛機，實現了人類飛行的夢想。",
+                        question: "萊特兄弟在1903年成功發明了什麼？",
+                        options: [
+                            "潛水艇",
+                            "動力飛機",
+                            "蒸汽火車"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "萊特兄弟（Orville and Wilbur Wright）於1903年12月17日在北卡羅來納州成功試飛第一架動力飛機",
+                            "他們的飛機「飛行者一號」首次飛行持續了12秒，飛行距離36米",
+                            "這次飛行開創了人類航空時代"
+                        ],
+                        sceneType: "wright",
+                        emoji: "✈️",
+                        completed: false
+                    },
+                    {
+                        id: 4,
+                        title: "牛頓與萬有引力",
+                        background: "17世紀，科學革命正在歐洲蓬勃發展，人們開始用科學方法理解世界。",
+                        alteredHistory: "牛頓發明了巧克力，而不是發現萬有引力。",
+                        correctHistory: "牛頓（Isaac Newton）發現了萬有引力定律，並提出了三大運動定律，為現代物理學奠定了基礎。",
+                        question: "牛頓最著名的發現是什麼？",
+                        options: [
+                            "巧克力製作方法",
+                            "萬有引力與三大運動定律",
+                            "電燈泡"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "牛頓（Isaac Newton）在1687年發表的《自然哲學的數學原理》中提出了萬有引力定律",
+                            "傳說牛頓是看到蘋果落地而受到啟發，思考為何物體總是向下落",
+                            "牛頓的三大運動定律為經典力學奠定了基礎"
+                        ],
+                        sceneType: "newton",
+                        emoji: "🍎",
+                        completed: false
+                    },
+                    {
+                        id: 5,
+                        title: "特斯拉與電力革命",
+                        background: "19世紀末至20世紀初，電力技術正在迅速發展，改變著人類的生活方式。",
+                        alteredHistory: "特斯拉是愛唱歌的藝術家，而不是科學家。",
+                        correctHistory: "特斯拉（Nikola Tesla）是發明交流電與無線電技術的科學家，他的發明為現代電力系統奠定了基礎。",
+                        question: "特斯拉的主要貢獻是什麼？",
+                        options: [
+                            "創作了許多著名歌曲",
+                            "發明交流電與無線電技術",
+                            "發明了第一台電腦"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "尼古拉·特斯拉（Nikola Tesla）發明了交流電系統，這是現代電力傳輸的基礎",
+                            "他在無線電技術方面也有重要貢獻，為無線通信奠定了基礎",
+                            "特斯拉與愛迪生曾有著名的「電流之戰」，爭論直流電與交流電的優劣"
+                        ],
+                        sceneType: "tesla",
+                        emoji: "⚡",
+                        completed: false
+                    },
+                    {
+                        id: 6,
+                        title: "蔡倫與造紙術",
+                        background: "東漢時期，文字記錄主要依靠竹簡和絹帛，既昂貴又不便於攜帶。",
+                        alteredHistory: "蔡倫把紙用玉石做成，只有皇帝能寫。",
+                        correctHistory: "蔡倫（Cai Lun）改進造紙術，使用樹皮、麻頭、破布等材料製作便宜的紙張，推廣給更多人使用。",
+                        question: "蔡倫對造紙術的貢獻是什麼？",
+                        options: [
+                            "用玉石製作昂貴的紙張",
+                            "改進造紙術，使紙張更便宜且普及",
+                            "禁止平民使用紙張"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "蔡倫（Cai Lun）在公元105年改進了造紙術，使用廉價材料製作紙張",
+                            "造紙術的改進大大降低了書寫材料的成本，促進了知識傳播",
+                            "造紙術是中國四大發明之一，後來傳播到世界各地"
+                        ],
+                        sceneType: "paper",
+                        emoji: "📃",
+                        completed: false
+                    },
+                    {
+                        id: 7,
+                        title: "哥倫布的航海探險",
+                        background: "15世紀末，歐洲人正尋找前往亞洲的新航線，以獲取香料和絲綢等貿易品。",
+                        alteredHistory: "哥倫布是太空人，乘坐火箭前往月球。",
+                        correctHistory: "哥倫布（Christopher Columbus）於1492年率領三艘船橫渡大西洋，意外發現了美洲大陸。",
+                        question: "哥倫布在1492年做了什麼重要的事情？",
+                        options: [
+                            "乘坐火箭前往月球",
+                            "發現了美洲大陸",
+                            "發明了指南針"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "哥倫布（Christopher Columbus）原本計劃找到前往亞洲的西方航線，卻意外發現了美洲",
+                            "他的航行開啟了歐洲與美洲之間的交流，也稱為「哥倫布大交換」",
+                            "這次航行改變了世界歷史的進程，開啟了歐洲的「大航海時代」"
+                        ],
+                        sceneType: "columbus",
+                        emoji: "🚢",
+                        completed: false
+                    },
+                    {
+                        id: 8,
+                        title: "馬丁路德金的夢想",
+                        background: "20世紀中期，美國的種族隔離政策導致非裔美國人面臨嚴重的歧視和不平等。",
+                        alteredHistory: "馬丁路德金因打籃球出名，而不是民權運動。",
+                        correctHistory: "馬丁路德金（Martin Luther King Jr.）是美國民權運動領袖，發表了著名的《我有一個夢想》演說，爭取種族平等。",
+                        question: "馬丁路德金最著名的貢獻是什麼？",
+                        options: [
+                            "成為NBA籃球明星",
+                            "領導美國民權運動，爭取種族平等",
+                            "發明了電視機"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "馬丁路德金（Martin Luther King Jr.）於1963年在華盛頓發表了著名的《我有一個夢想》演說",
+                            "他倡導非暴力抵抗方式，爭取非裔美國人的平等權利",
+                            "他的努力促成了1964年《民權法案》和1965年《投票權法案》的通過"
+                        ],
+                        sceneType: "mlk",
+                        emoji: "✊",
+                        completed: false
+                    },
+                    {
+                        id: 9,
+                        title: "甘地與印度獨立",
+                        background: "20世紀上半葉，印度是英國的殖民地，印度人民渴望獨立自主。",
+                        alteredHistory: "甘地用飛機攻擊英國，以武力爭取印度獨立。",
+                        correctHistory: "甘地（Mahatma Gandhi）提倡非暴力抵抗運動，通過和平方式爭取印度獨立。",
+                        question: "甘地用什麼方式爭取印度獨立？",
+                        options: [
+                            "武裝起義攻擊英國",
+                            "非暴力抵抗運動",
+                            "向英國支付大量金錢購買獨立"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "甘地（Mahatma Gandhi）提倡「非暴力不合作」運動，包括抵制英國商品、和平示威等方式",
+                            "他的「鹽進」運動是非暴力抵抗的典範，抗議英國對鹽的壟斷",
+                            "甘地的和平抵抗理念影響了全球許多民權運動領袖"
+                        ],
+                        sceneType: "gandhi",
+                        emoji: "☮️",
+                        completed: false
+                    },
+                    {
+                        id: 10,
+                        title: "印刷術的發明",
+                        background: "15世紀中期，歐洲的書籍主要由修道院僧侶手抄，成本高昂，普通人難以接觸到書籍。",
+                        alteredHistory: "印刷術是韓國 BTS 發明的，用來印製專輯封面。",
+                        correctHistory: "古騰堡（Johannes Gutenberg）於15世紀改良活字印刷術，大大降低了書籍成本，促進了知識傳播。",
+                        question: "誰在15世紀改良了活字印刷術？",
+                        options: [
+                            "韓國 BTS 組合",
+                            "約翰內斯·古騰堡（Johannes Gutenberg）",
+                            "克里斯多福·哥倫布（Christopher Columbus）"
+                        ],
+                        correctIndex: 1,
+                        keyPoints: [
+                            "約翰內斯·古騰堡（Johannes Gutenberg）於1450年代發明了金屬活字印刷術",
+                            "活字印刷術大大提高了書籍生產效率，降低了成本",
+                            "印刷術的發明促進了文藝復興和宗教改革，被認為是人類歷史上最重要的發明之一"
+                        ],
+                        sceneType: "gutenberg",
+                        emoji: "📚",
+                        completed: false
+                    }
+                ]
+            };
+            
+            // DOM Elements
+            const drawerFront = document.getElementById('drawer-front');
+            const timeMachineContainer = document.getElementById('time-machine-container');
+            const startBtn = document.getElementById('start-btn');
+            const timePortal = document.getElementById('time-portal');
+            const homeScreen = document.getElementById('home-screen');
+            const missionSelect = document.getElementById('mission-select');
+            const missionScreen = document.getElementById('mission-screen');
+            const reportScreen = document.getElementById('report-screen');
+            const badgeScreen = document.getElementById('badge-screen');
+            const repairAnimation = document.getElementById('repair-animation');
+            const achievement = document.getElementById('achievement');
+            
+            // Initialize the game
+            function initGame() {
+                updateMissionCount();
+                generateMissionCards();
+                setupEventListeners();
+                
+                // Set current date for report
+                const today = new Date();
+                document.getElementById('report-date').textContent = `日期: ${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+            }
+            
+            // Update mission count display
+            function updateMissionCount() {
+                document.getElementById('missions-completed').textContent = gameState.missionsCompleted;
+                document.getElementById('total-missions').textContent = gameState.missions.length;
+            }
+            
+            // Generate mission cards
+            function generateMissionCards() {
+                const container = document.querySelector('#mission-select .grid');
+                container.innerHTML = '';
+                
+                gameState.missions.forEach(mission => {
+                    const card = document.createElement('div');
+                    card.className = `mission-card ${mission.completed ? 'bg-green-50' : ''}`;
+                    card.innerHTML = `
+                        <h3 class="text-xl font-bold mb-2">${mission.emoji} ${mission.title}</h3>
+                        <p class="mb-4">${mission.alteredHistory}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm ${mission.completed ? 'text-green-600' : 'text-gray-500'}">
+                                ${mission.completed ? '✓ 已完成' : '⚠ 待修復'}
+                            </span>
+                            <button class="start-mission btn-primary text-sm py-2 px-4" data-id="${mission.id}">
+                                ${mission.completed ? '查看報告' : '開始任務'}
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                // Add event listeners to mission buttons
+                document.querySelectorAll('.start-mission').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const missionId = parseInt(this.getAttribute('data-id'));
+                        const mission = gameState.missions.find(m => m.id === missionId);
+                        
+                        if (mission.completed) {
+                            showReport(mission);
+                        } else {
+                            startMission(mission);
+                        }
+                    });
+                });
+            }
+            
+            // Setup event listeners
+            function setupEventListeners() {
+                // Drawer click to reveal time machine
+                drawerFront.addEventListener('click', function() {
+                    // Animate drawer opening
+                    this.style.transform = 'translateY(120%)';
+                    
+                    // Show time machine with delay
+                    setTimeout(() => {
+                        timeMachineContainer.classList.add('visible');
+                        
+                        // Show start button after time machine appears
+                        setTimeout(() => {
+                            startBtn.classList.remove('hidden');
+                        }, 1000);
+                    }, 800);
+                });
+                
+                // Start button click
+                startBtn.addEventListener('click', function() {
+                    timePortal.classList.add('active');
+                    setTimeout(() => {
+                        homeScreen.classList.add('hidden');
+                        missionSelect.classList.remove('hidden');
+                        timePortal.classList.remove('active');
+                    }, 2000);
+                });
+                
+                // Back to missions button
+                document.getElementById('back-to-missions').addEventListener('click', function() {
+                    missionScreen.classList.add('hidden');
+                    missionSelect.classList.remove('hidden');
+                });
+                
+                // Back to missions from report
+                document.getElementById('back-to-missions-from-report').addEventListener('click', function() {
+                    reportScreen.classList.add('hidden');
+                    missionSelect.classList.remove('hidden');
+                });
+                
+                // Check answer button
+                document.getElementById('check-answer').addEventListener('click', checkAnswer);
+                
+                // Continue button after showing result
+                document.getElementById('continue-btn').addEventListener('click', function() {
+                    document.getElementById('result-container').classList.add('hidden');
+                    
+                    // Show repair animation
+                    repairAnimation.classList.add('active');
+                    
+                    // Play scene-specific repair animation
+                    playRepairAnimation();
+                    
+                    setTimeout(() => {
+                        repairAnimation.classList.remove('active');
+                        
+                        // Mark mission as completed
+                        gameState.currentMission.completed = true;
+                        gameState.missionsCompleted++;
+                        updateMissionCount();
+                        
+                        // Check for badge achievement
+                        if (gameState.missionsCompleted === 5) {
+                            showBadgeScreen();
+                        } else {
+                            showReport(gameState.currentMission);
+                        }
+                    }, 3000);
+                });
+                
+                // Continue from badge screen
+                document.getElementById('continue-from-badge').addEventListener('click', function() {
+                    badgeScreen.classList.add('hidden');
+                    showReport(gameState.currentMission);
+                });
+                
+                // Download PDF button
+                document.getElementById('download-pdf').addEventListener('click', function() {
+                    const element = document.getElementById('report-content');
+                    const filename = `歷史篡改調查局_${gameState.currentMission.title}_學習單.pdf`;
+                    
+                    // Add a temporary class for PDF styling
+                    element.classList.add('pdf-mode');
+                    
+                    const opt = {
+                        margin: 10,
+                        filename: filename,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+                    
+                    // Generate PDF
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        // Remove temporary class
+                        element.classList.remove('pdf-mode');
+                    });
+                });
+            }
+            
+            // Start a mission
+            function startMission(mission) {
+                gameState.currentMission = mission;
+                gameState.selectedOption = null;
+                
+                // Set mission content
+                document.getElementById('mission-title').textContent = mission.title;
+                document.getElementById('mission-background').textContent = mission.background;
+                document.getElementById('altered-history').textContent = mission.alteredHistory;
+                document.getElementById('question').textContent = mission.question;
+                
+                // Generate options
+                const optionsContainer = document.getElementById('options-container');
+                optionsContainer.innerHTML = '';
+                
+                mission.options.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.textContent = option;
+                    optionElement.setAttribute('data-index', index);
+                    optionsContainer.appendChild(optionElement);
+                    
+                    optionElement.addEventListener('click', function() {
+                        document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+                        this.classList.add('selected');
+                        gameState.selectedOption = parseInt(this.getAttribute('data-index'));
+                    });
+                });
+                
+                // Setup history scene
+                setupHistoryScene(mission);
+                
+                // Hide result container
+                document.getElementById('result-container').classList.add('hidden');
+                
+                // Show mission screen
+                missionSelect.classList.add('hidden');
+                missionScreen.classList.remove('hidden');
+            }
+            
+            // Setup history scene based on mission type
+            function setupHistoryScene(mission) {
+                const scene = document.getElementById('history-scene');
+                scene.innerHTML = '';
+                
+                // Add emoji to all scenes
+                const emojiElement = document.createElement('div');
+                emojiElement.className = 'scene-emoji';
+                emojiElement.textContent = mission.emoji;
+                emojiElement.style.opacity = '1'; // Make emoji visible by default
+                scene.appendChild(emojiElement);
+                
+                switch (mission.sceneType) {
+                    case 'edison':
+                        scene.className = 'history-scene scene-edison';
+                        
+                        // Add candles
+                        for (let i = 0; i < 3; i++) {
+                            const candle = document.createElement('div');
+                            candle.className = 'candle';
+                            candle.style.left = `${20 + i * 30}%`;
+                            scene.appendChild(candle);
+                        }
+                        
+                        // Add light bulb (initially dim)
+                        const bulb = document.createElement('div');
+                        bulb.className = 'light-bulb';
+                        scene.appendChild(bulb);
+                        
+                        // Add Edison character (initially hidden)
+                        const edison = document.createElement('div');
+                        edison.className = 'character edison';
+                        scene.appendChild(edison);
+                        break;
+                        
+                    case 'qin':
+                        scene.className = 'history-scene scene-qin';
+                        
+                        // Add different text characters
+                        const text1 = document.createElement('div');
+                        text1.className = 'chinese-text text-different';
+                        text1.textContent = '甲骨文';
+                        text1.style.opacity = '1';
+                        scene.appendChild(text1);
+                        
+                        const text2 = document.createElement('div');
+                        text2.className = 'chinese-text text-different-2';
+                        text2.textContent = '金文';
+                        text2.style.opacity = '1';
+                        scene.appendChild(text2);
+                        
+                        const text3 = document.createElement('div');
+                        text3.className = 'chinese-text text-different-3';
+                        text3.textContent = '篆書';
+                        text3.style.opacity = '1';
+                        scene.appendChild(text3);
+                        
+                        // Add unified text (initially hidden)
+                        const unifiedText = document.createElement('div');
+                        unifiedText.className = 'chinese-text text-unified';
+                        unifiedText.textContent = '小篆';
+                        unifiedText.style.opacity = '0';
+                        scene.appendChild(unifiedText);
+                        
+                        // Add Qin Emperor character (initially hidden)
+                        const qinEmperor = document.createElement('div');
+                        qinEmperor.className = 'character qin-emperor';
+                        scene.appendChild(qinEmperor);
+                        break;
+                        
+                    case 'wright':
+                        scene.className = 'history-scene scene-wright';
+                        
+                        // Add Wright brothers' airplane (initially hidden)
+                        const airplane = document.createElement('div');
+                        airplane.className = 'character wright-brothers';
+                        scene.appendChild(airplane);
+                        break;
+                        
+                    case 'newton':
+                        scene.className = 'history-scene scene-newton';
+                        
+                        // Add Newton character (initially hidden)
+                        const newton = document.createElement('div');
+                        newton.className = 'character newton';
+                        scene.appendChild(newton);
+                        
+                        // Add apple (initially hidden)
+                        const apple = document.createElement('div');
+                        apple.className = 'apple';
+                        scene.appendChild(apple);
+                        break;
+                        
+                    case 'tesla':
+                        scene.className = 'history-scene scene-tesla';
+                        
+                        // Add Tesla character (initially hidden)
+                        const tesla = document.createElement('div');
+                        tesla.className = 'character tesla';
+                        scene.appendChild(tesla);
+                        
+                        // Add lightning (initially hidden)
+                        const lightning = document.createElement('div');
+                        lightning.className = 'lightning';
+                        scene.appendChild(lightning);
+                        break;
+                        
+                    case 'paper':
+                        scene.className = 'history-scene scene-paper';
+                        
+                        // Add paper scroll (initially hidden)
+                        const paperScroll = document.createElement('div');
+                        paperScroll.className = 'paper-scroll';
+                        scene.appendChild(paperScroll);
+                        break;
+                        
+                    case 'columbus':
+                        scene.className = 'history-scene scene-columbus';
+                        
+                        // Add ship (initially hidden)
+                        const ship = document.createElement('div');
+                        ship.className = 'ship';
+                        ship.innerHTML = '🚢';
+                        ship.style.fontSize = '60px';
+                        scene.appendChild(ship);
+                        break;
+                        
+                    case 'mlk':
+                        scene.className = 'history-scene scene-mlk';
+                        
+                        // Add speech bubble (initially hidden)
+                        const speechBubble = document.createElement('div');
+                        speechBubble.className = 'speech-bubble';
+                        speechBubble.textContent = 'I have a dream';
+                        scene.appendChild(speechBubble);
+                        break;
+                        
+                    case 'gandhi':
+                        scene.className = 'history-scene scene-gandhi';
+                        
+                        // Add flag (initially hidden)
+                        const flag = document.createElement('div');
+                        flag.className = 'flag';
+                        scene.appendChild(flag);
+                        break;
+                        
+                    case 'gutenberg':
+                        scene.className = 'history-scene scene-gutenberg';
+                        
+                        // Add printing press (initially hidden)
+                        const printingPress = document.createElement('div');
+                        printingPress.className = 'printing-press';
+                        scene.appendChild(printingPress);
+                        
+                        // Add printed page (initially hidden)
+                        const printedPage = document.createElement('div');
+                        printedPage.className = 'printed-page';
+                        scene.appendChild(printedPage);
+                        break;
+                        
+                    default:
+                        scene.className = 'history-scene';
+                        scene.style.background = 'linear-gradient(to bottom, #90cdf4 0%, #2b6cb0 100%)';
+                        break;
+                }
+            }
+            
+            // Check the selected answer
+            function checkAnswer() {
+                if (gameState.selectedOption === null) {
+                    alert('請選擇一個答案！');
+                    return;
+                }
+                
+                const resultContainer = document.getElementById('result-container');
+                const resultTitle = document.getElementById('result-title');
+                const resultMessage = document.getElementById('result-message');
+                
+                if (gameState.selectedOption === gameState.currentMission.correctIndex) {
+                    resultTitle.textContent = '答對了！';
+                    resultMessage.textContent = '你成功找出了歷史中的錯誤！準備修復時間線...';
+                    resultTitle.className = 'text-xl font-bold mb-4 text-green-600';
+                } else {
+                    resultTitle.textContent = '答錯了！';
+                    resultMessage.textContent = '這不是正確的歷史。再仔細想想...';
+                    resultTitle.className = 'text-xl font-bold mb-4 text-red-600';
+                    
+                    // Highlight correct and incorrect options
+                    document.querySelectorAll('.option').forEach((option, index) => {
+                        if (index === gameState.currentMission.correctIndex) {
+                            option.classList.add('correct');
+                        }
+                        if (index === gameState.selectedOption) {
+                            option.classList.add('incorrect');
+                        }
+                    });
+                    
+                    return;
+                }
+                
+                resultContainer.classList.remove('hidden');
+            }
+            
+            // Play repair animation based on mission type
+            function playRepairAnimation() {
+                const scene = document.getElementById('history-scene');
+                
+                // Make emoji bounce
+                const emoji = scene.querySelector('.scene-emoji');
+                emoji.classList.add('visible');
+                
+                switch (gameState.currentMission.sceneType) {
+                    case 'edison':
+                        // Light up the bulb
+                        const bulb = scene.querySelector('.light-bulb');
+                        bulb.classList.add('lit');
+                        
+                        // Show Edison
+                        const edison = scene.querySelector('.edison');
+                        edison.style.opacity = '1';
+                        
+                        // Hide candles
+                        const candles = scene.querySelectorAll('.candle');
+                        candles.forEach(candle => {
+                            candle.style.opacity = '0';
+                        });
+                        break;
+                        
+                    case 'qin':
+                        // Hide different texts
+                        const differentTexts = scene.querySelectorAll('.text-different, .text-different-2, .text-different-3');
+                        differentTexts.forEach(text => {
+                            text.style.opacity = '0';
+                        });
+                        
+                        // Show unified text
+                        const unifiedText = scene.querySelector('.text-unified');
+                        unifiedText.style.opacity = '1';
+                        
+                        // Show Qin Emperor
+                        const qinEmperor = scene.querySelector('.qin-emperor');
+                        qinEmperor.style.opacity = '1';
+                        break;
+                        
+                    case 'wright':
+                        // Show Wright brothers' airplane
+                        const airplane = scene.querySelector('.wright-brothers');
+                        airplane.style.opacity = '1';
+                        break;
+                        
+                    case 'newton':
+                        // Show Newton
+                        const newton = scene.querySelector('.newton');
+                        newton.style.opacity = '1';
+                        
+                        // Show and animate apple falling
+                        const apple = scene.querySelector('.apple');
+                        apple.style.opacity = '1';
+                        setTimeout(() => {
+                            apple.classList.add('falling');
+                        }, 500);
+                        break;
+                        
+                    case 'tesla':
+                        // Show Tesla
+                        const tesla = scene.querySelector('.tesla');
+                        tesla.style.opacity = '1';
+                        
+                        // Animate lightning
+                        const lightning = scene.querySelector('.lightning');
+                        lightning.classList.add('active');
+                        break;
+                        
+                    case 'paper':
+                        // Show paper scroll
+                        const paperScroll = scene.querySelector('.paper-scroll');
+                        paperScroll.classList.add('visible');
+                        break;
+                        
+                    case 'columbus':
+                        // Animate ship sailing
+                        const ship = scene.querySelector('.ship');
+                        ship.classList.add('sailing');
+                        break;
+                        
+                    case 'mlk':
+                        // Show speech bubble
+                        const speechBubble = scene.querySelector('.speech-bubble');
+                        speechBubble.classList.add('visible');
+                        break;
+                        
+                    case 'gandhi':
+                        // Show flag
+                        const flag = scene.querySelector('.flag');
+                        flag.classList.add('visible');
+                        break;
+                        
+                    case 'gutenberg':
+                        // Show printing press
+                        const printingPress = scene.querySelector('.printing-press');
+                        printingPress.classList.add('visible');
+                        
+                        // Show printed page
+                        const printedPage = scene.querySelector('.printed-page');
+                        printedPage.classList.add('visible');
+                        break;
+                }
+            }
+            
+            // Show mission report
+            function showReport(mission) {
+                document.getElementById('report-mission-title').textContent = mission.title;
+                document.getElementById('report-altered').textContent = mission.alteredHistory;
+                document.getElementById('report-correct').textContent = mission.correctHistory;
+                
+                // Generate key points
+                const keyPointsList = document.getElementById('report-key-points');
+                keyPointsList.innerHTML = '';
+                mission.keyPoints.forEach(point => {
+                    const li = document.createElement('li');
+                    li.textContent = point;
+                    keyPointsList.appendChild(li);
+                });
+                
+                missionScreen.classList.add('hidden');
+                reportScreen.classList.remove('hidden');
+                
+                // Update mission cards
+                generateMissionCards();
+            }
+            
+            // Show badge screen
+            function showBadgeScreen() {
+                missionScreen.classList.add('hidden');
+                badgeScreen.classList.remove('hidden');
+                
+                // Show achievement notification
+                setTimeout(() => {
+                    achievement.classList.add('show');
+                    setTimeout(() => {
+                        achievement.classList.remove('show');
+                    }, 5000);
+                }, 500);
+            }
+            
+            // Initialize the game
+            initGame();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9696b9a5371bf1f4',t:'MTc1NDIzMzY1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
