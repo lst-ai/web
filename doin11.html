@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桃太郎印記：動物任務出動</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        .bounce {
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+        }
+        
+        .animal-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .animal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .task-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+        }
+        
+        .correct-feedback {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+        }
+        
+        .wrong-feedback {
+            background: linear-gradient(135deg, #e17055 0%, #fdcb6e 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 min-h-screen">
+    <!-- 首頁 -->
+    <div id="homepage" class="min-h-screen flex flex-col items-center justify-center p-6">
+        <div class="text-center max-w-2xl">
+            <div class="text-6xl mb-6 fade-in">🍑</div>
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 fade-in">
+                ☎️LST遊戲室-《桃太郎印記》
+            </h1>
+            <h2 class="text-2xl md:text-3xl font-medium text-yellow-200 mb-8 fade-in">
+                動物任務出動
+            </h2>
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 mb-8 slide-up">
+                <div class="text-2xl mb-4">🎯 學習重點</div>
+                <div class="text-lg text-gray-700 mb-4">
+                    <div class="mb-2"><strong>自然科：</strong>動物的特徵與習性</div>
+                    <div><strong>國語科：</strong>運用說明語句描述動物行為與能力</div>
+                </div>
+                <div class="text-xl text-purple-600 font-medium animate-pulse">
+                    你獲得了桃太郎的神奇印記！<br>
+                    只要呼叫對的動物夥伴，就能完成各種任務！
+                </div>
+            </div>
+            <button onclick="startTutorial()" class="bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-4 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 glow">
+                🟢 開始遊戲
+            </button>
+            
+            <!-- 設計者資訊 -->
+            <div class="mt-12 text-center">
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 inline-block">
+                    <div class="text-gray-700 text-sm mb-2">
+                        遊戲設計與製作：呂舒婷｜了解更多🔍
+                    </div>
+                    <div class="text-gray-600 text-sm">
+                        臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 教學頁 -->
+    <div id="tutorial" class="min-h-screen flex flex-col items-center justify-center p-6 hidden">
+        <div class="max-w-4xl w-full">
+            <h2 class="text-3xl font-bold text-white text-center mb-8">📘 教學關卡</h2>
+            
+            <div class="task-card rounded-3xl p-8 mb-8 text-center slide-up">
+                <div class="text-6xl mb-4">🌼</div>
+                <div class="text-2xl font-bold text-gray-800 mb-4">花園需要幫忙授粉！</div>
+                <div class="text-lg text-gray-600">請選擇最適合的動物夥伴</div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="animal-card bg-white rounded-2xl p-6 text-center" onclick="selectTutorialAnimal('bee')">
+                    <div class="text-6xl mb-4">🐝</div>
+                    <div class="text-xl font-bold text-gray-800">蜜蜂</div>
+                </div>
+                <div class="animal-card bg-white rounded-2xl p-6 text-center" onclick="selectTutorialAnimal('elephant')">
+                    <div class="text-6xl mb-4">🐘</div>
+                    <div class="text-xl font-bold text-gray-800">大象</div>
+                </div>
+                <div class="animal-card bg-white rounded-2xl p-6 text-center" onclick="selectTutorialAnimal('crocodile')">
+                    <div class="text-6xl mb-4">🐊</div>
+                    <div class="text-xl font-bold text-gray-800">鱷魚</div>
+                </div>
+            </div>
+
+            <div id="tutorial-feedback" class="hidden"></div>
+        </div>
+    </div>
+
+    <!-- 遊戲模式 -->
+    <div id="gamemode" class="min-h-screen flex flex-col items-center justify-center p-6 hidden">
+        <div class="max-w-4xl w-full">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">🔄 任務模式</h2>
+                <div class="bg-white/90 rounded-full px-6 py-2">
+                    <span class="text-lg font-bold">題目 <span id="question-counter">1</span>/5</span>
+                </div>
+            </div>
+            
+            <div id="current-question" class="task-card rounded-3xl p-8 mb-8 text-center">
+                <!-- 動態載入題目 -->
+            </div>
+
+            <div id="animal-options" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 動態載入選項 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 回饋頁 -->
+    <div id="feedback" class="min-h-screen flex flex-col items-center justify-center p-6 hidden">
+        <div class="max-w-2xl w-full text-center">
+            <div id="feedback-content">
+                <!-- 動態載入回饋內容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果頁 -->
+    <div id="results" class="min-h-screen flex flex-col items-center justify-center p-6 hidden">
+        <div class="max-w-2xl w-full text-center">
+            <div class="text-6xl mb-6">🏆</div>
+            <h2 class="text-4xl font-bold text-white mb-8">任務完成！</h2>
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 mb-8">
+                <div class="text-2xl font-bold mb-4">你的成績</div>
+                <div class="text-6xl font-bold text-green-500 mb-4" id="final-score">0/5</div>
+                <div class="text-lg text-gray-600 mb-6">桃太郎印記已經充滿能量！</div>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="restartGame()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full">
+                        🔄 再玩一次
+                    </button>
+                    <button onclick="goHome()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-full">
+                        🏠 回到首頁
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 題庫
+        const questions = [
+            {
+                id: 1,
+                task: "誰可以幫忙授粉？",
+                icon: "🌼",
+                correct: { emoji: "🐝", name: "蜜蜂" },
+                options: [
+                    { emoji: "🐝", name: "蜜蜂" },
+                    { emoji: "🐘", name: "大象" },
+                    { emoji: "🐍", name: "蛇" }
+                ],
+                explanation: "這隻動物會飛，喜歡花，牠可以幫助花朵傳播花粉。"
+            },
+            {
+                id: 2,
+                task: "誰能幫忙吃掉農田裡的害蟲？",
+                icon: "🌾",
+                correct: { emoji: "🐸", name: "青蛙" },
+                options: [
+                    { emoji: "🐸", name: "青蛙" },
+                    { emoji: "🦒", name: "長頸鹿" },
+                    { emoji: "🐏", name: "綿羊" }
+                ],
+                explanation: "這隻動物會跳來跳去，最愛吃蚊子與小蟲。"
+            },
+            {
+                id: 3,
+                task: "誰可以在夜晚看得清楚守衛農場？",
+                icon: "🌙",
+                correct: { emoji: "🦉", name: "貓頭鷹" },
+                options: [
+                    { emoji: "🦉", name: "貓頭鷹" },
+                    { emoji: "🐣", name: "小雞" },
+                    { emoji: "🐌", name: "蝸牛" }
+                ],
+                explanation: "這隻動物眼睛大，白天睡覺，晚上會飛出來巡邏。"
+            },
+            {
+                id: 4,
+                task: "誰能挖洞鬆土讓植物呼吸？",
+                icon: "🌱",
+                correct: { emoji: "🪱", name: "蚯蚓" },
+                options: [
+                    { emoji: "🪱", name: "蚯蚓" },
+                    { emoji: "🐘", name: "大象" },
+                    { emoji: "🐊", name: "鱷魚" }
+                ],
+                explanation: "這隻小動物住在泥土裡，會挖洞幫助空氣進入土壤。"
+            },
+            {
+                id: 5,
+                task: "誰最適合幫忙運送重物到山頂？",
+                icon: "🏔️",
+                correct: { emoji: "🐴", name: "馬" },
+                options: [
+                    { emoji: "🐴", name: "馬" },
+                    { emoji: "🐦", name: "小鳥" },
+                    { emoji: "🐇", name: "兔子" }
+                ],
+                explanation: "這隻動物力氣大，能幫忙拉貨走山路。"
+            },
+            {
+                id: 6,
+                task: "誰最會幫忙把種子傳到遠方？",
+                icon: "🌰",
+                correct: { emoji: "🐿️", name: "松鼠" },
+                options: [
+                    { emoji: "🐿️", name: "松鼠" },
+                    { emoji: "🐬", name: "海豚" },
+                    { emoji: "🐘", name: "大象" }
+                ],
+                explanation: "這隻動物會藏堅果，但常忘記地點，讓種子長成新樹。"
+            },
+            {
+                id: 7,
+                task: "誰適合幫忙整理水草池塘？",
+                icon: "🏞️",
+                correct: { emoji: "🦆", name: "鴨子" },
+                options: [
+                    { emoji: "🦆", name: "鴨子" },
+                    { emoji: "🦏", name: "犀牛" },
+                    { emoji: "🐒", name: "猴子" }
+                ],
+                explanation: "這隻動物喜歡在水裡游來游去，還會吃水草。"
+            },
+            {
+                id: 8,
+                task: "誰最會找蜂蜜給大家吃？",
+                icon: "🍯",
+                correct: { emoji: "🐻", name: "熊" },
+                options: [
+                    { emoji: "🐻", name: "熊" },
+                    { emoji: "🐎", name: "馬" },
+                    { emoji: "🦃", name: "火雞" }
+                ],
+                explanation: "這隻動物鼻子靈，最愛找蜂巢吃蜂蜜。"
+            },
+            {
+                id: 9,
+                task: "誰能提醒大家快下雨了？",
+                icon: "🌧️",
+                correct: { emoji: "🐸", name: "青蛙" },
+                options: [
+                    { emoji: "🐸", name: "青蛙" },
+                    { emoji: "🐫", name: "駱駝" },
+                    { emoji: "🐈", name: "貓" }
+                ],
+                explanation: "這隻動物常在下雨前大叫，像在通知大家。"
+            },
+            {
+                id: 10,
+                task: "誰能幫忙看守家？",
+                icon: "🏠",
+                correct: { emoji: "🐕", name: "狗" },
+                options: [
+                    { emoji: "🐕", name: "狗" },
+                    { emoji: "🐍", name: "蛇" },
+                    { emoji: "🐢", name: "烏龜" }
+                ],
+                explanation: "這隻動物忠心又溫柔，會守護家人和朋友。"
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentQuestion = null;
+
+        function startTutorial() {
+            document.getElementById('homepage').classList.add('hidden');
+            document.getElementById('tutorial').classList.remove('hidden');
+        }
+
+        function selectTutorialAnimal(animal) {
+            const feedbackDiv = document.getElementById('tutorial-feedback');
+            
+            if (animal === 'bee') {
+                feedbackDiv.innerHTML = `
+                    <div class="correct-feedback rounded-3xl p-8 text-center text-white slide-up">
+                        <div class="text-6xl mb-4 bounce">🎉</div>
+                        <div class="text-2xl font-bold mb-4">你答對了！</div>
+                        <div class="text-xl mb-4">✨ 桃太郎印記發光中！</div>
+                        <div class="text-lg mb-6 bg-white/20 rounded-2xl p-4">
+                            📝 蜜蜂會傳花粉，幫助植物生長！
+                        </div>
+                        <button onclick="startGame()" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-6 rounded-full">
+                            進入任務模式 →
+                        </button>
+                    </div>
+                `;
+            } else {
+                feedbackDiv.innerHTML = `
+                    <div class="wrong-feedback rounded-3xl p-8 text-center text-white slide-up">
+                        <div class="text-6xl mb-4">😅</div>
+                        <div class="text-2xl font-bold mb-4">這不是最合適的夥伴，請再想一想！</div>
+                        <div class="text-lg mb-6 bg-white/20 rounded-2xl p-4">
+                            💡 提示：牠有什麼特徵？會做什麼？<br>
+                            想想看哪種動物會飛，而且喜歡花朵？
+                        </div>
+                        <button onclick="selectTutorialAnimal('bee')" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-full">
+                            再試一次
+                        </button>
+                    </div>
+                `;
+            }
+            
+            feedbackDiv.classList.remove('hidden');
+        }
+
+        function startGame() {
+            // 隨機選擇5題
+            currentQuestions = shuffleArray([...questions]).slice(0, 5);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            document.getElementById('tutorial').classList.add('hidden');
+            document.getElementById('gamemode').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            currentQuestion = currentQuestions[currentQuestionIndex];
+            document.getElementById('question-counter').textContent = currentQuestionIndex + 1;
+            
+            document.getElementById('current-question').innerHTML = `
+                <div class="text-6xl mb-4">${currentQuestion.icon}</div>
+                <div class="text-2xl font-bold text-gray-800 mb-4">${currentQuestion.task}</div>
+                <div class="text-lg text-gray-600">請選擇最適合的動物夥伴</div>
+            `;
+            
+            const shuffledOptions = shuffleArray([...currentQuestion.options]);
+            document.getElementById('animal-options').innerHTML = shuffledOptions.map(option => `
+                <div class="animal-card bg-white rounded-2xl p-6 text-center" onclick="selectAnswer('${option.name}')">
+                    <div class="text-6xl mb-4">${option.emoji}</div>
+                    <div class="text-xl font-bold text-gray-800">${option.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectAnswer(selectedAnimal) {
+            const isCorrect = selectedAnimal === currentQuestion.correct.name;
+            
+            if (isCorrect) {
+                score++;
+            }
+            
+            showFeedback(isCorrect);
+        }
+
+        function showFeedback(isCorrect) {
+            document.getElementById('gamemode').classList.add('hidden');
+            document.getElementById('feedback').classList.remove('hidden');
+            
+            if (isCorrect) {
+                document.getElementById('feedback-content').innerHTML = `
+                    <div class="correct-feedback rounded-3xl p-8 text-white slide-up">
+                        <div class="text-6xl mb-4 bounce">🎉</div>
+                        <div class="text-3xl font-bold mb-4">你答對了！</div>
+                        <div class="text-xl mb-4">✨ 桃太郎印記發光中！</div>
+                        <div class="text-lg mb-6 bg-white/20 rounded-2xl p-4">
+                            📝 ${currentQuestion.explanation}
+                        </div>
+                        <button onclick="nextQuestion()" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-6 rounded-full">
+                            🔁 下一題
+                        </button>
+                    </div>
+                `;
+            } else {
+                document.getElementById('feedback-content').innerHTML = `
+                    <div class="wrong-feedback rounded-3xl p-8 text-white slide-up">
+                        <div class="text-6xl mb-4">😅</div>
+                        <div class="text-2xl font-bold mb-4">這不是最合適的夥伴，請再想一想！</div>
+                        <div class="text-lg mb-4 bg-white/20 rounded-2xl p-4">
+                            💡 提示：${currentQuestion.explanation}
+                        </div>
+                        <div class="text-lg mb-6">
+                            正確答案是：${currentQuestion.correct.emoji} ${currentQuestion.correct.name}
+                        </div>
+                        <button onclick="nextQuestion()" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-full">
+                            🔁 下一題
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= currentQuestions.length) {
+                showResults();
+            } else {
+                document.getElementById('feedback').classList.add('hidden');
+                document.getElementById('gamemode').classList.remove('hidden');
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('final-score').textContent = `${score}/5`;
+        }
+
+        function restartGame() {
+            document.getElementById('results').classList.add('hidden');
+            startGame();
+        }
+
+        function goHome() {
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('homepage').classList.remove('hidden');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d594680ebf205',t:'MTc1NDMwMzEwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
