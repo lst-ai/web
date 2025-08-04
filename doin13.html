@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌙LST遊戲室-《夢境順序大拼圖》</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .dream-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .dream-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .selected {
+            border: 3px solid #fbbf24;
+            transform: scale(1.05);
+        }
+        
+        .correct-animation {
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        .wrong-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .star-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .star-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 3s linear infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body class="star-bg min-h-screen">
+    <!-- 封面頁 -->
+    <div id="cover-page" class="min-h-screen flex items-center justify-center p-6">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl fade-in">
+            <div class="text-6xl mb-6">🌙✨</div>
+            <h1 class="text-4xl font-bold text-purple-800 mb-6">🌙LST遊戲室-《夢境順序大拼圖》</h1>
+            <p class="text-lg text-gray-700 mb-8 leading-relaxed">
+                歡迎來到夢境順序大拼圖！<br>
+                每一段夢，都藏著一個順序祕密～<br>
+                快來幫夢境拼好吧！
+            </p>
+            <button onclick="showInstructions()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                🎮 開始遊戲
+            </button>
+            
+            <!-- 設計者資訊 -->
+            <div class="mt-8 pt-6 border-t border-purple-200 text-sm text-gray-600">
+                <p class="mb-2">遊戲設計與製作：呂舒婷｜了解更多🔍</p>
+                <p>臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲說明頁 -->
+    <div id="instructions-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl fade-in">
+            <div class="text-5xl mb-6">📖🧩</div>
+            <h2 class="text-3xl font-bold text-purple-800 mb-6">遊戲規則</h2>
+            <div class="text-left space-y-4 mb-8">
+                <p class="text-lg text-gray-700">📚 請仔細閱讀夢境故事</p>
+                <p class="text-lg text-gray-700">🎯 根據時間順序排列圖片卡片</p>
+                <p class="text-lg text-gray-700">🎲 每輪有3題，題目隨機出現</p>
+                <p class="text-lg text-gray-700">✨ 完成所有題目獲得夢境大師稱號</p>
+            </div>
+            <button onclick="showQuestionSelect()" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                🚀 開始挑戰
+            </button>
+        </div>
+    </div>
+
+    <!-- 題目選擇區 -->
+    <div id="question-select-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl fade-in">
+            <div class="text-5xl mb-6">🎯🌟</div>
+            <h2 class="text-3xl font-bold text-purple-800 mb-6">選擇你的夢境挑戰</h2>
+            <p class="text-lg text-gray-700 mb-8">點擊任一按鈕開始你的夢境之旅</p>
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="startRandomQuestion()" class="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-pink-600 hover:to-rose-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🌸 夢境挑戰 A
+                </button>
+                <button onclick="startRandomQuestion()" class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🌊 夢境挑戰 B
+                </button>
+                <button onclick="startRandomQuestion()" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🌿 夢境挑戰 C
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲頁面 -->
+    <div id="game-page" class="min-h-screen p-6 hidden">
+        <div class="max-w-6xl mx-auto">
+            <!-- 進度條 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-lg font-semibold text-purple-800">進度</span>
+                    <span id="progress-text" class="text-lg font-semibold text-purple-800">1/3</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="progress-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- 故事區域 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-lg">
+                <h3 id="story-title" class="text-2xl font-bold text-purple-800 mb-4 text-center"></h3>
+                <p id="story-content" class="text-lg text-gray-700 leading-relaxed text-center"></p>
+            </div>
+
+            <!-- 圖片卡片區域 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-lg">
+                <h4 class="text-xl font-semibold text-purple-800 mb-4 text-center">請按照故事順序點擊圖片卡片</h4>
+                <div id="cards-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- 圖片卡片將在這裡動態生成 -->
+                </div>
+                
+                <!-- 選擇順序顯示 -->
+                <div class="text-center">
+                    <p class="text-lg font-semibold text-purple-800 mb-4">你的選擇順序：</p>
+                    <div id="selected-order" class="flex justify-center space-x-4 mb-6">
+                        <div class="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">1</div>
+                        <div class="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">2</div>
+                        <div class="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">3</div>
+                    </div>
+                    
+                    <div class="space-x-4">
+                        <button id="clear-btn" onclick="clearSelection()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                            🔄 清除重選
+                        </button>
+                        <button id="submit-btn" onclick="checkAnswer()" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all duration-300 shadow-lg opacity-50 cursor-not-allowed" disabled>
+                            ✨ 確認答案
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果頁面 -->
+    <div id="result-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+            <div id="result-icon" class="text-6xl mb-6"></div>
+            <h2 id="result-title" class="text-3xl font-bold mb-6"></h2>
+            <p id="result-message" class="text-lg text-gray-700 mb-8"></p>
+            <button id="next-btn" onclick="nextQuestion()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                下一題 →
+            </button>
+        </div>
+    </div>
+
+    <!-- 完成頁面 -->
+    <div id="completion-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+            <div class="text-6xl mb-6">🎉👑</div>
+            <h2 class="text-3xl font-bold text-purple-800 mb-6">恭喜你！</h2>
+            <p class="text-lg text-gray-700 mb-8">
+                你完成了這輪夢境挑戰！<br>
+                你已經成為夢境順序大師！<br>
+                想再玩一次嗎？
+            </p>
+            <div class="space-y-4">
+                <button onclick="restartGame()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg block w-full">
+                    🔄 再玩一次
+                </button>
+                <button onclick="showCover()" class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all duration-300 shadow-lg block w-full">
+                    🏠 回到首頁
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲數據
+        const dreamStories = [
+            {
+                title: "鯨魚帶我回家",
+                story: "我夢見自己飛到了天空，風輕輕吹著，我像羽毛一樣飄在雲朵上。忽然，一隻彩色鯨魚從雲層裡跳出來，對我說：「我帶你去看一個祕密世界吧！」牠輕輕載著我滑過雲海、彩虹和星星，最後把我放回我的床邊。我一睜眼，枕頭邊竟有一片閃亮的魚鱗！",
+                cards: ["🌤️ 飛上天空", "🐋 彩色鯨魚", "🏠 回家"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "魔法鑰匙的任務",
+                story: "昨晚我進入了一棵老樹的樹洞，裡頭亮著柔和的燈光。一位精靈遞給我一把銀色鑰匙，說它可以打開星星屋的門。我走進夜空之中，找到了那座閃爍的屋子，鑰匙果然打開了它的大門。裡面飄滿了會說故事的星星，我聽了一整夜。",
+                cards: ["🌳 樹洞", "🗝️ 銀色鑰匙", "⭐ 星星屋"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "雨傘變熱氣球",
+                story: "夢裡，我在雨中走著，打開了我那把透明雨傘。忽然，雨傘開始膨脹、轉動，變成了一顆彩色熱氣球，載著我飛向天空。從高空看下去，城市像積木，河流像緞帶，整個世界好小好美。我大喊：「我要去雲端當探險家！」",
+                cards: ["☂️ 打開雨傘", "🎈 熱氣球", "☁️ 飛上天空"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "龍的心願",
+                story: "我走進一個黑暗的山洞，手上握著一盞小燈。在洞的最深處，我發現一顆閃閃發亮的石頭。當我碰到它時，石頭裂開了，一隻藍色小龍冒出來。「謝謝你喚醒我，我是這座山的守護者！」牠說完就帶我飛出山洞，看見整個山谷閃爍著奇幻的光。",
+                cards: ["🕳️ 山洞", "💎 閃亮石頭", "🐲 小龍"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "西瓜演唱會",
+                story: "我夢見自己肚子餓，打開冰箱，裡頭竟然有一顆會唱歌的西瓜！牠唱得超好聽，還邀請我和牠一起開演唱會。我們站在果汁舞台上唱跳，草莓打鼓、鳳梨拉小提琴，觀眾是坐在果凍椅上的哈密瓜。我醒來時嘴裡還哼著那首西瓜歌。",
+                cards: ["🧊 冰箱", "🍉 唱歌西瓜", "🎤 舞台"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "飛床太空之旅",
+                story: "我在床上睡著了，突然床開始震動，化成一艘火箭，帶我飛向太空。我從窗戶望出去，看見土星的環、月亮的臉和會閃的星星。我在太空吃爆米花，還和一顆友善的星星擊掌。床降落時，我一翻身醒來，還以為自己真的在宇宙裡！",
+                cards: ["🛏️ 床", "🚀 火箭", "🪐 星球"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "泡泡旅行家",
+                story: "夢裡，我喝了一瓶亮藍色的藥水，身體竟然慢慢變成一個大泡泡。我飄出窗戶，飛過公園、學校、海洋。途中，我遇到一群會唱歌的鳥兒，它們帶我飛舞、旋轉。泡泡最後降落在我家屋頂，我一跳醒，嘴邊還有一圈泡泡！",
+                cards: ["🧪 藥水", "🫧 泡泡", "🐦 鳥"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "糖果雨的秘密",
+                story: "我在夢中種下一顆五彩糖果種子。過了一會兒，一棵糖果樹長了出來，枝頭掛滿了棒棒糖、軟糖、棉花糖。忽然天空開始下起糖果雨，每顆糖都甜甜的、閃亮亮的。我撐著餅乾雨傘，在雨中跳舞，開心極了！",
+                cards: ["🌱 糖果種子", "🌳 糖果樹", "🍭 糖果雨"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "電視冒險記",
+                story: "我躺在客廳看卡通，電視忽然發出光芒，把我吸了進去！我變成卡通角色，穿上披風，和主角一起闖關、對抗大怪獸。我們一起笑、一起跳，最後打敗壞蛋。當我從電視裡跳出來時，手上還拿著一張卡通勇士證明書！",
+                cards: ["📺 電視", "🦸 卡通主角", "⚔️ 冒險場景"],
+                correct: [0, 1, 2]
+            },
+            {
+                title: "地圖與會說話的書",
+                story: "我在森林裡撿到一張古老的地圖，它指引我穿過迷霧和小河，來到一個寶箱前。我打開它，裡頭竟是一本文字會自己浮現的書。「我是時間之書，來教你世界的故事。」書說。它一邊翻頁，一邊讓我看見古今中外的奇幻畫面。",
+                cards: ["🗺️ 地圖", "📦 寶箱", "📚 書"],
+                correct: [0, 1, 2]
+            }
+        ];
+
+        // 遊戲狀態
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let selectedCards = [];
+        let currentStory = null;
+
+        // 頁面切換函數
+        function showPage(pageId) {
+            document.querySelectorAll('[id$="-page"]').forEach(page => {
+                page.classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function showCover() {
+            showPage('cover-page');
+        }
+
+        function showInstructions() {
+            showPage('instructions-page');
+        }
+
+        function showQuestionSelect() {
+            showPage('question-select-page');
+        }
+
+        // 開始隨機題目
+        function startRandomQuestion() {
+            // 隨機選擇3個不重複的題目
+            const shuffled = [...dreamStories].sort(() => 0.5 - Math.random());
+            currentQuestions = shuffled.slice(0, 3);
+            currentQuestionIndex = 0;
+            
+            showQuestion();
+        }
+
+        // 顯示題目
+        function showQuestion() {
+            currentStory = currentQuestions[currentQuestionIndex];
+            selectedCards = [];
+            
+            // 更新進度
+            document.getElementById('progress-text').textContent = `${currentQuestionIndex + 1}/3`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / 3) * 100}%`;
+            
+            // 顯示故事
+            document.getElementById('story-title').textContent = currentStory.title;
+            document.getElementById('story-content').textContent = currentStory.story;
+            
+            // 創建打亂的卡片
+            const shuffledCards = [...currentStory.cards].sort(() => 0.5 - Math.random());
+            const cardsContainer = document.getElementById('cards-container');
+            cardsContainer.innerHTML = '';
+            
+            shuffledCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'dream-card bg-gradient-to-br from-purple-100 to-pink-100 p-6 rounded-2xl text-center shadow-lg border-2 border-transparent';
+                cardElement.innerHTML = `
+                    <div class="text-4xl mb-3">${card.split(' ')[0]}</div>
+                    <div class="text-lg font-semibold text-purple-800">${card.split(' ').slice(1).join(' ')}</div>
+                `;
+                cardElement.onclick = () => selectCard(card, cardElement);
+                cardsContainer.appendChild(cardElement);
+            });
+            
+            // 重置選擇順序顯示
+            updateSelectedOrder();
+            
+            showPage('game-page');
+        }
+
+        // 選擇卡片
+        function selectCard(card, element) {
+            if (selectedCards.includes(card)) return;
+            
+            selectedCards.push(card);
+            element.classList.add('selected');
+            element.style.pointerEvents = 'none';
+            
+            updateSelectedOrder();
+            
+            if (selectedCards.length === 3) {
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // 更新選擇順序顯示
+        function updateSelectedOrder() {
+            const orderContainer = document.getElementById('selected-order');
+            const slots = orderContainer.children;
+            
+            for (let i = 0; i < 3; i++) {
+                if (selectedCards[i]) {
+                    slots[i].innerHTML = selectedCards[i].split(' ')[0];
+                    slots[i].className = 'w-16 h-16 border-2 border-purple-500 bg-purple-100 rounded-lg flex items-center justify-center text-2xl';
+                } else {
+                    slots[i].innerHTML = i + 1;
+                    slots[i].className = 'w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400';
+                }
+            }
+        }
+
+        // 清除選擇
+        function clearSelection() {
+            selectedCards = [];
+            
+            // 重置所有卡片狀態
+            const cards = document.querySelectorAll('.dream-card');
+            cards.forEach(card => {
+                card.classList.remove('selected');
+                card.style.pointerEvents = 'auto';
+            });
+            
+            // 重置選擇順序顯示
+            updateSelectedOrder();
+            
+            // 禁用確認按鈕
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // 檢查答案
+        function checkAnswer() {
+            const isCorrect = selectedCards.every((card, index) => {
+                return card === currentStory.cards[currentStory.correct[index]];
+            });
+            
+            const resultPage = document.getElementById('result-page');
+            const resultIcon = document.getElementById('result-icon');
+            const resultTitle = document.getElementById('result-title');
+            const resultMessage = document.getElementById('result-message');
+            
+            if (isCorrect) {
+                resultIcon.textContent = '✨🎉';
+                resultTitle.textContent = '夢境完成！';
+                resultTitle.className = 'text-3xl font-bold mb-6 text-green-600';
+                resultMessage.textContent = '你解開了順序之謎！夢境故事完美重現！';
+                resultPage.querySelector('.bg-white\\/90').classList.add('correct-animation');
+            } else {
+                resultIcon.textContent = '❌😅';
+                resultTitle.textContent = '順序錯了';
+                resultTitle.className = 'text-3xl font-bold mb-6 text-red-600';
+                resultMessage.textContent = '再試一次～仔細想想故事的時間順序哦！';
+                resultPage.querySelector('.bg-white\\/90').classList.add('wrong-animation');
+                
+                // 錯誤時返回重新選擇
+                document.getElementById('next-btn').textContent = '🔄 重新挑戰';
+                document.getElementById('next-btn').onclick = () => {
+                    resultPage.querySelector('.bg-white\\/90').classList.remove('wrong-animation');
+                    showQuestion();
+                };
+                showPage('result-page');
+                return;
+            }
+            
+            // 正確答案的處理
+            document.getElementById('next-btn').onclick = nextQuestion;
+            if (currentQuestionIndex === 2) {
+                document.getElementById('next-btn').textContent = '🎊 查看結果';
+            } else {
+                document.getElementById('next-btn').textContent = '下一題 →';
+            }
+            
+            showPage('result-page');
+        }
+
+        // 下一題
+        function nextQuestion() {
+            document.getElementById('result-page').querySelector('.bg-white\\/90').classList.remove('correct-animation');
+            
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= 3) {
+                showPage('completion-page');
+            } else {
+                showQuestion();
+            }
+        }
+
+        // 重新開始遊戲
+        function restartGame() {
+            currentQuestions = [];
+            currentQuestionIndex = 0;
+            selectedCards = [];
+            showQuestionSelect();
+        }
+
+        // 初始化
+        showCover();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d82a171c6f1d0',t:'MTc1NDMwNDc5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
