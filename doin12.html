@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任意筆發明想像屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .drawing-canvas {
+            background-image: 
+                linear-gradient(rgba(200, 200, 200, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200, 200, 200, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .invention-card {
+            transition: all 0.3s ease;
+        }
+        
+        .invention-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .selected {
+            border: 3px solid #10b981 !important;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .selected .text-lg {
+            color: #065f46 !important;
+            font-weight: 700 !important;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100 min-h-screen">
+    
+    <!-- Page 1: Cover Page -->
+    <div id="page1" class="min-h-screen flex flex-col items-center justify-center p-8">
+        <div class="text-center">
+            <div class="float-animation mb-8">
+                <div class="text-8xl mb-4">🖊️</div>
+            </div>
+            <h1 class="text-4xl font-bold text-purple-800 mb-2 leading-tight">
+                🖊️LST遊戲室-《任意筆發明想像屋》
+            </h1>
+            <h2 class="text-2xl font-semibold text-pink-600 mb-6">
+                地球出任務
+            </h2>
+            <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl max-w-md mx-auto">
+                <p class="text-xl text-gray-700 mb-6 leading-relaxed">
+                    🌟 你將進入發明家的想像屋 🌟
+                </p>
+                <p class="text-lg text-gray-600 mb-8">
+                    準備好用你的創意拯救地球了嗎？
+                </p>
+                <button onclick="showPage(2)" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    開始冒險 ✨
+                </button>
+            </div>
+            
+            <!-- Designer Credits -->
+            <div class="mt-8 text-center">
+                <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 max-w-lg mx-auto">
+                    <p class="text-sm text-gray-700 mb-2">
+                        遊戲設計與製作：呂舒婷｜了解更多🔍
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2: Mission Description -->
+    <div id="page2" class="min-h-screen flex flex-col items-center justify-center p-8 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-10 shadow-2xl max-w-2xl mx-auto text-center">
+            <div class="text-6xl mb-6">🌍</div>
+            <h2 class="text-4xl font-bold text-green-700 mb-8">今日任務</h2>
+            <div class="bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl p-8 mb-8">
+                <p class="text-2xl text-gray-800 font-semibold mb-4">
+                    請畫出一項可以幫助地球的發明
+                </p>
+                <p class="text-lg text-gray-600">
+                    發揮你的想像力，創造一個能讓世界變得更美好的發明！
+                </p>
+            </div>
+            <button onclick="showPage(3)" class="bg-gradient-to-r from-green-500 to-blue-500 text-white px-10 py-5 rounded-full text-2xl font-semibold hover:from-green-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                Start 開始畫圖 🎨
+            </button>
+        </div>
+    </div>
+
+    <!-- Page 3: Drawing Page -->
+    <div id="page3" class="min-h-screen p-8 hidden">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-bold text-center text-purple-800 mb-8">🎨 發明創作區</h2>
+            
+            <div class="bg-white rounded-3xl p-8 shadow-xl">
+                <div class="text-center mb-6">
+                    <p class="text-xl text-gray-700 font-semibold">用任意筆畫出你的發明！</p>
+                    <p class="text-gray-600 mt-2">在下方的畫布上盡情創作吧 ✨</p>
+                </div>
+                
+                <div class="drawing-canvas bg-white border-4 border-dashed border-purple-300 rounded-2xl p-4 mb-6" style="height: 400px;">
+                    <canvas id="drawingCanvas" width="800" height="350" class="w-full h-full cursor-crosshair rounded-xl"></canvas>
+                </div>
+                
+                <div class="flex justify-center gap-4 mb-6">
+                    <button onclick="clearCanvas()" class="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600 transition-colors">
+                        🗑️ 清除重畫
+                    </button>
+                    <button onclick="changeColor('black')" class="bg-black text-white px-4 py-3 rounded-full hover:bg-gray-800 transition-colors">⚫</button>
+                    <button onclick="changeColor('red')" class="bg-red-500 text-white px-4 py-3 rounded-full hover:bg-red-600 transition-colors">🔴</button>
+                    <button onclick="changeColor('blue')" class="bg-blue-500 text-white px-4 py-3 rounded-full hover:bg-blue-600 transition-colors">🔵</button>
+                    <button onclick="changeColor('green')" class="bg-green-500 text-white px-4 py-3 rounded-full hover:bg-green-600 transition-colors">🟢</button>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="showPage(4)" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-10 py-4 rounded-full text-xl font-semibold hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                        完成畫作，繼續下一步 ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 4: Sentence Matching -->
+    <div id="page4" class="min-h-screen p-8 hidden">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold text-center text-purple-800 mb-8">📝 句型配對區</h2>
+            
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl">
+                <p class="text-xl text-center text-gray-700 mb-8 font-semibold">
+                    選擇適合的句子來描述你的發明
+                </p>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Left Column: 我發明的是... -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-blue-700 mb-6 text-center">我發明的是...</h3>
+                        
+                        <!-- Custom Input Field -->
+                        <div class="mb-6">
+                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200">
+                                <div class="flex items-center mb-3">
+                                    <span class="text-2xl mr-3">✏️</span>
+                                    <span class="text-lg font-semibold text-blue-800">自己輸入</span>
+                                </div>
+                                <input type="text" id="customInvention" placeholder="請輸入你的發明名稱..." 
+                                       class="w-full p-3 rounded-lg border-2 border-blue-300 focus:border-blue-500 focus:outline-none text-lg"
+                                       oninput="handleCustomInvention(this.value)">
+                            </div>
+                        </div>
+                        
+                        <div class="text-center text-gray-600 mb-4 font-semibold">或選擇以下範例：</div>
+                        
+                        <div class="space-y-3">
+                            <div class="invention-card bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectInvention(this, '垃圾狗')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">🐕</span>
+                                    <span class="text-lg font-semibold">垃圾狗</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectInvention(this, '空氣清淨帽')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">🎩</span>
+                                    <span class="text-lg font-semibold">空氣清淨帽</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectInvention(this, '雨水回收屋頂')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">🏠</span>
+                                    <span class="text-lg font-semibold">雨水回收屋頂</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectInvention(this, '太陽能自動船')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">🚢</span>
+                                    <span class="text-lg font-semibold">太陽能自動船</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectInvention(this, '環保鞋')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">👟</span>
+                                    <span class="text-lg font-semibold">環保鞋</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: 它可以... -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-green-700 mb-6 text-center">它可以...</h3>
+                        
+                        <!-- Custom Input Field -->
+                        <div class="mb-6">
+                            <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border-2 border-green-200">
+                                <div class="flex items-center mb-3">
+                                    <span class="text-2xl mr-3">✏️</span>
+                                    <span class="text-lg font-semibold text-green-800">自己輸入</span>
+                                </div>
+                                <input type="text" id="customFunction" placeholder="請輸入你的發明功能..." 
+                                       class="w-full p-3 rounded-lg border-2 border-green-300 focus:border-green-500 focus:outline-none text-lg"
+                                       oninput="handleCustomFunction(this.value)">
+                            </div>
+                        </div>
+                        
+                        <div class="text-center text-gray-600 mb-4 font-semibold">或選擇以下範例：</div>
+                        
+                        <div class="space-y-3">
+                            <div class="invention-card bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectFunction(this, '吃掉海邊的塑膠垃圾')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">🗑️</span>
+                                    <span class="text-lg font-semibold">吃掉海邊的塑膠垃圾</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectFunction(this, '吸走城市裡的髒空氣')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">💨</span>
+                                    <span class="text-lg font-semibold">吸走城市裡的髒空氣</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectFunction(this, '把雨水變成可以喝的水')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">💧</span>
+                                    <span class="text-lg font-semibold">把雨水變成可以喝的水</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectFunction(this, '用太陽能清理河流上的垃圾')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">☀️</span>
+                                    <span class="text-lg font-semibold">用太陽能清理河流上的垃圾</span>
+                                </div>
+                            </div>
+                            <div class="invention-card bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl cursor-pointer border-2 border-transparent" onclick="selectFunction(this, '每走一步，種下一顆小草種子')">
+                                <div class="flex items-center">
+                                    <span class="text-2xl mr-3">🌱</span>
+                                    <span class="text-lg font-semibold">每走一步，種下一顆小草種子</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8">
+                    <button id="nextButton" onclick="showPage(5)" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-10 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg opacity-50 cursor-not-allowed" disabled>
+                        製作發明證明卡 🏆
+                    </button>
+                    <p class="text-gray-600 mt-3">請先選擇發明名稱和功能</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 5: Invention Certificate -->
+    <div id="page5" class="min-h-screen p-8 hidden">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-4xl font-bold text-center text-purple-800 mb-8">🏆 發明證明卡</h2>
+            
+            <div class="bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 rounded-3xl p-10 shadow-2xl border-4 border-yellow-400">
+                <div class="text-center mb-8">
+                    <div class="pulse-animation text-6xl mb-4">🌎</div>
+                    <h3 class="text-3xl font-bold text-green-700 mb-2">地球發明家證書</h3>
+                    <div class="text-2xl mb-2">🌱 拯救環境小英雄 🌱</div>
+                    <div class="text-lg text-gray-600 mb-4">
+                        證書頒發日期：<span id="certificateDate" class="font-semibold text-gray-800"></span>
+                    </div>
+                    
+                    <!-- Name Input Field -->
+                    <div class="bg-white/80 rounded-2xl p-4 max-w-md mx-auto mb-4">
+                        <label class="block text-lg font-semibold text-gray-700 mb-2">發明家姓名：</label>
+                        <input type="text" id="inventorName" placeholder="請輸入你的姓名" 
+                               class="w-full p-3 rounded-lg border-2 border-yellow-400 focus:border-yellow-600 focus:outline-none text-lg text-center font-semibold"
+                               oninput="updateCertificateName()">
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- Drawing Display -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg">
+                        <h4 class="text-xl font-bold text-center text-gray-700 mb-4">我的發明作品</h4>
+                        <div class="border-4 border-dashed border-purple-300 rounded-xl p-4">
+                            <canvas id="displayCanvas" width="300" height="200" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Sentence Display -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg">
+                        <h4 class="text-xl font-bold text-center text-gray-700 mb-4">發明說明</h4>
+                        <div class="space-y-4">
+                            <div class="bg-yellow-50 rounded-xl p-4">
+                                <p class="text-lg font-semibold text-orange-800">
+                                    發明家：<span id="certificateName" class="text-purple-700">請輸入姓名</span>
+                                </p>
+                            </div>
+                            <div class="bg-blue-50 rounded-xl p-4">
+                                <p class="text-lg font-semibold text-blue-800">
+                                    我發明的是：<span id="selectedInvention" class="text-purple-700"></span>
+                                </p>
+                            </div>
+                            <div class="bg-green-50 rounded-xl p-4">
+                                <p class="text-lg font-semibold text-green-800">
+                                    它可以：<span id="selectedFunction" class="text-purple-700"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="mb-6">
+                        <div class="text-4xl mb-2">🎉</div>
+                        <p class="text-xl text-gray-700 font-semibold">恭喜你完成了一項偉大的發明！</p>
+                    </div>
+                    <div class="flex justify-center">
+                        <button onclick="resetGame()" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                            🔁 再挑戰一個發明
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let selectedInventionName = '';
+        let selectedFunctionName = '';
+        let canvas, ctx;
+        let isDrawing = false;
+        let currentColor = 'black';
+        
+        // Initialize canvas
+        function initCanvas() {
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = currentColor;
+            
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function changeColor(color) {
+            currentColor = color;
+            ctx.strokeStyle = color;
+        }
+        
+        function showPage(pageNum) {
+            // Hide all pages
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`page${i}`).classList.add('hidden');
+            }
+            
+            // Show target page
+            document.getElementById(`page${pageNum}`).classList.remove('hidden');
+            currentPage = pageNum;
+            
+            // Initialize canvas when showing drawing page
+            if (pageNum === 3) {
+                setTimeout(initCanvas, 100);
+            }
+            
+            // Copy drawing to display canvas when showing certificate
+            if (pageNum === 5) {
+                copyToDisplayCanvas();
+                updateCertificateDate();
+            }
+        }
+        
+        function handleCustomInvention(value) {
+            if (value.trim()) {
+                selectedInventionName = value.trim();
+                // Clear all card selections
+                document.querySelectorAll('#page4 .invention-card').forEach(card => {
+                    if (card.parentElement.parentElement.querySelector('h3').textContent.includes('我發明的是')) {
+                        card.classList.remove('selected');
+                    }
+                });
+                checkSelections();
+            } else {
+                if (!document.querySelector('#page4 .invention-card.selected')) {
+                    selectedInventionName = '';
+                    checkSelections();
+                }
+            }
+        }
+        
+        function handleCustomFunction(value) {
+            if (value.trim()) {
+                selectedFunctionName = value.trim();
+                // Clear all card selections
+                document.querySelectorAll('#page4 .invention-card').forEach(card => {
+                    if (card.parentElement.parentElement.querySelector('h3').textContent.includes('它可以')) {
+                        card.classList.remove('selected');
+                    }
+                });
+                checkSelections();
+            } else {
+                if (!document.querySelector('#page4 .invention-card.selected')) {
+                    selectedFunctionName = '';
+                    checkSelections();
+                }
+            }
+        }
+        
+        function selectInvention(element, invention) {
+            // Clear custom input
+            document.getElementById('customInvention').value = '';
+            
+            // Remove previous selections
+            document.querySelectorAll('#page4 .invention-card').forEach(card => {
+                if (card.parentElement.parentElement.querySelector('h3').textContent.includes('我發明的是')) {
+                    card.classList.remove('selected');
+                }
+            });
+            
+            // Add selection to clicked element
+            element.classList.add('selected');
+            selectedInventionName = invention;
+            
+            checkSelections();
+        }
+        
+        function selectFunction(element, func) {
+            // Clear custom input
+            document.getElementById('customFunction').value = '';
+            
+            // Remove previous selections
+            document.querySelectorAll('#page4 .invention-card').forEach(card => {
+                if (card.parentElement.parentElement.querySelector('h3').textContent.includes('它可以')) {
+                    card.classList.remove('selected');
+                }
+            });
+            
+            // Add selection to clicked element
+            element.classList.add('selected');
+            selectedFunctionName = func;
+            
+            checkSelections();
+        }
+        
+        function checkSelections() {
+            const nextButton = document.getElementById('nextButton');
+            if (selectedInventionName && selectedFunctionName) {
+                nextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                nextButton.disabled = false;
+                nextButton.parentElement.querySelector('p').textContent = '準備好了！點擊製作證書';
+            }
+        }
+        
+        function copyToDisplayCanvas() {
+            const displayCanvas = document.getElementById('displayCanvas');
+            const displayCtx = displayCanvas.getContext('2d');
+            
+            // Clear display canvas
+            displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+            
+            // Copy from main canvas
+            displayCtx.drawImage(canvas, 0, 0, displayCanvas.width, displayCanvas.height);
+            
+            // Update text
+            document.getElementById('selectedInvention').textContent = selectedInventionName;
+            document.getElementById('selectedFunction').textContent = selectedFunctionName;
+        }
+        
+        function updateCertificateName() {
+            const nameInput = document.getElementById('inventorName');
+            const certificateName = document.getElementById('certificateName');
+            certificateName.textContent = nameInput.value.trim() || '請輸入姓名';
+        }
+        
+        function updateCertificateDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const dateString = `${year}年${month}月${day}日`;
+            document.getElementById('certificateDate').textContent = dateString;
+        }
+        
+
+        
+        function resetGame() {
+            selectedInventionName = '';
+            selectedFunctionName = '';
+            
+            // Clear selections
+            document.querySelectorAll('.selected').forEach(element => {
+                element.classList.remove('selected');
+            });
+            
+            // Clear custom inputs
+            if (document.getElementById('customInvention')) {
+                document.getElementById('customInvention').value = '';
+            }
+            if (document.getElementById('customFunction')) {
+                document.getElementById('customFunction').value = '';
+            }
+            if (document.getElementById('inventorName')) {
+                document.getElementById('inventorName').value = '';
+                document.getElementById('certificateName').textContent = '請輸入姓名';
+            }
+            
+            // Reset button
+            const nextButton = document.getElementById('nextButton');
+            nextButton.classList.add('opacity-50', 'cursor-not-allowed');
+            nextButton.disabled = true;
+            nextButton.parentElement.querySelector('p').textContent = '請先選擇發明名稱和功能';
+            
+            // Clear canvas
+            if (canvas) {
+                clearCanvas();
+            }
+            
+            // Go back to first page
+            showPage(1);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d86847700f1fa',t:'MTc1NDMwNDk1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
