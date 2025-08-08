@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四次元學科口袋：實用道具篇</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .pocket-animation {
+            animation: pocketGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pocketGlow {
+            0% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
+        }
+        
+        .tool-emerge {
+            animation: toolEmerge 1s ease-out forwards;
+        }
+        
+        @keyframes toolEmerge {
+            0% { transform: translateY(100px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        .success-animation {
+            animation: successPulse 0.8s ease-in-out;
+        }
+        
+        @keyframes successPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .error-shake {
+            animation: errorShake 0.5s ease-in-out;
+        }
+        
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .bubble-effect {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(59, 130, 246, 0.6);
+            border-radius: 50%;
+            animation: bubbleFloat 2s ease-out forwards;
+        }
+        
+        @keyframes bubbleFloat {
+            0% { transform: translateY(0) scale(0); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: gold;
+            border-radius: 50%;
+            animation: sparkleFloat 1.5s ease-out forwards;
+        }
+        
+        @keyframes sparkleFloat {
+            0% { transform: translateY(0) scale(0); opacity: 1; }
+            100% { transform: translateY(-80px) scale(2); opacity: 0; }
+        }
+        
+        .option-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 min-h-screen">
+    <!-- Game Container -->
+    <div id="gameContainer" class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">LST遊戲室-🎯 四次元學科口袋</h1>
+            <p class="text-xl text-white/90">實用道具篇 - 學習與探索</p>
+            <div class="mt-4 bg-white/20 rounded-full px-6 py-2 inline-block">
+                <span class="text-white font-medium">進度: <span id="progressText">0/3</span></span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-white/30 rounded-full h-3 mb-8">
+            <div id="progressBar" class="progress-bar bg-gradient-to-r from-yellow-400 to-orange-500 h-3 rounded-full" style="width: 0%"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="text-center">
+            <div class="pocket-animation bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-12 mb-8 mx-auto max-w-md">
+                <div class="text-8xl mb-4">📦</div>
+                <h2 class="text-2xl font-bold text-white mb-4">四次元口袋</h2>
+                <p class="text-white/90 mb-6">準備好探索神奇的學習道具了嗎？</p>
+            </div>
+            <button onclick="startGame()" class="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-4 rounded-full text-xl font-bold hover:scale-105 transition-transform shadow-lg">
+                🚀 開始探索
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="hidden">
+            <!-- Tool Display -->
+            <div id="toolDisplay" class="text-center mb-8">
+                <div class="bg-white rounded-3xl p-8 shadow-2xl mx-auto max-w-md">
+                    <div id="toolIcon" class="text-8xl mb-4 tool-emerge">🧯</div>
+                    <h3 id="toolName" class="text-2xl font-bold text-gray-800 mb-2">滅火器</h3>
+                    <p class="text-gray-600">從四次元口袋中取出的神奇道具！</p>
+                </div>
+            </div>
+
+            <!-- Questions -->
+            <div id="questionContainer" class="space-y-8">
+                <!-- Tool Description -->
+                <div class="bg-white/95 rounded-2xl p-6 shadow-xl">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">💡 這個道具的詳細功能說明</h4>
+                    <div id="toolDescription" class="text-gray-700 text-lg leading-relaxed">
+                        <!-- Description will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Function Question -->
+                <div class="bg-white/95 rounded-2xl p-6 shadow-xl">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4">❓ 這個道具是用來做什麼的？</h4>
+                    <div id="functionOptions" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Options will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="successScreen" class="hidden text-center">
+            <div class="success-animation bg-gradient-to-br from-green-400 to-blue-500 rounded-3xl p-12 mb-8 mx-auto max-w-md">
+                <div class="text-8xl mb-4">✨</div>
+                <h2 class="text-3xl font-bold text-white mb-4">道具啟動成功！</h2>
+                <div id="successAnimation" class="relative mb-4">
+                    <div id="successIcon" class="text-6xl">🧯</div>
+                </div>
+                <p id="successMessage" class="text-white/90 text-lg">你答對了！這是屬於自然科的知識喔～</p>
+            </div>
+            <button onclick="nextQuestion()" class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-full text-xl font-bold hover:scale-105 transition-transform shadow-lg">
+                ⭐ 繼續探索
+            </button>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="errorScreen" class="hidden text-center">
+            <div class="error-shake bg-gradient-to-br from-gray-400 to-gray-600 rounded-3xl p-12 mb-8 mx-auto max-w-md">
+                <div class="text-8xl mb-4 grayscale">⚠️</div>
+                <h2 class="text-3xl font-bold text-white mb-4">啊喔～道具卡住了</h2>
+                <p class="text-white/90 text-lg mb-4">請再試一次吧！</p>
+                <div class="text-6xl grayscale" id="errorIcon">🧯</div>
+            </div>
+            <button onclick="retryQuestion()" class="bg-gradient-to-r from-orange-400 to-red-500 text-white px-8 py-4 rounded-full text-xl font-bold hover:scale-105 transition-transform shadow-lg">
+                🔄 再試一次
+            </button>
+        </div>
+
+        <!-- Final Screen -->
+        <div id="finalScreen" class="hidden text-center">
+            <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-12 mb-8 mx-auto max-w-md">
+                <div class="text-8xl mb-4">🏆</div>
+                <h2 class="text-3xl font-bold text-white mb-4">恭喜通關！</h2>
+                <div class="bg-white/20 rounded-2xl p-4 mb-4">
+                    <p class="text-white text-lg font-bold">四次元學科小博士</p>
+                </div>
+                <p id="finalScore" class="text-white/90 text-lg">你答對了 3/3 題！</p>
+            </div>
+            <div class="space-y-4">
+                <button onclick="restartGame()" class="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-4 rounded-full text-xl font-bold hover:scale-105 transition-transform shadow-lg">
+                    🎮 再挑戰一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black/20 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg">遊戲設計與製作：呂舒婷｜了解更多🔍</p>
+            <p class="mt-2">臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+        </div>
+    </footer>
+
+    <script>
+        // Game data
+        const tools = [
+            {
+                icon: "🧯",
+                name: "滅火器",
+                functions: ["滅火", "吸塵", "照明"],
+                correctFunction: 0,
+                description: "滅火器是重要的消防安全設備，內含滅火劑，能夠快速撲滅火災。使用時需要拔掉安全插銷，對準火源根部噴射。不同類型的滅火器適用於不同種類的火災，如乾粉滅火器適用於一般火災，二氧化碳滅火器適用於電器火災。",
+                animation: "fire-extinguisher",
+                message: "答對了！滅火器是消防安全的重要工具！"
+            },
+            {
+                icon: "⛑️",
+                name: "安全帽",
+                functions: ["保護頭部", "遮陽", "裝飾"],
+                correctFunction: 0,
+                description: "安全帽是工作場所必備的個人防護裝備，主要功能是保護頭部免受墜落物品、碰撞或其他危險的傷害。現代安全帽通常由高強度塑料製成，內部有緩衝墊，能有效分散衝擊力。在建築工地、工廠、實驗室等場所都必須佩戴。",
+                animation: "safety-helmet",
+                message: "答對了！安全帽是保護頭部安全的重要裝備！"
+            },
+            {
+                icon: "🧪",
+                name: "酚酞試劑",
+                functions: ["測酸鹼", "染色", "清潔"],
+                correctFunction: 0,
+                description: "酚酞是一種化學指示劑，主要用於檢測溶液的酸鹼性。在酸性或中性環境中呈無色，在鹼性環境中會變成粉紅色或紅色。這個特性讓它成為化學實驗中判斷酸鹼性的重要工具，廣泛應用於學校實驗室和化學分析中。",
+                animation: "chemical-test",
+                message: "答對了！酚酞試劑是化學實驗的重要指示劑！"
+            },
+            {
+                icon: "🌡️",
+                name: "溫度計",
+                functions: ["測量溫度", "測時間", "測重量"],
+                correctFunction: 0,
+                description: "溫度計是測量溫度的精密儀器，利用物質熱脹冷縮的原理工作。常見的有水銀溫度計、酒精溫度計和電子溫度計。在醫療、氣象、工業生產等領域都有重要應用。使用時要注意正確的測量方法和安全事項。",
+                animation: "thermometer",
+                message: "答對了！溫度計是測量溫度變化的精密儀器！"
+            },
+            {
+                icon: "🧭",
+                name: "指南針",
+                functions: ["指方向", "測風速", "看時間"],
+                correctFunction: 0,
+                description: "指南針是利用地球磁場原理製作的導航工具，磁針會指向磁北極方向。古代中國發明的指南針是四大發明之一，對人類航海和探險有重大貢獻。現代指南針結合了精密刻度，能準確指示方向，是野外活動和地理學習的重要工具。",
+                animation: "compass",
+                message: "答對了！指南針是重要的導航工具！"
+            },
+            {
+                icon: "🪫",
+                name: "行動電源",
+                functions: ["充電", "照明", "加熱"],
+                correctFunction: 0,
+                description: "行動電源是便攜式的電力儲存裝置，內建鋰電池，可以為手機、平板等電子設備充電。現代行動電源通常具有多個USB接口、快充功能，有些還附加LED手電筒功能。是現代人外出時不可缺少的實用工具。",
+                animation: "power-bank",
+                message: "答對了！行動電源是現代生活的便利充電工具！"
+            },
+            {
+                icon: "📡",
+                name: "衛星定位儀",
+                functions: ["找位置", "放音樂", "拍照"],
+                correctFunction: 0,
+                description: "衛星定位儀（GPS）是利用衛星信號確定地理位置的電子設備。它接收多顆衛星的信號，通過計算得出精確的經緯度座標。廣泛應用於導航、測量、救援等領域，現在智慧型手機也內建了GPS功能。",
+                animation: "gps-device",
+                message: "答對了！衛星定位儀是精確定位的高科技工具！"
+            },
+            {
+                icon: "🔬",
+                name: "顯微鏡",
+                functions: ["看清微小東西", "放大聲音", "測量距離"],
+                correctFunction: 0,
+                description: "顯微鏡是用來觀察微小物體的光學儀器，通過透鏡組合將物體放大數十倍到數千倍。分為光學顯微鏡和電子顯微鏡等類型。在生物學、醫學、材料科學等領域有重要應用，幫助人類探索微觀世界的奧秘。",
+                animation: "microscope",
+                message: "答對了！顯微鏡是探索微觀世界的重要工具！"
+            },
+            {
+                icon: "🧽",
+                name: "掃地機器人",
+                functions: ["自動打掃", "按摩", "烹飪"],
+                correctFunction: 0,
+                description: "掃地機器人是智能家電的代表，配備感應器和程式控制系統，能自動清掃地面灰塵和垃圾。現代掃地機器人具有路徑規劃、避障、自動充電等功能，大大減輕了家務負擔，是智慧家庭的重要組成部分。",
+                animation: "robot-vacuum",
+                message: "答對了！掃地機器人是智能清潔的好幫手！"
+            },
+            {
+                icon: "☢️",
+                name: "輻射偵測儀",
+                functions: ["偵測輻射", "測聲音", "測光線"],
+                correctFunction: 0,
+                description: "輻射偵測儀是專門用來檢測和測量輻射強度的精密儀器。它能偵測各種類型的輻射，如α、β、γ射線等，並發出聲音或顯示數值警告。在核電廠、醫院、實驗室等場所是重要的安全防護設備。",
+                animation: "radiation-detector",
+                message: "答對了！輻射偵測儀是重要的安全防護設備！"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let currentTool = null;
+        let functionAnswered = false;
+        let selectedTools = [];
+
+        function startGame() {
+            // Select 3 random tools
+            selectedTools = tools.sort(() => 0.5 - Math.random()).slice(0, 3);
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= selectedTools.length) {
+                showFinalScreen();
+                return;
+            }
+
+            currentTool = selectedTools[currentQuestionIndex];
+            functionAnswered = false;
+
+            // Update progress
+            updateProgress();
+
+            // Display tool
+            document.getElementById('toolIcon').textContent = currentTool.icon;
+            document.getElementById('toolName').textContent = currentTool.name;
+
+            // Display tool description
+            document.getElementById('toolDescription').textContent = currentTool.description;
+
+            // Create function options
+            createOptions('functionOptions', currentTool.functions, 'function');
+
+            // Add emergence animation
+            document.getElementById('toolIcon').classList.add('tool-emerge');
+            setTimeout(() => {
+                document.getElementById('toolIcon').classList.remove('tool-emerge');
+            }, 1000);
+        }
+
+        function createOptions(containerId, options, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option-card bg-gradient-to-r from-blue-400 to-purple-500 text-white p-4 rounded-xl text-center font-bold text-lg shadow-lg';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(type, index);
+                container.appendChild(optionDiv);
+            });
+        }
+
+        function selectOption(type, selectedIndex) {
+            const isCorrect = (type === 'function' && selectedIndex === currentTool.correctFunction);
+
+            if (type === 'function') {
+                functionAnswered = true;
+            }
+
+            if (isCorrect) {
+                playSuccessSound();
+                createSuccessEffect();
+                
+                setTimeout(() => {
+                    correctAnswers++;
+                    showSuccessScreen();
+                }, 1000);
+            } else {
+                playErrorSound();
+                showErrorScreen();
+            }
+        }
+
+        function showSuccessScreen() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('successScreen').classList.remove('hidden');
+            
+            document.getElementById('successIcon').textContent = currentTool.icon;
+            document.getElementById('successMessage').textContent = currentTool.message;
+            
+            createSuccessAnimation();
+        }
+
+        function showErrorScreen() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('errorScreen').classList.remove('hidden');
+            
+            document.getElementById('errorIcon').textContent = currentTool.icon;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            document.getElementById('successScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function retryQuestion() {
+            document.getElementById('errorScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            // Reset question state
+            functionAnswered = false;
+            
+            // Recreate options
+            createOptions('functionOptions', currentTool.functions, 'function');
+        }
+
+        function showFinalScreen() {
+            // Complete the progress bar
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressText').textContent = `${selectedTools.length}/${selectedTools.length}`;
+            
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('finalScreen').classList.remove('hidden');
+            
+            document.getElementById('finalScore').textContent = `你答對了 ${correctAnswers}/${selectedTools.length} 題！`;
+        }
+
+        function restartGame() {
+            document.getElementById('finalScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+
+
+        function updateProgress() {
+            const progress = (currentQuestionIndex / selectedTools.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${currentQuestionIndex}/${selectedTools.length}`;
+        }
+
+        function createSuccessEffect() {
+            const container = document.getElementById('toolDisplay');
+            
+            // Create bubbles
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble-effect';
+                    bubble.style.left = Math.random() * 300 + 'px';
+                    bubble.style.top = '100px';
+                    container.appendChild(bubble);
+                    
+                    setTimeout(() => bubble.remove(), 2000);
+                }, i * 200);
+            }
+        }
+
+        function createSuccessAnimation() {
+            const container = document.getElementById('successAnimation');
+            
+            // Create sparkles
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.style.left = Math.random() * 100 + 'px';
+                    sparkle.style.top = '50px';
+                    container.appendChild(sparkle);
+                    
+                    setTimeout(() => sparkle.remove(), 1500);
+                }, i * 100);
+            }
+        }
+
+        function playSuccessSound() {
+            // Visual feedback for success
+            document.body.style.background = 'linear-gradient(45deg, #10b981, #3b82f6)';
+            setTimeout(() => {
+                document.body.style.background = 'linear-gradient(to bottom right, rgb(168 85 247), rgb(236 72 153), rgb(59 130 246))';
+            }, 300);
+        }
+
+        function playErrorSound() {
+            // Visual feedback for error
+            document.body.style.background = 'linear-gradient(45deg, #ef4444, #f97316)';
+            setTimeout(() => {
+                document.body.style.background = 'linear-gradient(to bottom right, rgb(168 85 247), rgb(236 72 153), rgb(59 130 246))';
+            }, 300);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96becbb183b2f220',t:'MTc1NDY1MzgyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
