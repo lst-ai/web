@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夢境順序大拼圖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .dream-card {
+            transition: all 0.3s ease;
+            cursor: grab;
+        }
+        
+        .dream-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .dream-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        .drop-zone {
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.drag-over {
+            background-color: #e0f2fe;
+            border-color: #0284c7;
+            transform: scale(1.05);
+        }
+        
+        .correct-animation {
+            animation: correctPulse 0.6s ease-in-out;
+        }
+        
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: #dcfce7; }
+            100% { transform: scale(1); }
+        }
+        
+        .star-animation {
+            animation: starTwinkle 1s ease-in-out infinite;
+        }
+        
+        @keyframes starTwinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-400 via-pink-300 to-blue-400 min-h-screen">
+    <!-- 封面頁 -->
+    <div id="cover-page" class="min-h-screen flex items-center justify-center p-6">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+            <div class="text-6xl mb-6 floating">🎮</div>
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">🌙LST遊戲室-《夢境順序大拼圖》</h1>
+            <p class="text-lg text-purple-600 mb-6 font-medium">每篇400-500字，適用中高年級</p>
+            <div class="text-lg text-gray-700 mb-8 leading-relaxed">
+                歡迎來到夢境順序大拼圖！<br>
+                每一段夢，都藏著一個順序祕密～<br>
+                快來幫夢境拼好吧！
+            </div>
+            <button onclick="showInstructions()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg mb-6">
+                🌟 開始遊戲
+            </button>
+            <div class="text-sm text-gray-600 border-t pt-4">
+                <p class="mb-1">遊戲設計與製作：呂舒婷｜了解更多🔍</p>
+                <p>臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲說明頁 -->
+    <div id="instructions-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+            <div class="text-5xl mb-6">📖</div>
+            <h2 class="text-3xl font-bold text-purple-800 mb-6">遊戲規則</h2>
+            <div class="text-lg text-gray-700 mb-8 leading-relaxed space-y-4">
+                <p>🌙 請閱讀夢境故事，根據時間順序排列圖片卡片</p>
+                <p>🎯 每輪有 3 題，題目隨機抽出</p>
+                <p>🖱️ 拖曳圖片卡片到正確位置</p>
+                <p>✨ 完成所有題目獲得夢境勇士稱號！</p>
+            </div>
+            <button onclick="showQuestionSelect()" class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                🚀 開始挑戰
+            </button>
+        </div>
+    </div>
+
+    <!-- 題目選擇區 -->
+    <div id="question-select-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+            <div class="text-5xl mb-6">🎲</div>
+            <h2 class="text-3xl font-bold text-purple-800 mb-6">選擇你的夢境冒險</h2>
+            <div class="text-lg text-gray-700 mb-8">
+                點擊任一按鈕開始隨機夢境挑戰！
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <button onclick="startRandomQuestions()" class="bg-gradient-to-r from-pink-400 to-red-400 text-white px-6 py-4 rounded-xl text-lg font-semibold hover:from-pink-500 hover:to-red-500 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🌸 夢境 A
+                </button>
+                <button onclick="startRandomQuestions()" class="bg-gradient-to-r from-blue-400 to-cyan-400 text-white px-6 py-4 rounded-xl text-lg font-semibold hover:from-blue-500 hover:to-cyan-500 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🌊 夢境 B
+                </button>
+                <button onclick="startRandomQuestions()" class="bg-gradient-to-r from-green-400 to-emerald-400 text-white px-6 py-4 rounded-xl text-lg font-semibold hover:from-green-500 hover:to-emerald-500 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🌿 夢境 C
+                </button>
+            </div>
+            <div class="text-sm text-gray-600">
+                每次遊戲將隨機選出 3 個夢境故事
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲頁面 -->
+    <div id="game-page" class="min-h-screen p-6 hidden">
+        <div class="max-w-6xl mx-auto">
+            <!-- 進度條 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-lg font-semibold text-purple-800">進度</span>
+                    <span class="text-lg font-semibold text-purple-800" id="progress-text">1 / 3</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="progress-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500" style="width: 33.33%"></div>
+                </div>
+            </div>
+
+            <!-- 故事區域 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-purple-800" id="story-title">夢境故事</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">畫筆工具：</span>
+                        <button onclick="toggleDrawing()" id="draw-btn" class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300">
+                            🖍️ 畫記號
+                        </button>
+                        <button onclick="clearDrawing()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300">
+                            🧹 清除
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <canvas id="drawing-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-10" style="display: none;"></canvas>
+                    <div class="text-gray-700 leading-relaxed text-lg" id="story-content">
+                        <!-- 故事內容將在這裡顯示 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 遊戲區域 -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+                <h4 class="text-xl font-bold text-purple-800 mb-4">請按照故事順序排列圖片：</h4>
+                
+                <!-- 答案區域 -->
+                <div class="grid grid-cols-3 gap-4 mb-6" id="answer-slots">
+                    <div class="drop-zone border-3 border-dashed border-gray-300 rounded-xl h-32 flex items-center justify-center text-gray-500 font-semibold" data-position="0">
+                        第一個
+                    </div>
+                    <div class="drop-zone border-3 border-dashed border-gray-300 rounded-xl h-32 flex items-center justify-center text-gray-500 font-semibold" data-position="1">
+                        第二個
+                    </div>
+                    <div class="drop-zone border-3 border-dashed border-gray-300 rounded-xl h-32 flex items-center justify-center text-gray-500 font-semibold" data-position="2">
+                        第三個
+                    </div>
+                </div>
+
+                <!-- 圖片卡片區域 -->
+                <div class="grid grid-cols-3 gap-4 mb-6" id="card-area">
+                    <!-- 圖片卡片將在這裡生成 -->
+                </div>
+
+                <!-- 檢查答案按鈕 -->
+                <div class="text-center space-x-4">
+                    <button onclick="clearAllAnswers()" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                        🧹 清除重排
+                    </button>
+                    <button id="check-answer" onclick="checkAnswer()" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        🔍 檢查答案
+                    </button>
+                </div>
+
+                <!-- 結果顯示 -->
+                <div id="result-area" class="mt-6 text-center hidden">
+                    <!-- 結果將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完成頁 -->
+    <div id="completion-page" class="min-h-screen flex items-center justify-center p-6 hidden">
+        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-2xl text-center shadow-2xl">
+            <div class="text-6xl mb-6 star-animation">🎉</div>
+            <h2 class="text-4xl font-bold text-purple-800 mb-6">恭喜完成！</h2>
+            <div class="text-lg text-gray-700 mb-8 leading-relaxed">
+                你完成了這輪夢境挑戰！<br>
+                你是真正的夢境順序大師！<br>
+                想再玩一次嗎？
+            </div>
+            <div class="space-y-4">
+                <button onclick="restartGame()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg block w-full">
+                    🔄 再玩一次
+                </button>
+                <button onclick="backToHome()" class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all duration-300 shadow-lg block w-full">
+                    🏠 回到首頁
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 夢境故事資料庫
+        const dreamStories = [
+            {
+                title: "彩虹鯨魚的秘密任務",
+                content: "昨晚的夢境好奇妙，我坐在窗邊看星星，不知不覺就睡著了。突然，我感覺自己像羽毛一樣飄了起來，飛向夜空。我穿過層層雲朵，來到一片閃著彩色光芒的天空草原。正當我驚嘆眼前景色時，一隻彩虹鯨魚從雲裡游出來，牠的身體像寶石般發亮，鱗片隨著月光閃爍。彩虹鯨魚用溫柔的聲音對我說：「地球有個需要幫助的地方，你願意和我一起去看看嗎？」我點點頭，牠就用尾巴拍出一道七彩光圈，我們一起衝進去。那是一片快要乾枯的森林，樹葉變黃，小動物們看起來很虛弱。我拿出一顆星星果實，輕輕埋進土裡，沒多久，水泉湧出，整座森林又恢復生機。「謝謝你，我們完成了任務。」鯨魚說完，把我載回雲朵邊緣，讓我從那裡慢慢降落回自己的床。醒來時，我發現枕頭邊有一片晶瑩的魚鱗，上面印著一道彩虹。",
+                cards: ["🌙 飄向雲端", "🐋 彩虹鯨魚", "🌈 彩虹魚鱗回到床邊"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "星星屋的祕密任務",
+                content: "夢裡，我走進一棵看似普通的老樹，卻發現裡頭藏著一個發亮的樹洞。我小心翼翼地彎下腰，走進去，發現裡面像一間溫暖的書房，天花板掛著微光的藤蔓，一位銀髮精靈對我說：「你被選中了，這把銀色鑰匙可以打開星星屋的大門。」我接過鑰匙，走上一條閃爍的階梯，來到天空中漂浮著的一棟透明小屋。我深吸一口氣，把鑰匙插進門鎖。門打開的瞬間，成千上萬顆會說話的星星從屋內飛出，它們用不同語言講述著世界的故事，有的講埃及金字塔，有的講未來機器人。我坐在星星墊子上，聽得入迷，直到精靈告訴我：「時間到了，記得你聽過的故事，它們會成為你的力量。」我緩緩走出星星屋，感覺腦海裡亮起了好多盞燈。醒來時，窗台上竟多了一把銀色鑰匙吊飾，我小心收好，心裡暗想：星星屋真的存在嗎？",
+                cards: ["🌳 樹洞", "🗝️ 銀色鑰匙", "⭐ 星星屋"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "雨傘熱氣球歷險記",
+                content: "那天晚上，我夢見自己在校門口撐著雨傘走路。突然，一陣風吹來，我的透明雨傘竟然開始旋轉、膨脹，慢慢變成了一顆彩色熱氣球，還附帶籃子！我就這樣被熱氣球帶上了天空。從高空往下看，城市像積木排成一格一格，馬路像流動的黑帶，操場上的學生看起來像螞蟻在活動。熱氣球飄呀飄，帶我經過大海、沙漠和極光，最後降落在一個空中島嶼，那裡長著會唱歌的花。我躺在柔軟的花床上睡了一會兒。醒來時，我發現熱氣球已經停在我家屋頂。牠像聽得懂我心裡的聲音一樣，把我溫柔送回房間。就在我重新躺回床上時，熱氣球輕輕升空，消失在月光裡。我從夢中醒來時，枕頭邊竟然有一片小小的透明傘布，閃著七彩的光。",
+                cards: ["☂️ 打開雨傘", "🎈 熱氣球", "🏝️ 空中島嶼"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "山洞裡的藍龍傳說",
+                content: "那一晚的夢好像電影情節。我拿著一盞小油燈，走進了一個黑暗的山洞。每走一步，回音就跟著我走，地上有閃閃發光的石頭。我心想：這裡一定藏著什麼祕密。走到洞的最深處，我看見一顆巨大的寶石，像藍寶石一樣透明。我剛一碰它，它竟然裂開，一隻迷你藍色小龍從裡面探出頭。「謝謝你喚醒我，我是守護這座山的最後一條龍。」牠低聲說。小龍帶我飛出山洞，經過高山與溪谷，還用尾巴揮出一道藍色光芒，在天空中畫出一條龍形。牠說自己沉睡了千年，只有真正相信傳說的人才能喚醒牠。當我們回到山洞口時，小龍輕聲說：「以後你會再見到我，但只在夢中。」牠便回到寶石中睡去。我點點頭，關上燈，轉身離開。清晨醒來，我發現床邊有一顆小小的藍色石子，冰冰的、閃閃的。",
+                cards: ["🕳️ 山洞", "💎 發光石頭", "🐲 小龍"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "西瓜演唱會",
+                content: "我夢見自己半夜肚子餓，打開冰箱，發現裡面有一顆大大的西瓜，上面竟然貼著一張紙條：「唱歌天后，今晚開唱！」我正覺得奇怪，那顆西瓜忽然打開嘴巴開始唱歌，而且還唱得超級好聽！牠說今晚是水果界音樂節，要我趕快上台伴奏。我一眨眼就站在果汁做成的舞台上，旁邊是草莓打鼓、鳳梨拉小提琴、香蕉合音，觀眾席坐滿了戴墨鏡的哈密瓜、搖旗吶喊的藍莓，還有跳舞的芒果。我跟著節奏唱跳，還學了西瓜的招牌動作：「切半轉圈加冒泡！」全場尖叫。唱到最後，我和西瓜一起鞠躬，全場灑下果凍紙花，氣氛嗨到爆。演唱會結束後，西瓜給我一張 VIP 果實證明卡，上面寫著：「最佳舞台搭檔」。醒來時，我的床單竟然有一片甜甜的果凍花瓣，還發出一點點歌聲。",
+                cards: ["🧊 冰箱", "🍉 唱歌的西瓜", "🎭 果汁舞台"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "飛床的太空旅行",
+                content: "那天夜裡，我累得倒頭就睡。忽然，床開始震動，床腳變成引擎，床頭升起操控桿。我還來不及反應，整張床就「轟！」地飛向天花板，穿破頂，進入閃爍的星空。我在半空中坐起來，看見土星的光環在我眼前旋轉，月亮像一張熟睡的臉對我微笑，彗星從遠方呼嘯而過。床慢慢降落在一顆軟綿綿的星球上，像棉花糖一樣踩起來會彈。我在那裡遇見一顆會說話的星星，它邀請我玩「星星丟丟樂」──我每丟中一顆星星，它就變成一段有趣的故事，有關宇宙的誕生、黑洞的祕密、太陽的笑聲。玩到一半，床開始發出「逼逼」聲，提醒我該回家了。我向星星揮手告別，它送給我一顆小小的銀色光點，說那是我的夢境指南針。隔天醒來，我的棉被上竟然出現了一個閃閃發亮的指南針圖樣，好像真的從太空帶回來的禮物。",
+                cards: ["🛏️ 火箭床", "🪐 星球", "⭐ 星星遊戲"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "泡泡旅行家",
+                content: "我夢見自己在浴室洗澡，水龍頭忽然流出一瓶亮藍色的藥水。我好奇地喝了一口，身體居然慢慢變透明、變輕，最後變成一個大大的泡泡！我被風吹出窗戶，像熱氣球一樣飄在空中。沿途經過公園的樹梢、學校的屋頂，還飄過一群上課中的鴿子老師和鳥學生。牠們一邊唱歌一邊寫字，筆尖是羽毛，墨水是花蜜。牠們看到我，熱情地圍過來唱歡迎歌：「泡泡來了～泡泡來了～」泡泡繼續飄，飄到海上，遇到一艘用葉子做的帆船。一隻海龜船長向我敬禮，說我是第一位來訪的「空中泡泡族」。牠送我一顆星沙，祝我旅途平安。回到家時，我的泡泡身體慢慢縮小，最後落在屋頂，恢復原樣。醒來時，我嘴邊還有一圈透明的小泡泡，閃著亮光。",
+                cards: ["🧪 藥水", "🫧 泡泡飄浮", "🐦 鳥兒老師"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "糖果雨的秘密",
+                content: "在夢中，我收到一封神祕信，上面只寫了三個字：「種下去。」我一低頭，發現手中握著一顆五彩繽紛的糖果種子。我照著指示，把它種在花園裡的空地上。不到幾分鐘，一棵高大的糖果樹「咻」地從地上長出來。它的樹幹是巧克力，樹枝是太妃糖，葉子像棉花糖一樣柔軟。最吸引我的是，它的果實竟然會發光，像夜燈一樣照亮整座花園。忽然，天空變得粉紅，雲朵像軟糖一樣化開，開始下起「糖果雨」！棒棒糖像雨點一樣落下，棉花糖隨風飄舞，地上積起一層甜滋滋的糖湖。我撐起餅乾做的雨傘，在糖果雨中旋轉跳舞，踩出的水花都是水果口味。跳著跳著，我聽見遠方有人喊：「糖果仙子要選出守護者！」我自告奮勇走上前，被授予一條繡有「糖果勇士」字樣的絲帶。醒來後，我的枕頭邊竟然多了一條淡粉色的絲帶，上面還黏著一顆小小的軟糖。",
+                cards: ["🌱 糖果種子", "🌳 糖果樹", "🌧️ 糖果雨"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "電視冒險記",
+                content: "晚上我在客廳看最喜歡的卡通，看到一半，電視忽然「啪！」的一聲變亮，螢幕像漩渦一樣把我吸了進去！我驚訝地發現自己變成卡通人物，穿著披風、拿著雷射劍，站在冒險森林的入口。我跟著主角一起闖關、躲陷阱、打怪獸。我們跳過岩漿湖，躲過會說謊的仙人掌，還跟時間機器賽跑。主角說：「你是這一集的關鍵角色，沒有你就過不了關！」最後我們在天空城堡裡對抗終極大魔王，一起合力發動「友情光波」，把壞蛋打回動畫書裡。觀眾歡呼，我們高舉勝利之劍，城堡上方放起卡通煙火。任務完成後，主角送我一張卡通勇士證明卡，上面寫著我的名字。電視螢幕再度閃爍，我從沙發上醒來，手中竟然握著一張畫有我卡通樣子的卡片！",
+                cards: ["📺 電視漩渦", "🦸 卡通角色", "🌲 冒險森林"],
+                correctOrder: [0, 1, 2]
+            },
+            {
+                title: "地圖與會說話的書",
+                content: "我在夢裡走進森林，一陣風吹來，一張泛黃的地圖從天而降。我打開一看，上面畫著迷霧山、小河與一個「？」標誌。我順著地圖走過蜿蜒小徑、踏過會唱歌的石頭、游過一條藍色的小河。終於來到地圖標示的地點，那裡擺著一個古老的寶箱。我小心地打開它，竟然發現裡頭不是金幣，而是一本會說話的書。「你好，我是時間之書，專門收藏這個世界上最重要的故事。」它溫柔地說。書翻到一頁，我眼前浮現古埃及金字塔建造的過程；下一頁，展現未來人類在火星建立城市。每翻一頁，就是一場時空旅行，還有光影與聲音陪伴，彷彿我也成為歷史裡的一角。最後，書合上了封面，說：「記住這些故事，因為你就是未來的記錄者。」我點點頭，把書抱在懷裡，回到森林出口。早晨醒來，我發現床邊多了一張泛黃地圖，上面畫著我的夢中路線。",
+                cards: ["🗺️ 地圖", "📦 寶箱", "📚 會說話的書"],
+                correctOrder: [0, 1, 2]
+            }
+        ];
+
+        // 遊戲狀態
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let draggedCard = null;
+        let isDrawing = false;
+        let drawingEnabled = false;
+        let canvas, ctx;
+
+        // 顯示說明頁
+        function showInstructions() {
+            document.getElementById('cover-page').classList.add('hidden');
+            document.getElementById('instructions-page').classList.remove('hidden');
+        }
+
+        // 顯示題目選擇頁
+        function showQuestionSelect() {
+            document.getElementById('instructions-page').classList.add('hidden');
+            document.getElementById('question-select-page').classList.remove('hidden');
+        }
+
+        // 開始隨機題目
+        function startRandomQuestions() {
+            // 隨機選擇3個題目
+            const shuffled = [...dreamStories].sort(() => 0.5 - Math.random());
+            currentQuestions = shuffled.slice(0, 3);
+            currentQuestionIndex = 0;
+            
+            document.getElementById('question-select-page').classList.add('hidden');
+            document.getElementById('game-page').classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        // 載入題目
+        function loadQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            
+            // 更新進度
+            document.getElementById('progress-text').textContent = `${currentQuestionIndex + 1} / 3`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / 3) * 100}%`;
+            
+            // 更新故事內容
+            document.getElementById('story-title').textContent = question.title;
+            document.getElementById('story-content').textContent = question.content;
+            
+            // 重置答案區域
+            const answerSlots = document.querySelectorAll('.drop-zone');
+            answerSlots.forEach(slot => {
+                slot.innerHTML = slot.dataset.position == 0 ? '第一個' : 
+                                slot.dataset.position == 1 ? '第二個' : '第三個';
+                slot.classList.remove('bg-blue-100', 'border-blue-400');
+                slot.classList.add('border-gray-300');
+            });
+            
+            // 生成打亂的卡片
+            const cardArea = document.getElementById('card-area');
+            cardArea.innerHTML = '';
+            
+            // 打亂卡片順序
+            const shuffledCards = [...question.cards].sort(() => 0.5 - Math.random());
+            
+            shuffledCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'dream-card bg-gradient-to-br from-yellow-200 to-orange-200 p-4 rounded-xl text-center font-semibold text-gray-800 shadow-lg';
+                cardElement.draggable = true;
+                cardElement.textContent = card;
+                cardElement.dataset.originalIndex = question.cards.indexOf(card);
+                
+                // 拖拽事件
+                cardElement.addEventListener('dragstart', handleDragStart);
+                cardElement.addEventListener('dragend', handleDragEnd);
+                
+                cardArea.appendChild(cardElement);
+            });
+            
+            // 重置用戶答案
+            userAnswers = [null, null, null];
+            
+            // 重置檢查按鈕
+            document.getElementById('check-answer').disabled = true;
+            document.getElementById('result-area').classList.add('hidden');
+            
+            // 重置畫筆狀態
+            drawingEnabled = false;
+            const drawBtn = document.getElementById('draw-btn');
+            const drawCanvas = document.getElementById('drawing-canvas');
+            drawBtn.textContent = '🖍️ 畫記號';
+            drawBtn.classList.remove('bg-red-400', 'hover:bg-red-500');
+            drawBtn.classList.add('bg-yellow-400', 'hover:bg-yellow-500');
+            drawCanvas.style.display = 'none';
+            drawCanvas.style.pointerEvents = 'none';
+            clearDrawing();
+        }
+
+        // 拖拽開始
+        function handleDragStart(e) {
+            draggedCard = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        // 拖拽結束
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedCard = null;
+        }
+
+        // 設置放置區域事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            if (draggedCard) {
+                const position = parseInt(e.target.dataset.position);
+                const originalIndex = parseInt(draggedCard.dataset.originalIndex);
+                
+                // 更新答案
+                userAnswers[position] = originalIndex;
+                
+                // 更新顯示
+                e.target.innerHTML = draggedCard.textContent;
+                e.target.classList.remove('border-gray-300');
+                e.target.classList.add('bg-blue-100', 'border-blue-400');
+                
+                // 隱藏已使用的卡片
+                draggedCard.style.opacity = '0.3';
+                draggedCard.draggable = false;
+                
+                // 檢查是否所有位置都已填滿
+                if (userAnswers.every(answer => answer !== null)) {
+                    document.getElementById('check-answer').disabled = false;
+                }
+            }
+        }
+
+        // 檢查答案
+        function checkAnswer() {
+            const question = currentQuestions[currentQuestionIndex];
+            const isCorrect = JSON.stringify(userAnswers) === JSON.stringify(question.correctOrder);
+            
+            const resultArea = document.getElementById('result-area');
+            resultArea.classList.remove('hidden');
+            
+            if (isCorrect) {
+                resultArea.innerHTML = `
+                    <div class="correct-animation bg-green-100 border-2 border-green-400 rounded-xl p-6">
+                        <div class="text-4xl mb-2">🎉</div>
+                        <div class="text-xl font-bold text-green-800 mb-2">太棒了！夢境完成！</div>
+                        <div class="text-green-700">你完美地排列了夢境順序！</div>
+                        <button onclick="nextQuestion()" class="mt-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-2 rounded-full font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-300">
+                            ${currentQuestionIndex < 2 ? '下一個夢境 →' : '查看結果 🏆'}
+                        </button>
+                    </div>
+                `;
+            } else {
+                resultArea.innerHTML = `
+                    <div class="bg-red-100 border-2 border-red-400 rounded-xl p-6">
+                        <div class="text-4xl mb-2">😅</div>
+                        <div class="text-xl font-bold text-red-800 mb-2">再試試看！</div>
+                        <div class="text-red-700 mb-4">夢境順序還不太對，重新閱讀故事再試一次吧！</div>
+                        <button onclick="resetQuestion()" class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-600 hover:to-pink-600 transition-all duration-300">
+                            重新排列
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 下一題
+        function nextQuestion() {
+            if (currentQuestionIndex < 2) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showCompletion();
+            }
+        }
+
+        // 重置當前題目
+        function resetQuestion() {
+            loadQuestion();
+        }
+
+        // 顯示完成頁
+        function showCompletion() {
+            document.getElementById('game-page').classList.add('hidden');
+            document.getElementById('completion-page').classList.remove('hidden');
+        }
+
+        // 重新開始遊戲
+        function restartGame() {
+            document.getElementById('completion-page').classList.add('hidden');
+            document.getElementById('question-select-page').classList.remove('hidden');
+        }
+
+        // 回到首頁
+        function backToHome() {
+            document.getElementById('completion-page').classList.add('hidden');
+            document.getElementById('cover-page').classList.remove('hidden');
+        }
+
+        // 畫筆功能
+        function toggleDrawing() {
+            drawingEnabled = !drawingEnabled;
+            const canvas = document.getElementById('drawing-canvas');
+            const btn = document.getElementById('draw-btn');
+            
+            if (drawingEnabled) {
+                canvas.style.display = 'block';
+                canvas.style.pointerEvents = 'auto';
+                btn.textContent = '🖍️ 關閉畫筆';
+                btn.classList.remove('bg-yellow-400', 'hover:bg-yellow-500');
+                btn.classList.add('bg-red-400', 'hover:bg-red-500');
+                initCanvas();
+            } else {
+                canvas.style.pointerEvents = 'none';
+                btn.textContent = '🖍️ 畫記號';
+                btn.classList.remove('bg-red-400', 'hover:bg-red-500');
+                btn.classList.add('bg-yellow-400', 'hover:bg-yellow-500');
+            }
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('drawing-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // 設置畫布大小
+            const storyContent = document.getElementById('story-content');
+            canvas.width = storyContent.offsetWidth;
+            canvas.height = storyContent.offsetHeight;
+            
+            // 設置畫筆樣式
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            // 添加事件監聽器
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            if (!drawingEnabled) return;
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function draw(e) {
+            if (!isDrawing || !drawingEnabled) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearDrawing() {
+            if (canvas && ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // 清除所有答案
+        function clearAllAnswers() {
+            // 重置答案區域
+            const answerSlots = document.querySelectorAll('.drop-zone');
+            answerSlots.forEach(slot => {
+                slot.innerHTML = slot.dataset.position == 0 ? '第一個' : 
+                                slot.dataset.position == 1 ? '第二個' : '第三個';
+                slot.classList.remove('bg-blue-100', 'border-blue-400');
+                slot.classList.add('border-gray-300');
+            });
+            
+            // 重新顯示所有卡片
+            const cards = document.querySelectorAll('.dream-card');
+            cards.forEach(card => {
+                card.style.opacity = '1';
+                card.draggable = true;
+            });
+            
+            // 重置用戶答案
+            userAnswers = [null, null, null];
+            
+            // 禁用檢查按鈕
+            document.getElementById('check-answer').disabled = true;
+            document.getElementById('result-area').classList.add('hidden');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bea7569615f201',t:'MTc1NDY1MjMzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
