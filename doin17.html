@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-🧢 科學能量帽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        @keyframes energyWave {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        @keyframes hatGlow {
+            0% { box-shadow: 0 0 20px #00f5ff, 0 0 30px #00f5ff; }
+            50% { box-shadow: 0 0 40px #00f5ff, 0 0 60px #00d4ff, 0 0 80px #00b4ff; }
+            100% { box-shadow: 0 0 20px #00f5ff, 0 0 30px #00f5ff; }
+        }
+        
+        @keyframes upgrade {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(90deg); }
+            50% { transform: scale(1.4) rotate(180deg); }
+            75% { transform: scale(1.2) rotate(270deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .energy-wave {
+            animation: energyWave 1s ease-out;
+        }
+        
+        .hat-glow {
+            animation: hatGlow 2s ease-in-out;
+        }
+        
+        .upgrade-effect {
+            animation: upgrade 2s ease-in-out;
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .futuristic-bg {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            position: relative;
+        }
+        
+        .futuristic-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(0, 245, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(83, 52, 131, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px #00f5ff, 0 0 20px #00f5ff, 0 0 30px #00f5ff;
+        }
+        
+        .tech-font {
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .energy-bar-glow {
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="futuristic-bg min-h-screen text-white relative">
+    <div class="container mx-auto px-4 py-8 pb-20 relative z-10">
+        <!-- 遊戲標題 -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold mb-2 neon-text tech-font float-animation">LST遊戲室</h1>
+            <h2 class="text-3xl text-cyan-300 tech-font mb-2">🧢 科學能量帽</h2>
+            <h3 class="text-xl text-cyan-200">《自然反應雷達》</h3>
+        </div>
+
+        <!-- 科學帽子和能量顯示 -->
+        <div class="flex justify-center items-center mb-8">
+            <div id="scienceHat" class="relative">
+                <div class="text-8xl mb-4" id="hatEmoji">🧢</div>
+                <div class="absolute inset-0 rounded-full" id="hatGlow"></div>
+            </div>
+            <div class="ml-8">
+                <div class="text-xl mb-2 tech-font text-cyan-300">能量值</div>
+                <div class="bg-gray-800 bg-opacity-50 rounded-full h-8 w-56 border border-cyan-500 p-1">
+                    <div id="energyBar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-6 rounded-full transition-all duration-500 energy-bar-glow" style="width: 0%"></div>
+                </div>
+                <div class="text-sm mt-2 tech-font text-cyan-200">
+                    <span id="currentEnergy">0</span> / <span id="maxEnergy">5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 遊戲內容區域 -->
+        <div id="gameContent" class="max-w-4xl mx-auto">
+            <!-- 開始畫面 -->
+            <div id="startScreen" class="text-center">
+                <div class="glass-card rounded-2xl p-8 mb-6">
+                    <h3 class="text-3xl font-bold mb-4 tech-font text-cyan-300 pulse-animation">🔬 準備戴上科學能量帽！</h3>
+                    <p class="text-lg mb-6 text-gray-200 leading-relaxed">你將獲得觀察自然現象的超能力，回答5道科學問題來累積能量！</p>
+                    <button id="startBtn" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-10 rounded-xl text-xl transition-all duration-300 transform hover:scale-105 tech-font shadow-lg">
+                        開始遊戲 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- 學習頁面 -->
+            <div id="learningScreen" class="hidden">
+                <div class="glass-card rounded-2xl p-8 text-center">
+                    <div class="text-6xl mb-4 float-animation" id="learningIcon">🌟</div>
+                    <h3 class="text-2xl font-bold mb-4 tech-font text-cyan-300" id="learningTitle">科學現象</h3>
+                    <p class="text-lg mb-6 text-gray-200 leading-relaxed" id="learningDescription">準備學習新的科學知識...</p>
+                    <button id="continueBtn" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 tech-font">
+                        繼續 →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 問題頁面 -->
+            <div id="questionScreen" class="hidden">
+                <div class="glass-card rounded-2xl p-8">
+                    <div class="text-center mb-6">
+                        <div class="text-sm text-cyan-300 mb-2 tech-font">第 <span id="currentQuestion">1</span> 題 / 5</div>
+                        <h3 class="text-2xl font-bold text-white" id="questionText">問題載入中...</h3>
+                    </div>
+                    
+                    <div class="space-y-4" id="optionsContainer">
+                        <!-- 選項會動態生成 -->
+                    </div>
+                    
+                    <div id="feedback" class="hidden mt-6 p-4 rounded-xl text-center glass-card">
+                        <div id="feedbackText" class="text-lg font-bold mb-2 tech-font"></div>
+                        <div id="explanationText" class="text-sm text-gray-200"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 完成畫面 -->
+            <div id="completionScreen" class="hidden text-center">
+                <div class="glass-card rounded-2xl p-8">
+                    <div class="text-6xl mb-4 float-animation">🎉</div>
+                    <h3 class="text-3xl font-bold mb-4 tech-font text-cyan-300" id="completionTitle">恭喜完成！</h3>
+                    <p class="text-lg mb-6 text-gray-200" id="completionMessage">你的科學能量帽已經充滿能量！</p>
+                    <div class="space-y-4">
+                        <button id="restartBtn" class="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 tech-font mr-4">
+                            再玩一次 🔄
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部設計師資訊 -->
+        <div class="fixed bottom-0 left-0 right-0 z-20">
+            <div class="glass-card border-t border-cyan-500 border-opacity-30 py-3">
+                <div class="container mx-auto px-4">
+                    <div class="text-center text-sm text-cyan-200 tech-font">
+                        遊戲設計與製作：呂舒婷｜
+                        <a href="#" class="text-cyan-300 hover:text-cyan-100 transition-colors">了解更多🔍</a>
+                        <br class="sm:hidden">
+                        <span class="hidden sm:inline">｜</span>
+                        臉書搜尋：呂舒婷｜
+                        <a href="mailto:luuyobi@gmail.com" class="text-cyan-300 hover:text-cyan-100 transition-colors">📧 luuyobi@gmail.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 能量波動畫效果 -->
+        <div id="energyWaveEffect" class="fixed inset-0 pointer-events-none hidden z-30">
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div class="w-32 h-32 border-4 border-cyan-400 rounded-full energy-wave"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 題庫資料
+        const questions = [
+            {
+                id: 1,
+                question: "風箏飛起來是因為？",
+                icon: "🪁",
+                learning: "空氣動力學讓風箏能夠飛翔，當風吹過風箏時會產生升力。",
+                options: [
+                    { text: "空氣動力", correct: true, explanation: "風產生升力讓風箏飛起" },
+                    { text: "蒸發", correct: false, explanation: "和風箏無關" },
+                    { text: "溶解", correct: false, explanation: "與物質溶於液體有關" }
+                ]
+            },
+            {
+                id: 2,
+                question: "水變成水蒸氣是什麼現象？",
+                icon: "💨",
+                learning: "蒸發是液體表面的分子獲得足夠能量變成氣體的過程。",
+                options: [
+                    { text: "蒸發", correct: true, explanation: "水表面分子變成氣體" },
+                    { text: "重力", correct: false, explanation: "讓物體向下的力" },
+                    { text: "摩擦", correct: false, explanation: "使物體表面產生阻力或熱" }
+                ]
+            },
+            {
+                id: 3,
+                question: "滑梯滑得快，是因為什麼小？",
+                icon: "🛝",
+                learning: "摩擦力是阻止物體相對運動的力，摩擦力越小，物體移動越快。",
+                options: [
+                    { text: "摩擦力", correct: true, explanation: "摩擦小，速度快" },
+                    { text: "重力", correct: false, explanation: "方向為向下，不是速度唯一原因" },
+                    { text: "溶解", correct: false, explanation: "和液體混合物有關" }
+                ]
+            },
+            {
+                id: 4,
+                question: "彩虹出現的原因是？",
+                icon: "🌈",
+                learning: "彩虹是陽光通過空氣中的水滴時發生折射和反射形成的光學現象。",
+                options: [
+                    { text: "光的折射與反射", correct: true, explanation: "陽光進入水滴" },
+                    { text: "蒸發", correct: false, explanation: "與水變成氣體有關" },
+                    { text: "重力", correct: false, explanation: "和光線現象無關" }
+                ]
+            },
+            {
+                id: 5,
+                question: "船能浮在水面是因為？",
+                icon: "⛵",
+                learning: "浮力是液體對浸入其中的物體產生向上的支持力。",
+                options: [
+                    { text: "浮力", correct: true, explanation: "液體對物體的向上支持力" },
+                    { text: "摩擦", correct: false, explanation: "與水流阻力不同" },
+                    { text: "蒸發", correct: false, explanation: "和氣化作用無關" }
+                ]
+            },
+            {
+                id: 6,
+                question: "腳踩滑板下坡越來越快，原因是？",
+                icon: "🛹",
+                learning: "重力是地球對物體的吸引力，會讓物體向下加速運動。",
+                options: [
+                    { text: "重力", correct: true, explanation: "將物體向下拉動" },
+                    { text: "蒸發", correct: false, explanation: "與液體氣化有關" },
+                    { text: "光反射", correct: false, explanation: "與視覺現象有關" }
+                ]
+            },
+            {
+                id: 7,
+                question: "冰塊在熱水中會變小，是因為？",
+                icon: "🧊",
+                learning: "融化是固體吸收熱量變成液體的物理變化過程。",
+                options: [
+                    { text: "融化", correct: true, explanation: "固體變液體" },
+                    { text: "蒸發", correct: false, explanation: "液體變氣體" },
+                    { text: "摩擦", correct: false, explanation: "與接觸運動有關" }
+                ]
+            },
+            {
+                id: 8,
+                question: "放在桌上的鉛筆不會動，是因為？",
+                icon: "✏️",
+                learning: "靜摩擦力能夠阻止物體開始滑動，保持物體靜止狀態。",
+                options: [
+                    { text: "摩擦力", correct: true, explanation: "阻止物體滑動" },
+                    { text: "重力", correct: false, explanation: "讓它貼在桌上，但不會阻止橫向滑動" },
+                    { text: "蒸發", correct: false, explanation: "無關" }
+                ]
+            },
+            {
+                id: 9,
+                question: "海邊潮水漲退，是因為？",
+                icon: "🌊",
+                learning: "月球的引力作用在地球的海水上，造成潮汐現象。",
+                options: [
+                    { text: "月球引力", correct: true, explanation: "引起潮汐現象" },
+                    { text: "蒸發", correct: false, explanation: "與水氣化有關" },
+                    { text: "溶解", correct: false, explanation: "和物質混合有關" }
+                ]
+            },
+            {
+                id: 10,
+                question: "糖放進水裡消失，是因為？",
+                icon: "🍯",
+                learning: "溶解是固體物質均勻分散到液體中形成溶液的過程。",
+                options: [
+                    { text: "溶解", correct: true, explanation: "物質分散到水中" },
+                    { text: "蒸發", correct: false, explanation: "氣化" },
+                    { text: "摩擦", correct: false, explanation: "阻力" }
+                ]
+            }
+        ];
+
+        // 遊戲狀態
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let energy = 0;
+        let correctAnswers = 0;
+
+        // DOM 元素
+        const startScreen = document.getElementById('startScreen');
+        const learningScreen = document.getElementById('learningScreen');
+        const questionScreen = document.getElementById('questionScreen');
+        const completionScreen = document.getElementById('completionScreen');
+        const energyBar = document.getElementById('energyBar');
+        const currentEnergySpan = document.getElementById('currentEnergy');
+        const scienceHat = document.getElementById('scienceHat');
+        const energyWaveEffect = document.getElementById('energyWaveEffect');
+
+        // 開始遊戲
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('continueBtn').addEventListener('click', showQuestion);
+        document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+        function startGame() {
+            // 隨機選擇5題
+            currentQuestions = getRandomQuestions(5);
+            currentQuestionIndex = 0;
+            energy = 0;
+            correctAnswers = 0;
+            updateEnergyDisplay();
+            
+            startScreen.classList.add('hidden');
+            showLearning();
+        }
+
+        function getRandomQuestions(count) {
+            const shuffled = [...questions].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function showLearning() {
+            const question = currentQuestions[currentQuestionIndex];
+            
+            document.getElementById('learningIcon').textContent = question.icon;
+            document.getElementById('learningTitle').textContent = '科學小知識';
+            document.getElementById('learningDescription').textContent = question.learning;
+            
+            learningScreen.classList.remove('hidden');
+            questionScreen.classList.add('hidden');
+        }
+
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionText').textContent = question.question;
+            
+            // 生成選項
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'w-full p-4 text-left glass-card hover:bg-white hover:bg-opacity-10 rounded-xl transition-all duration-300 transform hover:scale-102 border border-cyan-500 border-opacity-30 hover:border-opacity-60 tech-font text-gray-200 hover:text-white';
+                button.textContent = `${String.fromCharCode(65 + index)}. ${option.text}`;
+                button.addEventListener('click', () => selectAnswer(option, button));
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('feedback').classList.add('hidden');
+            learningScreen.classList.add('hidden');
+            questionScreen.classList.remove('hidden');
+        }
+
+        function selectAnswer(selectedOption, buttonElement) {
+            // 禁用所有按鈕
+            const buttons = document.querySelectorAll('#optionsContainer button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // 顯示反饋
+            const feedback = document.getElementById('feedback');
+            const feedbackText = document.getElementById('feedbackText');
+            const explanationText = document.getElementById('explanationText');
+            
+            if (selectedOption.correct) {
+                buttonElement.classList.add('bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'border-green-400');
+                feedbackText.textContent = '✅ 答對了！';
+                feedbackText.className = 'text-lg font-bold mb-2 text-green-300 tech-font';
+                explanationText.textContent = selectedOption.explanation;
+                
+                // 增加能量
+                energy++;
+                correctAnswers++;
+                updateEnergyDisplay();
+                showEnergyWave();
+                glowHat();
+                
+            } else {
+                buttonElement.classList.add('bg-gradient-to-r', 'from-red-500', 'to-pink-600', 'border-red-400');
+                feedbackText.textContent = '❌ 答錯了';
+                feedbackText.className = 'text-lg font-bold mb-2 text-red-300 tech-font';
+                explanationText.textContent = selectedOption.explanation;
+                
+                // 顯示正確答案
+                buttons.forEach((btn, index) => {
+                    const question = currentQuestions[currentQuestionIndex];
+                    if (question.options[index].correct) {
+                        btn.classList.add('bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'border-green-400');
+                    }
+                });
+            }
+            
+            feedback.classList.remove('hidden');
+            
+            // 2秒後繼續下一題
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < currentQuestions.length) {
+                    showLearning();
+                } else {
+                    showCompletion();
+                }
+            }, 3000);
+        }
+
+        function updateEnergyDisplay() {
+            const percentage = (energy / 5) * 100;
+            energyBar.style.width = percentage + '%';
+            currentEnergySpan.textContent = energy;
+        }
+
+        function showEnergyWave() {
+            energyWaveEffect.classList.remove('hidden');
+            setTimeout(() => {
+                energyWaveEffect.classList.add('hidden');
+            }, 1000);
+        }
+
+        function glowHat() {
+            scienceHat.classList.add('hat-glow');
+            setTimeout(() => {
+                scienceHat.classList.remove('hat-glow');
+            }, 2000);
+        }
+
+        function showCompletion() {
+            questionScreen.classList.add('hidden');
+            
+            const completionTitle = document.getElementById('completionTitle');
+            const completionMessage = document.getElementById('completionMessage');
+            
+            if (correctAnswers === 5) {
+                completionTitle.textContent = '🎉 完美！帽子升級！';
+                completionMessage.textContent = '你全部答對了！科學能量帽已經升級到最高等級！';
+                scienceHat.classList.add('upgrade-effect');
+                document.getElementById('hatEmoji').textContent = '👑';
+            } else if (correctAnswers >= 3) {
+                completionTitle.textContent = '🌟 表現不錯！';
+                completionMessage.textContent = `你答對了 ${correctAnswers} 題！科學能量帽獲得了不少能量！`;
+            } else {
+                completionTitle.textContent = '💪 繼續努力！';
+                completionMessage.textContent = `你答對了 ${correctAnswers} 題，再接再厲！`;
+            }
+            
+            completionScreen.classList.remove('hidden');
+        }
+
+        function restartGame() {
+            completionScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            scienceHat.classList.remove('upgrade-effect');
+            document.getElementById('hatEmoji').textContent = '🧢';
+            energy = 0;
+            updateEnergyDisplay();
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96beeb3eb068f20d',t:'MTc1NDY1NTExNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
