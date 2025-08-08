@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎐 詩詞風車《風中詩詞寶藏》</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #fecfef 75%, #ffd1ff 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color:rgba(255,255,255,0.1)"/><stop offset="100%" style="stop-color:rgba(255,255,255,0)"/></radialGradient></defs><g opacity="0.15"><rect x="90" y="80" width="2" height="20" fill="rgba(139,69,19,0.3)"/><g transform="translate(100,90)"><rect x="-10" y="-1" width="8" height="2" rx="1" fill="rgba(255,107,157,0.4)" transform="rotate(0)"/><rect x="-10" y="-1" width="8" height="2" rx="1" fill="rgba(255,107,157,0.4)" transform="rotate(60)"/><rect x="-10" y="-1" width="8" height="2" rx="1" fill="rgba(255,107,157,0.4)" transform="rotate(120)"/><rect x="-10" y="-1" width="8" height="2" rx="1" fill="rgba(255,107,157,0.4)" transform="rotate(180)"/><rect x="-10" y="-1" width="8" height="2" rx="1" fill="rgba(255,107,157,0.4)" transform="rotate(240)"/><rect x="-10" y="-1" width="8" height="2" rx="1" fill="rgba(255,107,157,0.4)" transform="rotate(300)"/></g></g><g opacity="0.1" transform="translate(50,150)"><rect x="90" y="80" width="1.5" height="15" fill="rgba(139,69,19,0.3)"/><g transform="translate(100,87)"><rect x="-7" y="-0.5" width="6" height="1.5" rx="0.75" fill="rgba(255,107,157,0.3)" transform="rotate(0)"/><rect x="-7" y="-0.5" width="6" height="1.5" rx="0.75" fill="rgba(255,107,157,0.3)" transform="rotate(60)"/><rect x="-7" y="-0.5" width="6" height="1.5" rx="0.75" fill="rgba(255,107,157,0.3)" transform="rotate(120)"/><rect x="-7" y="-0.5" width="6" height="1.5" rx="0.75" fill="rgba(255,107,157,0.3)" transform="rotate(180)"/><rect x="-7" y="-0.5" width="6" height="1.5" rx="0.75" fill="rgba(255,107,157,0.3)" transform="rotate(240)"/><rect x="-7" y="-0.5" width="6" height="1.5" rx="0.75" fill="rgba(255,107,157,0.3)" transform="rotate(300)"/></g></g><circle cx="20" cy="20" r="2" fill="url(%23g)"/><circle cx="180" cy="40" r="1.5" fill="url(%23g)"/><circle cx="40" cy="180" r="1" fill="url(%23g)"/><circle cx="160" cy="170" r="1.2" fill="url(%23g)"/><circle cx="10" cy="160" r="0.8" fill="url(%23g)"/></svg>') repeat;
+            animation: float-bg 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        @keyframes float-bg {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .windmill {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            margin: 0 auto;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        }
+        
+        .windmill-base {
+            width: 12px;
+            height: 100px;
+            background: linear-gradient(to bottom, #8B4513, #A0522D, #8B4513);
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            border-radius: 6px;
+            box-shadow: inset 2px 0 4px rgba(0,0,0,0.3);
+        }
+        
+        .windmill-blades {
+            width: 120px;
+            height: 120px;
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: transform 0.3s ease;
+        }
+        
+        .blade {
+            position: absolute;
+            width: 50px;
+            height: 12px;
+            background: linear-gradient(45deg, #FF6B9D, #C44569, #FF6B9D);
+            border-radius: 25px;
+            transform-origin: 60px 60px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .blade:nth-child(1) { transform: rotate(0deg); }
+        .blade:nth-child(2) { transform: rotate(60deg); }
+        .blade:nth-child(3) { transform: rotate(120deg); }
+        .blade:nth-child(4) { transform: rotate(180deg); }
+        .blade:nth-child(5) { transform: rotate(240deg); }
+        .blade:nth-child(6) { transform: rotate(300deg); }
+        
+        .spinning {
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: translateX(-50%) rotate(0deg); }
+            to { transform: translateX(-50%) rotate(360deg); }
+        }
+        
+        .petal {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(45deg, #FF6B9D, #FFB6C1, #FF8FA3);
+            border-radius: 50% 0;
+            animation: float 4s ease-out forwards;
+            opacity: 0;
+            box-shadow: 0 2px 8px rgba(255,107,157,0.4);
+        }
+        
+        @keyframes float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translateY(-50px) rotate(72deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-300px) rotate(360deg) scale(0.3);
+            }
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #FFD700, #FFA500);
+            border-radius: 50%;
+            animation: sparkle 2s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes sparkle {
+            0% {
+                opacity: 1;
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(360deg);
+            }
+        }
+        
+        .treasure-scroll {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border: 3px solid #B8860B;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 8px 25px rgba(255,215,0,0.5); }
+            to { box-shadow: 0 8px 35px rgba(255,215,0,0.8); }
+        }
+        
+        .poem-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border: 3px solid rgba(255, 107, 157, 0.3);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .poem-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .option-btn {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .option-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(255, 107, 157, 0.3);
+            border-color: rgba(255, 107, 157, 0.5);
+        }
+        
+        .option-btn:hover::before {
+            left: 100%;
+        }
+        
+        .correct {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border-color: #2E7D32;
+            animation: pulse 0.6s ease-in-out;
+        }
+        
+        .incorrect {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            border-color: #C62828;
+            animation: shake 0.6s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- 標題 -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-gray-800 mb-2 drop-shadow-lg">LST遊戲室-🎐 詩詞風車</h1>
+            <h2 class="text-3xl text-gray-700 drop-shadow-md">《風中詩詞寶藏》</h2>
+        </div>
+        
+        <!-- 風車 -->
+        <div class="windmill mb-8" id="windmill">
+            <div class="windmill-base"></div>
+            <div class="windmill-blades" id="windmill-blades">
+                <div class="blade"></div>
+                <div class="blade"></div>
+                <div class="blade"></div>
+                <div class="blade"></div>
+                <div class="blade"></div>
+                <div class="blade"></div>
+            </div>
+        </div>
+        
+        <!-- 遊戲狀態 -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center space-x-6 bg-white bg-opacity-25 rounded-full px-8 py-4 backdrop-blur-md border border-white border-opacity-30">
+                <span class="text-gray-800 font-semibold text-xl">題目 <span id="current-question">1</span>/5</span>
+                <div class="w-px h-6 bg-white bg-opacity-50"></div>
+                <span class="text-gray-800 font-semibold text-xl">得分 <span id="score">0</span></span>
+                <div class="w-px h-6 bg-white bg-opacity-50"></div>
+                <div class="flex space-x-1">
+                    <div id="heart1" class="text-2xl transition-all duration-300">💖</div>
+                    <div id="heart2" class="text-2xl transition-all duration-300">💖</div>
+                    <div id="heart3" class="text-2xl transition-all duration-300">💖</div>
+                </div>
+            </div>
+            <!-- 進度條 -->
+            <div class="mt-4 max-w-md mx-auto">
+                <div class="bg-white bg-opacity-20 rounded-full h-3 backdrop-blur-sm">
+                    <div id="progress-bar" class="bg-gradient-to-r from-pink-400 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out" style="width: 20%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 遊戲區域 -->
+        <div id="game-area">
+            <!-- 開始畫面 -->
+            <div id="start-screen" class="poem-card p-8 text-center">
+                <h3 class="text-3xl font-bold text-gray-800 mb-4">歡迎來到詩詞風車！</h3>
+                <p class="text-xl text-gray-600 mb-6">在這裡你將學習中國古典詩詞，完成填空題目，讓風車為你轉動出美麗的詩詞花瓣！</p>
+                <button onclick="startGame()" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 text-lg">
+                    🌸 開始遊戲
+                </button>
+                
+                <!-- 底部資訊 -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <p class="text-lg text-gray-700 mb-2">遊戲設計與製作：呂舒婷｜了解更多🔍</p>
+                    <p class="text-lg text-gray-600">臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+                </div>
+            </div>
+            
+            <!-- 題目區域 -->
+            <div id="question-area" class="poem-card p-8 hidden">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2" id="question-title">詩句填空</h3>
+                    <p class="text-3xl text-gray-700 font-semibold" id="question-text"></p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="options-container">
+                    <!-- 選項將由 JavaScript 生成 -->
+                </div>
+                
+                <div id="feedback" class="text-center hidden">
+                    <p id="feedback-text" class="text-xl font-semibold mb-4"></p>
+                    <p id="explanation" class="text-gray-600 mb-4 text-lg"></p>
+                    <button onclick="nextQuestion()" class="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-full font-semibold hover:from-green-600 hover:to-blue-600 transition-all duration-300 text-lg">
+                        下一題 →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 結果畫面 -->
+            <div id="result-screen" class="poem-card p-8 text-center hidden">
+                <h3 class="text-3xl font-bold text-gray-800 mb-4" id="result-title"></h3>
+                <p class="text-xl text-gray-600 mb-6" id="result-message"></p>
+                <div id="treasure-scroll" class="hidden treasure-scroll p-6 mb-6">
+                    <h4 class="text-2xl font-bold text-gray-800 mb-2">🏆 詩詞寶藏卷</h4>
+                    <p class="text-gray-700 text-lg">恭喜你獲得了詩詞大師的認證！</p>
+                </div>
+                <button onclick="restartGame()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 text-lg">
+                    🔄 再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 題庫
+        const questions = [
+            {
+                question: "床前明月光，______。",
+                options: ["風吹柳萬條", "疑是地上霜", "白日依山盡"],
+                correct: 1,
+                explanation: "形容月光如霜，描寫晚上的寧靜景象",
+                meaning: "描寫時間 → 晚上"
+            },
+            {
+                question: "白日依山盡，______。",
+                options: ["疑是地上霜", "黃河入海流", "兩岸猿聲啼"],
+                correct: 1,
+                explanation: "壯闊景象，表現大自然的雄偉",
+                meaning: "表現 → 壯闊景色"
+            },
+            {
+                question: "兩岸猿聲啼不住，______。",
+                options: ["風吹柳萬條", "黃河入海流", "輕舟已過萬重山"],
+                correct: 2,
+                explanation: "表現水流湍急，船行迅速",
+                meaning: "描寫 → 船行迅速"
+            },
+            {
+                question: "春眠不覺曉，______。",
+                options: ["處處聞啼鳥", "輕舟已過萬重山", "疑是地上霜"],
+                correct: 0,
+                explanation: "清晨鳥鳴，春天的美好時光",
+                meaning: "時間 → 春天清晨"
+            },
+            {
+                question: "千山鳥飛絕，______。",
+                options: ["處處聞啼鳥", "萬徑人蹤滅", "黃河入海流"],
+                correct: 1,
+                explanation: "大雪封山，萬物寂靜",
+                meaning: "描寫 → 冬日雪景"
+            },
+            {
+                question: "日照香爐生紫煙，______。",
+                options: ["輕舟已過萬重山", "風吹柳萬條", "遙看瀑布掛前川"],
+                correct: 2,
+                explanation: "壯麗瀑布景象，山水之美",
+                meaning: "描寫 → 山水壯觀"
+            },
+            {
+                question: "離離原上草，______。",
+                options: ["風吹柳萬條", "一歲一枯榮", "疑是地上霜"],
+                correct: 1,
+                explanation: "草木榮枯循環，時光流逝",
+                meaning: "象徵 → 時光流逝"
+            },
+            {
+                question: "碧玉妝成一樹高，______。",
+                options: ["萬條垂下綠絲絛", "一歲一枯榮", "遙看瀑布掛前川"],
+                correct: 0,
+                explanation: "春柳新綠，生機盎然",
+                meaning: "描寫 → 春柳生機"
+            },
+            {
+                question: "黑雲壓城城欲摧，______。",
+                options: ["黃河入海流", "甲光向日金鱗開", "處處聞啼鳥"],
+                correct: 1,
+                explanation: "戰爭氣氛，緊張激烈的場面",
+                meaning: "描寫 → 戰爭場景"
+            },
+            {
+                question: "孤帆遠影碧空盡，______。",
+                options: ["萬條垂下綠絲絛", "疑是地上霜", "惟見長江天際流"],
+                correct: 2,
+                explanation: "表現遼闊，江水無邊",
+                meaning: "描寫 → 江水遼闊"
+            }
+        ];
+        
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+        let lives = 3;
+        let combo = 0;
+        
+        function startGame() {
+            // 隨機選擇5題
+            currentQuestions = shuffleArray([...questions]).slice(0, 5);
+            currentQuestionIndex = 0;
+            score = 0;
+            answered = false;
+            lives = 3;
+            combo = 0;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('question-area').classList.remove('hidden');
+            document.getElementById('current-question').textContent = '1';
+            document.getElementById('score').textContent = '0';
+            updateHearts();
+            updateProgressBar();
+            
+            showQuestion();
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            document.getElementById('question-text').textContent = question.question;
+            document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 p-5 rounded-lg font-semibold hover:from-gray-200 hover:to-gray-300 text-xl';
+                button.textContent = option;
+                button.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('feedback').classList.add('hidden');
+            answered = false;
+        }
+        
+        function selectAnswer(selectedIndex) {
+            if (answered) return;
+            answered = true;
+            
+            const question = currentQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option-btn');
+            
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+                option.style.pointerEvents = 'none';
+            });
+            
+            const isCorrect = selectedIndex === question.correct;
+            if (isCorrect) {
+                score++;
+                combo++;
+                document.getElementById('score').textContent = score;
+                spinWindmill();
+                createPetals();
+                createSparkles();
+                
+                let message = '🎉 答對了！';
+                if (combo >= 3) message += ` 連續答對 ${combo} 題！太棒了！`;
+                
+                document.getElementById('feedback-text').textContent = message;
+                document.getElementById('feedback-text').className = 'text-xl font-semibold mb-4 text-green-600';
+            } else {
+                lives--;
+                combo = 0;
+                updateHearts();
+                
+                if (lives <= 0) {
+                    document.getElementById('feedback-text').textContent = '💔 生命值用完了！遊戲結束！';
+                    document.getElementById('feedback-text').className = 'text-xl font-semibold mb-4 text-red-600';
+                } else {
+                    document.getElementById('feedback-text').textContent = `❌ 答錯了！還有 ${lives} 次機會！`;
+                    document.getElementById('feedback-text').className = 'text-xl font-semibold mb-4 text-red-600';
+                }
+            }
+            
+            updateProgressBar();
+            document.getElementById('explanation').textContent = `${question.explanation} (${question.meaning})`;
+            document.getElementById('feedback').classList.remove('hidden');
+        }
+        
+        function spinWindmill() {
+            const blades = document.getElementById('windmill-blades');
+            blades.classList.add('spinning');
+            setTimeout(() => {
+                blades.classList.remove('spinning');
+            }, 2000);
+        }
+        
+        function createPetals() {
+            const windmill = document.getElementById('windmill');
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => {
+                    const petal = document.createElement('div');
+                    petal.className = 'petal';
+                    petal.style.left = (Math.random() * 120 - 10) + 'px';
+                    petal.style.top = '75px';
+                    petal.style.background = `linear-gradient(45deg, hsl(${Math.random() * 60 + 300}, 70%, 70%), hsl(${Math.random() * 60 + 300}, 70%, 80%))`;
+                    windmill.appendChild(petal);
+                    
+                    setTimeout(() => {
+                        petal.remove();
+                    }, 4000);
+                }, i * 150);
+            }
+        }
+        
+        function createSparkles() {
+            const windmill = document.getElementById('windmill');
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.style.left = (Math.random() * 100) + 'px';
+                    sparkle.style.top = (Math.random() * 100) + 'px';
+                    windmill.appendChild(sparkle);
+                    
+                    setTimeout(() => {
+                        sparkle.remove();
+                    }, 2000);
+                }, i * 100);
+            }
+        }
+        
+        function updateHearts() {
+            for (let i = 1; i <= 3; i++) {
+                const heart = document.getElementById(`heart${i}`);
+                if (i <= lives) {
+                    heart.textContent = '💖';
+                    heart.style.transform = 'scale(1)';
+                    heart.style.opacity = '1';
+                } else {
+                    heart.textContent = '🖤';
+                    heart.style.transform = 'scale(0.8)';
+                    heart.style.opacity = '0.5';
+                }
+            }
+        }
+        
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / 5) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+        }
+        
+        function nextQuestion() {
+            if (lives <= 0) {
+                showResult();
+                return;
+            }
+            
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+        
+        function showResult() {
+            document.getElementById('question-area').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const resultTitle = document.getElementById('result-title');
+            const resultMessage = document.getElementById('result-message');
+            const treasureScroll = document.getElementById('treasure-scroll');
+            
+            if (lives <= 0) {
+                resultTitle.textContent = '💔 遊戲結束';
+                resultMessage.textContent = `生命值用完了！你答對了 ${score} 題，再接再厲！`;
+            } else if (score === 5) {
+                resultTitle.textContent = '🏆 完美表現！';
+                resultMessage.textContent = '你答對了所有題目！真是詩詞大師！';
+                treasureScroll.classList.remove('hidden');
+                createCelebration();
+            } else if (score >= 4) {
+                resultTitle.textContent = '🌟 表現卓越！';
+                resultMessage.textContent = `你答對了 ${score} 題，幾乎完美！`;
+            } else if (score >= 3) {
+                resultTitle.textContent = '👏 表現優秀！';
+                resultMessage.textContent = `你答對了 ${score} 題，繼續努力學習詩詞吧！`;
+            } else {
+                resultTitle.textContent = '📚 繼續加油！';
+                resultMessage.textContent = `你答對了 ${score} 題，多讀詩詞會讓你更進步！`;
+            }
+        }
+        
+        function createCelebration() {
+            const body = document.body;
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-10px';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.animation = 'float 3s ease-out forwards';
+                    confetti.style.zIndex = '1000';
+                    body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 100);
+            }
+        }
+        
+        function restartGame() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96beed58452bf1cc',t:'MTc1NDY1NTIwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
