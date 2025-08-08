@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-🔭《歷史望遠鏡》</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .telescope-animation {
+            animation: telescope-glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes telescope-glow {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            100% { transform: scale(1.05) rotate(2deg); filter: brightness(1.2); }
+        }
+        
+        .drag-item {
+            transition: all 0.3s ease;
+            cursor: grab;
+        }
+        
+        .drag-item:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+        
+        .drop-zone {
+            transition: all 0.3s ease;
+            border: 2px dashed transparent;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .success-animation {
+            animation: success-bounce 0.6s ease-out;
+        }
+        
+        @keyframes success-bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .celebration {
+            animation: celebration 1s ease-out;
+        }
+        
+        @keyframes celebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(5deg); }
+            50% { transform: scale(1.1) rotate(-5deg); }
+            75% { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .sparkle {
+            animation: sparkle 0.8s ease-out;
+        }
+        
+        @keyframes sparkle {
+            0% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+        
+        .completed-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-400 via-pink-400 to-blue-500 min-h-screen">
+    <!-- 遊戲容器 -->
+    <div id="gameContainer" class="container mx-auto px-4 py-8 max-w-6xl">
+        
+        <!-- 第一頁：遊戲簡介 -->
+        <div id="introPage" class="text-center fade-in">
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                <div class="telescope-animation text-8xl mb-6">🔭</div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">LST遊戲室-《歷史望遠鏡》</h1>
+                <h2 class="text-2xl font-medium text-purple-600 mb-6">時代追追追：生活演化篇</h2>
+                <p class="text-lg text-gray-700 mb-8 leading-relaxed max-w-2xl mx-auto">
+                    歡迎來到《時代追追追》！這是一場物品演化大挑戰，<br>
+                    請使用歷史望遠鏡，照出正確的時間順序，完成任務吧！
+                </p>
+                <button onclick="showCategoryPage()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                    🎮 開始遊戲
+                </button>
+                
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-sm text-gray-600">
+                        遊戲設計與製作：呂舒婷｜<a href="#" class="text-purple-600 hover:text-purple-800 transition-colors">了解更多🔍</a>
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">
+                        臉書搜尋：呂舒婷｜📧 <a href="mailto:luuyobi@gmail.com" class="text-purple-600 hover:text-purple-800 transition-colors">luuyobi@gmail.com</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二頁：主題選擇 -->
+        <div id="categoryPage" class="hidden fade-in">
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">選擇你的挑戰主題</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="categoryGrid">
+                    
+                    <div class="category-card bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-6 text-white cursor-pointer relative" onclick="showLearningPage('transport')" data-category="transport">
+                        <div class="text-5xl mb-4">🚗</div>
+                        <h3 class="text-xl font-semibold mb-2">交通工具演進</h3>
+                        <p class="text-blue-100">飛天跑地變變變</p>
+                    </div>
+                    
+                    <div class="category-card bg-gradient-to-br from-pink-400 to-pink-600 rounded-2xl p-6 text-white cursor-pointer relative" onclick="showLearningPage('clothing')" data-category="clothing">
+                        <div class="text-5xl mb-4">👗</div>
+                        <h3 class="text-xl font-semibold mb-2">衣著演變</h3>
+                        <p class="text-pink-100">衣起變身秀</p>
+                    </div>
+                    
+                    <div class="category-card bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-6 text-white cursor-pointer relative" onclick="showLearningPage('communication')" data-category="communication">
+                        <div class="text-5xl mb-4">📱</div>
+                        <h3 class="text-xl font-semibold mb-2">通訊工具</h3>
+                        <p class="text-green-100">聲聲不息傳心意</p>
+                    </div>
+                    
+                    <div class="category-card bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-6 text-white cursor-pointer relative" onclick="showLearningPage('writing')" data-category="writing">
+                        <div class="text-5xl mb-4">✏️</div>
+                        <h3 class="text-xl font-semibold mb-2">書寫工具</h3>
+                        <p class="text-yellow-100">一筆寫千年</p>
+                    </div>
+                    
+                    <div class="category-card bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-6 text-white cursor-pointer relative" onclick="showLearningPage('lighting')" data-category="lighting">
+                        <div class="text-5xl mb-4">💡</div>
+                        <h3 class="text-xl font-semibold mb-2">照明工具</h3>
+                        <p class="text-purple-100">黑夜變光明</p>
+                    </div>
+                    
+                    <div class="category-card bg-gradient-to-br from-red-400 to-red-600 rounded-2xl p-6 text-white cursor-pointer relative" onclick="showLearningPage('photography')" data-category="photography">
+                        <div class="text-5xl mb-4">📷</div>
+                        <h3 class="text-xl font-semibold mb-2">照相工具</h3>
+                        <p class="text-red-100">咔嚓演化史</p>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8">
+                    <button onclick="showIntroPage()" class="bg-gray-500 text-white px-6 py-3 rounded-full hover:bg-gray-600 transition-colors">
+                        ← 返回首頁
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三頁：學習頁 -->
+        <div id="learningPage" class="hidden fade-in">
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                <h2 id="learningTitle" class="text-3xl font-bold text-center text-gray-800 mb-8"></h2>
+                <div id="learningContent" class="text-center mb-8">
+                    <!-- 動態內容將在這裡顯示 -->
+                </div>
+                <div class="text-center">
+                    <button id="startGameBtn" class="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-green-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                        🎯 開始挑戰
+                    </button>
+                    <button onclick="showCategoryPage()" class="ml-4 bg-gray-500 text-white px-6 py-3 rounded-full hover:bg-gray-600 transition-colors">
+                        ← 返回選擇
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第四頁：任務頁 -->
+        <div id="gamePage" class="hidden fade-in">
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 id="gameTitle" class="text-3xl font-bold text-gray-800"></h2>
+                    <div class="text-right">
+                        <div id="questionCounter" class="text-lg font-semibold text-purple-600"></div>
+                        <div id="score" class="text-sm text-gray-600">得分: 0</div>
+                    </div>
+                </div>
+                
+                <div id="gameContent">
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">請將物品按照時代順序排列（從古到今）：</h3>
+                        
+                        <!-- 拖曳物品區域 -->
+                        <div id="dragItems" class="flex flex-wrap justify-center gap-4 mb-8 p-6 bg-gray-50 rounded-2xl">
+                            <!-- 動態生成拖曳物品 -->
+                        </div>
+                        
+                        <!-- 放置區域 -->
+                        <div id="dropZones" class="flex justify-center gap-4 mb-8">
+                            <!-- 動態生成放置區域 -->
+                        </div>
+                        
+                        <div class="text-center">
+                            <button id="checkAnswer" class="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition-colors mr-4" onclick="checkAnswer()">
+                                ✅ 檢查答案
+                            </button>
+                            <button id="resetGame" class="bg-yellow-500 text-white px-6 py-3 rounded-full hover:bg-yellow-600 transition-colors mr-4" onclick="resetCurrentQuestion()">
+                                🔄 重新排列
+                            </button>
+                            <button onclick="showCategoryPage()" class="bg-gray-500 text-white px-6 py-3 rounded-full hover:bg-gray-600 transition-colors">
+                                ← 返回選擇
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 完成頁 -->
+        <div id="completePage" class="hidden fade-in">
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl text-center">
+                <div class="text-8xl mb-6">🏆</div>
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">恭喜完成！</h2>
+                <p id="completionMessage" class="text-xl text-gray-700 mb-6"></p>
+                <div id="badge" class="text-6xl mb-6"></div>
+                <div class="space-x-4">
+                    <button onclick="showCategoryPage()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                        🎮 選擇其他主題
+                    </button>
+                    <button onclick="showIntroPage()" class="bg-gray-500 text-white px-6 py-3 rounded-full hover:bg-gray-600 transition-colors">
+                        🏠 返回首頁
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲數據
+        const gameData = {
+            transport: {
+                title: "交通工具演進",
+                subtitle: "飛天跑地變變變",
+                badge: "🚗",
+                questions: [
+                    {
+                        items: [
+                            { name: "馬車", emoji: "🐎", order: 1 },
+                            { name: "火車", emoji: "🚂", order: 2 },
+                            { name: "汽車", emoji: "🚗", order: 3 }
+                        ]
+                    },
+                    {
+                        items: [
+                            { name: "熱氣球", emoji: "🎈", order: 1 },
+                            { name: "飛機", emoji: "✈️", order: 2 },
+                            { name: "高鐵", emoji: "🚄", order: 3 }
+                        ]
+                    }
+                ]
+            },
+            clothing: {
+                title: "衣著演變",
+                subtitle: "衣起變身秀",
+                badge: "👗",
+                questions: [
+                    {
+                        items: [
+                            { name: "清朝長袍", emoji: "🥻", order: 1 },
+                            { name: "民初洋裝", emoji: "👗", order: 2 },
+                            { name: "現代連帽外套", emoji: "🧥", order: 3 }
+                        ]
+                    },
+                    {
+                        items: [
+                            { name: "古代草鞋", emoji: "🥿", order: 1 },
+                            { name: "黑皮鞋", emoji: "👞", order: 2 },
+                            { name: "運動鞋", emoji: "👟", order: 3 }
+                        ]
+                    }
+                ]
+            },
+            communication: {
+                title: "通訊工具",
+                subtitle: "聲聲不息傳心意",
+                badge: "📱",
+                questions: [
+                    {
+                        items: [
+                            { name: "書信", emoji: "✉️", order: 1 },
+                            { name: "電話", emoji: "☎️", order: 2 },
+                            { name: "手機", emoji: "📱", order: 3 }
+                        ]
+                    },
+                    {
+                        items: [
+                            { name: "口信", emoji: "🗣️", order: 1 },
+                            { name: "電報", emoji: "📠", order: 2 },
+                            { name: "Line", emoji: "💬", order: 3 }
+                        ]
+                    }
+                ]
+            },
+            writing: {
+                title: "書寫工具",
+                subtitle: "一筆寫千年",
+                badge: "✏️",
+                questions: [
+                    {
+                        items: [
+                            { name: "竹簡", emoji: "🎋", order: 1 },
+                            { name: "毛筆", emoji: "🖌️", order: 2 },
+                            { name: "鋼筆", emoji: "🖋️", order: 3 }
+                        ]
+                    },
+                    {
+                        items: [
+                            { name: "鋼筆", emoji: "🖋️", order: 1 },
+                            { name: "原子筆", emoji: "🖊️", order: 2 },
+                            { name: "筆電打字", emoji: "💻", order: 3 }
+                        ]
+                    }
+                ]
+            },
+            lighting: {
+                title: "照明工具",
+                subtitle: "黑夜變光明",
+                badge: "💡",
+                questions: [
+                    {
+                        items: [
+                            { name: "火把", emoji: "🔥", order: 1 },
+                            { name: "油燈", emoji: "🪔", order: 2 },
+                            { name: "LED燈", emoji: "💡", order: 3 }
+                        ]
+                    },
+                    {
+                        items: [
+                            { name: "火堆", emoji: "🔥", order: 1 },
+                            { name: "蠟燭", emoji: "🕯️", order: 2 },
+                            { name: "手電筒", emoji: "🔦", order: 3 }
+                        ]
+                    }
+                ]
+            },
+            photography: {
+                title: "照相工具",
+                subtitle: "咔嚓演化史",
+                badge: "📷",
+                questions: [
+                    {
+                        items: [
+                            { name: "黑白相機", emoji: "📷", order: 1 },
+                            { name: "拍立得", emoji: "📸", order: 2 },
+                            { name: "手機相機", emoji: "📱", order: 3 }
+                        ]
+                    },
+                    {
+                        items: [
+                            { name: "大型相機", emoji: "📷", order: 1 },
+                            { name: "數位相機", emoji: "📸", order: 2 },
+                            { name: "自拍棒", emoji: "🤳", order: 3 }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        let currentCategory = '';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let draggedElement = null;
+        let completedCategories = JSON.parse(localStorage.getItem('completedCategories') || '[]');
+
+        // 頁面切換函數
+        function showIntroPage() {
+            hideAllPages();
+            document.getElementById('introPage').classList.remove('hidden');
+        }
+
+        function showCategoryPage() {
+            hideAllPages();
+            document.getElementById('categoryPage').classList.remove('hidden');
+            updateCompletionBadges();
+        }
+        
+        function updateCompletionBadges() {
+            const categoryCards = document.querySelectorAll('.category-card');
+            categoryCards.forEach(card => {
+                const category = card.dataset.category;
+                const existingBadge = card.querySelector('.completed-badge');
+                
+                if (completedCategories.includes(category)) {
+                    if (!existingBadge) {
+                        const badge = document.createElement('div');
+                        badge.className = 'completed-badge';
+                        badge.innerHTML = '✓';
+                        card.appendChild(badge);
+                    }
+                } else if (existingBadge) {
+                    existingBadge.remove();
+                }
+            });
+        }
+
+        function showLearningPage(category) {
+            currentCategory = category;
+            const data = gameData[category];
+            
+            hideAllPages();
+            document.getElementById('learningPage').classList.remove('hidden');
+            document.getElementById('learningTitle').textContent = data.title;
+            
+            // 顯示學習內容
+            const learningContent = document.getElementById('learningContent');
+            learningContent.innerHTML = `
+                <div class="text-6xl mb-6">${data.badge}</div>
+                <h3 class="text-2xl font-semibold text-gray-700 mb-4">${data.subtitle}</h3>
+                <p class="text-lg text-gray-600 mb-6">觀察這些物品的演進過程，了解科技如何改變我們的生活！</p>
+                <div class="flex justify-center items-center space-x-8 text-4xl">
+                    ${data.questions[0].items.map(item => item.emoji).join(' → ')}
+                </div>
+            `;
+            
+            document.getElementById('startGameBtn').onclick = () => startGame(category);
+        }
+
+        function startGame(category) {
+            currentCategory = category;
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            hideAllPages();
+            document.getElementById('gamePage').classList.remove('hidden');
+            document.getElementById('gameTitle').textContent = gameData[category].title;
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const data = gameData[currentCategory];
+            const question = data.questions[currentQuestionIndex];
+            
+            document.getElementById('questionCounter').textContent = 
+                `第 ${currentQuestionIndex + 1} 題 / ${data.questions.length} 題`;
+            document.getElementById('score').textContent = `得分: ${score}`;
+            
+            // 創建拖曳物品
+            const dragItems = document.getElementById('dragItems');
+            dragItems.innerHTML = '';
+            
+            // 隨機打亂順序
+            const shuffledItems = [...question.items].sort(() => Math.random() - 0.5);
+            
+            shuffledItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'drag-item bg-white rounded-2xl p-4 shadow-lg border-2 border-gray-200 text-center min-w-[120px]';
+                itemDiv.draggable = true;
+                itemDiv.dataset.order = item.order;
+                itemDiv.innerHTML = `
+                    <div class="text-4xl mb-2">${item.emoji}</div>
+                    <div class="text-sm font-medium text-gray-700">${item.name}</div>
+                `;
+                
+                itemDiv.addEventListener('dragstart', handleDragStart);
+                itemDiv.addEventListener('dragend', handleDragEnd);
+                
+                dragItems.appendChild(itemDiv);
+            });
+            
+            // 創建放置區域
+            const dropZones = document.getElementById('dropZones');
+            dropZones.innerHTML = '';
+            
+            for (let i = 1; i <= question.items.length; i++) {
+                const dropZone = document.createElement('div');
+                dropZone.className = 'drop-zone bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl p-6 min-w-[140px] min-h-[120px] flex flex-col items-center justify-center';
+                dropZone.dataset.position = i;
+                dropZone.innerHTML = `
+                    <div class="text-2xl text-gray-400 mb-2">${i}</div>
+                    <div class="text-sm text-gray-500">拖曳到這裡</div>
+                `;
+                
+                dropZone.addEventListener('dragover', handleDragOver);
+                dropZone.addEventListener('drop', handleDrop);
+                dropZone.addEventListener('dragenter', handleDragEnter);
+                dropZone.addEventListener('dragleave', handleDragLeave);
+                
+                dropZones.appendChild(dropZone);
+            }
+        }
+
+        function hideAllPages() {
+            const pages = ['introPage', 'categoryPage', 'learningPage', 'gamePage', 'completePage'];
+            pages.forEach(pageId => {
+                document.getElementById(pageId).classList.add('hidden');
+            });
+        }
+
+        // 拖拽事件處理
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.style.opacity = '0.5';
+        }
+
+        function handleDragEnd(e) {
+            e.target.style.opacity = '1';
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            if (dropZone && draggedElement) {
+                dropZone.classList.remove('drag-over');
+                
+                // 如果放置區域已有物品，將其移回原處
+                const existingItem = dropZone.querySelector('.drag-item');
+                if (existingItem) {
+                    document.getElementById('dragItems').appendChild(existingItem);
+                }
+                
+                // 將拖曳的物品放入放置區域
+                dropZone.innerHTML = '';
+                dropZone.appendChild(draggedElement);
+                draggedElement.classList.remove('drag-item');
+                draggedElement.classList.add('dropped-item');
+            }
+        }
+
+        function checkAnswer() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let correct = true;
+            let answers = [];
+            
+            dropZones.forEach((zone, index) => {
+                const item = zone.querySelector('.dropped-item');
+                if (item) {
+                    const expectedOrder = index + 1;
+                    const actualOrder = parseInt(item.dataset.order);
+                    answers.push(actualOrder);
+                    
+                    if (actualOrder !== expectedOrder) {
+                        correct = false;
+                        zone.classList.add('bg-red-100', 'border-red-300');
+                    } else {
+                        zone.classList.add('bg-green-100', 'border-green-300');
+                    }
+                } else {
+                    correct = false;
+                    zone.classList.add('bg-red-100', 'border-red-300');
+                }
+            });
+            
+            setTimeout(() => {
+                if (correct) {
+                    score += 100;
+                    showSuccessMessage();
+                } else {
+                    showErrorMessage();
+                }
+            }, 1000);
+        }
+
+        function showSuccessMessage() {
+            // 創建慶祝效果
+            createCelebrationEffect();
+            
+            // 顯示成功訊息
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50';
+            successDiv.innerHTML = `
+                <div class="bg-white rounded-3xl p-8 text-center celebration shadow-2xl max-w-md mx-4">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="text-2xl font-bold text-green-600 mb-2">望遠鏡修復成功！</h3>
+                    <p class="text-lg text-gray-700 mb-4">時間順序完全正確！</p>
+                    <div class="text-3xl text-yellow-500">⭐ +100 分 ⭐</div>
+                </div>
+            `;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                document.body.removeChild(successDiv);
+                
+                currentQuestionIndex++;
+                const data = gameData[currentCategory];
+                
+                if (currentQuestionIndex >= data.questions.length) {
+                    // 標記為已完成
+                    if (!completedCategories.includes(currentCategory)) {
+                        completedCategories.push(currentCategory);
+                        localStorage.setItem('completedCategories', JSON.stringify(completedCategories));
+                    }
+                    showCompletePage();
+                } else {
+                    loadQuestion();
+                }
+            }, 2500);
+        }
+        
+        function createCelebrationEffect() {
+            // 創建閃爍星星效果
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'fixed text-4xl sparkle pointer-events-none z-40';
+                    sparkle.innerHTML = '✨';
+                    sparkle.style.left = Math.random() * window.innerWidth + 'px';
+                    sparkle.style.top = Math.random() * window.innerHeight + 'px';
+                    document.body.appendChild(sparkle);
+                    
+                    setTimeout(() => {
+                        if (document.body.contains(sparkle)) {
+                            document.body.removeChild(sparkle);
+                        }
+                    }, 800);
+                }, i * 100);
+            }
+        }
+
+        function showErrorMessage() {
+            alert('❌ 歷史混亂啦！再來一次！');
+            setTimeout(() => {
+                resetCurrentQuestion();
+            }, 1000);
+        }
+
+        function resetCurrentQuestion() {
+            // 清除所有樣式
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                zone.classList.remove('bg-red-100', 'border-red-300', 'bg-green-100', 'border-green-300');
+                const item = zone.querySelector('.dropped-item');
+                if (item) {
+                    item.classList.remove('dropped-item');
+                    item.classList.add('drag-item');
+                    document.getElementById('dragItems').appendChild(item);
+                }
+            });
+            
+            loadQuestion();
+        }
+
+        function showCompletePage() {
+            const data = gameData[currentCategory];
+            
+            hideAllPages();
+            document.getElementById('completePage').classList.remove('hidden');
+            document.getElementById('completionMessage').textContent = 
+                `你完成了「${data.title}」的所有挑戰！總得分：${score} 分`;
+            document.getElementById('badge').textContent = data.badge;
+        }
+
+        // 初始化遊戲
+        showIntroPage();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96beb06975c9f209',t:'MTc1NDY1MjcwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
