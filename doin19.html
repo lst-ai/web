@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LST遊戲室-英語魔法書</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .magic-glow {
+            animation: magicGlow 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+        }
+        
+        @keyframes magicGlow {
+            from { box-shadow: 0 0 20px rgba(147, 51, 234, 0.5); }
+            to { box-shadow: 0 0 30px rgba(147, 51, 234, 0.8); }
+        }
+        
+        .sparkle {
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.1) rotate(180deg); opacity: 0.8; }
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .word-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .word-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .draggable {
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+        
+        .draggable:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        
+        .drop-zone {
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.drag-over {
+            background-color: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            transform: scale(1.02);
+        }
+        
+        .success-animation {
+            animation: successPulse 0.8s ease-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background-color: rgba(34, 197, 94, 0.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .error-shake {
+            animation: errorShake 0.5s ease-in-out;
+        }
+        
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <!-- Home Page -->
+    <div id="homePage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="text-center max-w-2xl mx-auto">
+            <div class="magic-glow bg-white rounded-3xl p-8 mb-8">
+                <div class="text-6xl mb-4 sparkle">📖</div>
+                <h1 class="text-4xl font-bold text-purple-800 mb-4">LST遊戲室-英語魔法書</h1>
+                <h2 class="text-2xl font-semibold text-blue-700 mb-6">《魔法單字陣》</h2>
+                
+                <div class="bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-6 mb-6">
+                    <p class="text-lg text-gray-700 mb-4">「你發現了一本閃著光的英語魔法書！」</p>
+                    <p class="text-base text-gray-600 mb-4">透過互動學習和挑戰遊戲，掌握神奇的單字魔法。</p>
+                    <p class="text-lg font-semibold text-purple-700">準備好來一場單字挑戰了嗎？</p>
+                </div>
+                
+                <div class="text-sm text-gray-500 mb-6">
+                    <p>🎯 學習主題：字母與發音（Phonics）、主題單字認讀、拼字與單字配對</p>
+                    <p>👦 適合年級：國小中年級（小三～小五）</p>
+                </div>
+                
+                <button onclick="showModeSelection()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-lg mb-6">
+                    🟢 開始遊戲
+                </button>
+                
+                <div class="text-sm text-gray-500 border-t pt-4">
+                    <p class="mb-1">遊戲設計與製作：呂舒婷｜了解更多🔍</p>
+                    <p>臉書搜尋：呂舒婷｜📧 luuyobi@gmail.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Selection Page -->
+    <div id="modeSelection" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-bold text-white mb-8 sparkle">選擇你的魔法挑戰</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Fruits Mode -->
+                <div class="word-card bg-white rounded-3xl p-6 shadow-xl" onclick="startMode('fruits')">
+                    <div class="text-6xl mb-4">🍓</div>
+                    <h3 class="text-2xl font-bold text-red-600 mb-2">水果魔法圈</h3>
+                    <p class="text-gray-600 mb-4">apple, banana, grape, mango, orange</p>
+                    <div class="bg-red-100 rounded-full py-2 px-4 text-red-700 font-semibold">
+                        點擊開始挑戰
+                    </div>
+                </div>
+                
+                <!-- Food Mode -->
+                <div class="word-card bg-white rounded-3xl p-6 shadow-xl" onclick="startMode('food')">
+                    <div class="text-6xl mb-4">🍕</div>
+                    <h3 class="text-2xl font-bold text-orange-600 mb-2">食物魔法陣</h3>
+                    <p class="text-gray-600 mb-4">cake, bread, rice, cheese, juice</p>
+                    <div class="bg-orange-100 rounded-full py-2 px-4 text-orange-700 font-semibold">
+                        點擊開始挑戰
+                    </div>
+                </div>
+                
+                <!-- Animals Mode -->
+                <div class="word-card bg-white rounded-3xl p-6 shadow-xl" onclick="startMode('animals')">
+                    <div class="text-6xl mb-4">🐶</div>
+                    <h3 class="text-2xl font-bold text-blue-600 mb-2">動物召喚咒</h3>
+                    <p class="text-gray-600 mb-4">cat, dog, bird, rabbit, fish</p>
+                    <div class="bg-blue-100 rounded-full py-2 px-4 text-blue-700 font-semibold">
+                        點擊開始挑戰
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="showHomePage()" class="mt-8 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300">
+                ← 返回首頁
+            </button>
+        </div>
+    </div>
+
+    <!-- Learning Page -->
+    <div id="learningPage" class="hidden min-h-screen p-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-4">
+                    <span id="learningTitle">學習頁</span>
+                </h2>
+                <p class="text-xl text-blue-200">觀察圖片和單字，準備接下來的挑戰</p>
+            </div>
+            
+            <div id="learningContent" class="grid md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+                <!-- Learning cards will be generated here -->
+            </div>
+            
+            <div class="text-center">
+                <button onclick="showMatching()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    🟩 下一步：配對任務
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matching Page -->
+    <div id="matchingPage" class="hidden min-h-screen p-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-4">單字配對任務</h2>
+                <p class="text-xl text-blue-200">將單字拖曳到對應的圖片上</p>
+                <div class="text-lg text-yellow-300 mt-2">
+                    魔力值: <span id="matchingScore">0</span> ⚡
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-4 text-center">圖片</h3>
+                    <div id="imageCards" class="grid grid-cols-2 gap-4">
+                        <!-- Image cards will be generated here -->
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-4 text-center">單字</h3>
+                    <div id="wordCards" class="grid grid-cols-2 gap-4">
+                        <!-- Word cards will be generated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <button id="nextToSpelling" onclick="showSpelling()" class="hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    🔵 下一步：拼字挑戰
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spelling Page -->
+    <div id="spellingPage" class="hidden min-h-screen p-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-4">拼字挑戰</h2>
+                <p class="text-xl text-blue-200">拖曳字母拼出正確的單字</p>
+                <div class="text-lg text-yellow-300 mt-2">
+                    題目 <span id="spellingQuestion">1</span> / 3
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-3xl p-8 mb-8">
+                <div class="text-center mb-6">
+                    <div id="spellingImage" class="text-8xl mb-4">🍎</div>
+                    <div class="text-lg text-gray-600 mb-4">看圖片，拼出正確的英文單字</div>
+                    <div id="hintDisplay" class="hidden bg-yellow-100 border-2 border-yellow-400 rounded-lg p-3 mt-4 inline-block">
+                        <span class="text-yellow-800 font-semibold">💡 提示：第一個字母是 </span>
+                        <span id="hintLetter" class="text-yellow-900 font-bold text-xl"></span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 text-center">拖曳字母到這裡</h3>
+                    <div id="dropZone" class="drop-zone border-4 border-dashed border-gray-300 rounded-2xl p-4 min-h-20 flex items-center justify-center gap-2">
+                        <span class="text-gray-400">將字母拖曳到這裡</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 text-center">可用字母</h3>
+                    <div id="letterCards" class="flex justify-center gap-3 flex-wrap">
+                        <!-- Letter cards will be generated here -->
+                    </div>
+                </div>
+                
+                <div class="text-center mt-6">
+                    <button id="checkSpelling" onclick="checkSpelling()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 mr-4">
+                        檢查答案
+                    </button>
+                    <button id="hintButton" onclick="showHint()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 mr-4">
+                        💡 提示
+                    </button>
+                    <button id="resetSpelling" onclick="resetSpelling()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300">
+                        重新開始
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button id="nextToResults" onclick="showResults()" class="hidden bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    🎉 查看結果
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Page -->
+    <div id="resultsPage" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="text-center max-w-2xl mx-auto">
+            <div class="bg-white rounded-3xl p-8 shadow-xl">
+                <div class="text-6xl mb-4 sparkle">🎉</div>
+                <h2 class="text-4xl font-bold text-purple-800 mb-4">恭喜完成挑戰！</h2>
+                <p class="text-xl text-gray-700 mb-6">你完成了英語魔法書的咒語挑戰！</p>
+                
+                <div id="badgeDisplay" class="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl p-6 mb-6">
+                    <div class="text-4xl mb-2">🎖</div>
+                    <div id="badgeText" class="text-2xl font-bold text-orange-700">魔法學徒</div>
+                </div>
+                
+                <div class="flex justify-center gap-4">
+                    <button onclick="showModeSelection()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300">
+                        返回選單
+                    </button>
+                    <button onclick="showModeSelection()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300">
+                        挑戰其他主題
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const gameData = {
+            fruits: {
+                title: '🍓 水果魔法圈',
+                badge: '水果魔法學徒',
+                words: [
+                    { word: 'apple', emoji: '🍎', scrambled: ['A', 'P', 'P', 'L', 'E'] },
+                    { word: 'banana', emoji: '🍌', scrambled: ['B', 'A', 'N', 'A', 'N', 'A'] },
+                    { word: 'grape', emoji: '🍇', scrambled: ['G', 'R', 'A', 'P', 'E'] },
+                    { word: 'mango', emoji: '🥭', scrambled: ['M', 'A', 'N', 'G', 'O'] },
+                    { word: 'orange', emoji: '🍊', scrambled: ['O', 'R', 'A', 'N', 'G', 'E'] }
+                ]
+            },
+            food: {
+                title: '🍕 食物魔法陣',
+                badge: '食物魔法大師',
+                words: [
+                    { word: 'cake', emoji: '🍰', scrambled: ['C', 'A', 'K', 'E'] },
+                    { word: 'bread', emoji: '🍞', scrambled: ['B', 'R', 'E', 'A', 'D'] },
+                    { word: 'rice', emoji: '🍚', scrambled: ['R', 'I', 'C', 'E'] },
+                    { word: 'cheese', emoji: '🧀', scrambled: ['C', 'H', 'E', 'E', 'S', 'E'] },
+                    { word: 'juice', emoji: '🥤', scrambled: ['J', 'U', 'I', 'C', 'E'] }
+                ]
+            },
+            animals: {
+                title: '🐶 動物召喚咒',
+                badge: '動物召喚高手',
+                words: [
+                    { word: 'cat', emoji: '🐱', scrambled: ['C', 'A', 'T'] },
+                    { word: 'dog', emoji: '🐶', scrambled: ['D', 'O', 'G'] },
+                    { word: 'bird', emoji: '🐦', scrambled: ['B', 'I', 'R', 'D'] },
+                    { word: 'rabbit', emoji: '🐰', scrambled: ['R', 'A', 'B', 'B', 'I', 'T'] },
+                    { word: 'fish', emoji: '🐟', scrambled: ['F', 'I', 'S', 'H'] }
+                ]
+            }
+        };
+
+        let currentMode = '';
+        let currentWords = [];
+        let matchingScore = 0;
+        let matchedPairs = 0;
+        let spellingQuestionIndex = 0;
+        let spellingCorrect = 0;
+        let droppedLetters = [];
+        let hintUsed = false;
+
+        // Navigation functions
+        function showHomePage() {
+            hideAllPages();
+            document.getElementById('homePage').classList.remove('hidden');
+        }
+
+        function showModeSelection() {
+            hideAllPages();
+            document.getElementById('modeSelection').classList.remove('hidden');
+        }
+
+        function hideAllPages() {
+            const pages = ['homePage', 'modeSelection', 'learningPage', 'matchingPage', 'spellingPage', 'resultsPage'];
+            pages.forEach(page => {
+                document.getElementById(page).classList.add('hidden');
+            });
+        }
+
+        // Game functions
+        function startMode(mode) {
+            currentMode = mode;
+            currentWords = gameData[mode].words;
+            matchingScore = 0;
+            matchedPairs = 0;
+            spellingQuestionIndex = 0;
+            spellingCorrect = 0;
+            
+            showLearning();
+        }
+
+        function showLearning() {
+            hideAllPages();
+            document.getElementById('learningPage').classList.remove('hidden');
+            document.getElementById('learningTitle').textContent = gameData[currentMode].title;
+            
+            const content = document.getElementById('learningContent');
+            content.innerHTML = '';
+            
+            currentWords.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'word-card bg-white rounded-2xl p-6 shadow-lg text-center';
+                card.innerHTML = `
+                    <div class="text-6xl mb-4">${item.emoji}</div>
+                    <div class="text-2xl font-bold text-gray-800 mb-2">${item.word}</div>
+                    <div class="text-lg text-blue-600">${item.word[0]} is for ${item.word}</div>
+                `;
+                content.appendChild(card);
+            });
+        }
+
+        function showMatching() {
+            hideAllPages();
+            document.getElementById('matchingPage').classList.remove('hidden');
+            document.getElementById('matchingScore').textContent = matchingScore;
+            document.getElementById('nextToSpelling').classList.add('hidden');
+            
+            setupMatching();
+        }
+
+        function setupMatching() {
+            const imageCards = document.getElementById('imageCards');
+            const wordCards = document.getElementById('wordCards');
+            
+            imageCards.innerHTML = '';
+            wordCards.innerHTML = '';
+            
+            // Shuffle words for variety
+            const shuffledWords = [...currentWords].sort(() => Math.random() - 0.5);
+            const shuffledWordTexts = [...currentWords].map(w => w.word).sort(() => Math.random() - 0.5);
+            
+            // Create image cards
+            shuffledWords.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'drop-zone bg-white rounded-2xl p-6 shadow-lg text-center border-4 border-gray-200';
+                card.dataset.word = item.word;
+                card.innerHTML = `
+                    <div class="text-6xl mb-2">${item.emoji}</div>
+                    <div class="text-lg font-semibold text-gray-600">拖曳單字到這裡</div>
+                `;
+                
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragleave', handleDragLeave);
+                
+                imageCards.appendChild(card);
+            });
+            
+            // Create word cards
+            shuffledWordTexts.forEach(word => {
+                const card = document.createElement('div');
+                card.className = 'draggable bg-blue-500 hover:bg-blue-600 text-white rounded-2xl p-4 shadow-lg text-center font-bold text-xl';
+                card.draggable = true;
+                card.dataset.word = word;
+                card.textContent = word;
+                
+                card.addEventListener('dragstart', handleDragStart);
+                
+                wordCards.appendChild(card);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.word);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const draggedWord = e.dataTransfer.getData('text/plain');
+            const targetWord = e.currentTarget.dataset.word;
+            
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (draggedWord === targetWord) {
+                // Correct match
+                e.currentTarget.classList.add('success-animation');
+                e.currentTarget.innerHTML = `
+                    <div class="text-6xl mb-2">${currentWords.find(w => w.word === targetWord).emoji}</div>
+                    <div class="text-xl font-bold text-green-600">${targetWord}</div>
+                    <div class="text-sm text-green-500">單字魔力 +1 ⚡</div>
+                `;
+                
+                matchingScore++;
+                matchedPairs++;
+                document.getElementById('matchingScore').textContent = matchingScore;
+                
+                // Remove the dragged word card
+                const wordCard = document.querySelector(`[data-word="${draggedWord}"][draggable="true"]`);
+                if (wordCard) {
+                    wordCard.style.opacity = '0.5';
+                    wordCard.draggable = false;
+                }
+                
+                if (matchedPairs === currentWords.length) {
+                    setTimeout(() => {
+                        document.getElementById('nextToSpelling').classList.remove('hidden');
+                    }, 1000);
+                }
+            } else {
+                // Incorrect match
+                e.currentTarget.classList.add('error-shake');
+                setTimeout(() => {
+                    e.currentTarget.classList.remove('error-shake');
+                }, 500);
+                
+                showMessage('咒語失敗！再試一次 💥', 'error');
+            }
+        }
+
+        function showSpelling() {
+            hideAllPages();
+            document.getElementById('spellingPage').classList.remove('hidden');
+            spellingQuestionIndex = 0;
+            spellingCorrect = 0;
+            setupSpellingQuestion();
+        }
+
+        function setupSpellingQuestion() {
+            if (spellingQuestionIndex >= 3) {
+                document.getElementById('nextToResults').classList.remove('hidden');
+                return;
+            }
+            
+            const wordIndex = spellingQuestionIndex % currentWords.length;
+            const currentWord = currentWords[wordIndex];
+            
+            document.getElementById('spellingQuestion').textContent = spellingQuestionIndex + 1;
+            document.getElementById('spellingImage').textContent = currentWord.emoji;
+            // Target word is hidden to encourage memory recall
+            
+            // Reset hint
+            hintUsed = false;
+            document.getElementById('hintDisplay').classList.add('hidden');
+            document.getElementById('hintButton').disabled = false;
+            document.getElementById('hintButton').classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Reset drop zone
+            const dropZone = document.getElementById('dropZone');
+            dropZone.innerHTML = '<span class="text-gray-400">將字母拖曳到這裡</span>';
+            droppedLetters = [];
+            
+            // Create scrambled letters
+            const letterCards = document.getElementById('letterCards');
+            letterCards.innerHTML = '';
+            
+            const scrambledLetters = [...currentWord.scrambled].map(letter => letter.toLowerCase()).sort(() => Math.random() - 0.5);
+            
+            scrambledLetters.forEach((letter, index) => {
+                const card = document.createElement('div');
+                card.className = 'draggable bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl p-3 shadow-lg text-center font-bold text-xl w-12 h-12 flex items-center justify-center';
+                card.draggable = true;
+                card.dataset.letter = letter;
+                card.dataset.index = index;
+                card.textContent = letter;
+                
+                card.addEventListener('dragstart', handleLetterDragStart);
+                
+                letterCards.appendChild(card);
+            });
+            
+            // Setup drop zone
+            dropZone.addEventListener('dragover', handleSpellingDragOver);
+            dropZone.addEventListener('drop', handleSpellingDrop);
+        }
+
+        function handleLetterDragStart(e) {
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                letter: e.target.dataset.letter,
+                index: e.target.dataset.index
+            }));
+        }
+
+        function handleSpellingDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleSpellingDrop(e) {
+            e.preventDefault();
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            
+            e.currentTarget.classList.remove('drag-over');
+            
+            // Add letter to dropped letters
+            droppedLetters.push(data.letter);
+            
+            // Update drop zone display
+            updateDropZone();
+            
+            // Hide the dragged letter
+            const letterCard = document.querySelector(`[data-index="${data.index}"]`);
+            if (letterCard) {
+                letterCard.style.opacity = '0.3';
+                letterCard.draggable = false;
+            }
+        }
+
+        function updateDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            if (droppedLetters.length === 0) {
+                dropZone.innerHTML = '<span class="text-gray-400">將字母拖曳到這裡</span>';
+            } else {
+                dropZone.innerHTML = droppedLetters.map(letter => 
+                    `<span class="bg-blue-500 text-white px-3 py-1 rounded-lg font-bold">${letter}</span>`
+                ).join('');
+            }
+        }
+
+        function checkSpelling() {
+            const wordIndex = spellingQuestionIndex % currentWords.length;
+            const correctWord = currentWords[wordIndex].word;
+            const userWord = droppedLetters.join('');
+            
+            if (userWord.toLowerCase() === correctWord.toLowerCase()) {
+                spellingCorrect++;
+                showMessage('Correct! 🎉', 'success');
+                setTimeout(() => {
+                    spellingQuestionIndex++;
+                    setupSpellingQuestion();
+                }, 1500);
+            } else {
+                showMessage('Oops! Try again 💥', 'error');
+            }
+        }
+
+        function resetSpelling() {
+            droppedLetters = [];
+            updateDropZone();
+            
+            // Reset all letter cards
+            const letterCards = document.querySelectorAll('.draggable[data-letter]');
+            letterCards.forEach(card => {
+                card.style.opacity = '1';
+                card.draggable = true;
+            });
+        }
+
+        function showHint() {
+            if (hintUsed) return;
+            
+            const wordIndex = spellingQuestionIndex % currentWords.length;
+            const currentWord = currentWords[wordIndex];
+            const firstLetter = currentWord.word[0];
+            
+            // Show hint
+            document.getElementById('hintLetter').textContent = firstLetter;
+            document.getElementById('hintDisplay').classList.remove('hidden');
+            
+            // Disable hint button
+            hintUsed = true;
+            const hintButton = document.getElementById('hintButton');
+            hintButton.disabled = true;
+            hintButton.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            showMessage('提示已顯示！💡', 'success');
+        }
+
+        function showResults() {
+            hideAllPages();
+            document.getElementById('resultsPage').classList.remove('hidden');
+            document.getElementById('badgeText').textContent = gameData[currentMode].badge;
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 2000);
+        }
+
+
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            showHomePage();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bec42fa193f1c0',t:'MTc1NDY1MzUxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
