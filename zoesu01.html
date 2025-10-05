@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芷儀的字音字形複習本</title>
+    <style>
+        /* 引入標楷體 */
+        @font-face {
+            font-family: 'Biaokai';
+            src: local('BiauKai');
+            /* 如果使用者電腦沒有標楷體，可以考慮提供備用字體 */
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #ffe0f0;
+            color: #4a4a4a;
+            perspective: 1000px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(255,100,150,0.2);
+            text-align: center;
+            width: 90%;
+            max-width: 700px;
+            border: 2px solid #ffb3d9;
+        }
+
+        h1 {
+            color: #ff66a3;
+            font-size: 3em;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-container {
+            width: 100%;
+            min-height: 280px;
+            position: relative;
+            margin: 30px 0;
+        }
+
+        .card {
+            width: 100%;
+            min-height: 280px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s ease-in-out;
+        }
+
+        .card.flipped {
+            transform: rotateX(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .card-front {
+            background-color: #fff0f5;
+            border: 1px solid #ffccd9;
+            color: #d14188;
+        }
+
+        .card-back {
+            background-color: #c9e9ff;
+            border: 1px solid #a6d8ff;
+            transform: rotateX(180deg);
+            color: #4a6c8e;
+        }
+
+        #character {
+            font-size: 5em;
+            font-weight: bold;
+            line-height: 1.2;
+            font-family: 'Biaokai', 'Noto Sans TC', sans-serif; /* 應用標楷體 */
+        }
+
+        #pronunciation, #meaning {
+            font-size: 2em;
+            margin: 10px 0;
+            padding: 0 15px;
+            line-height: 1.5;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            outline: none;
+        }
+        
+        #flip-btn {
+            background-color: #87cefa;
+            box-shadow: 0 4px 8px rgba(135, 206, 250, 0.4);
+        }
+        #flip-btn:hover {
+            background-color: #72b6e1;
+            transform: translateY(-3px);
+        }
+
+        #next-btn {
+            background-color: #ffa500;
+            box-shadow: 0 4px 8px rgba(255, 165, 0, 0.4);
+        }
+        #next-btn:hover {
+            background-color: #e59400;
+            transform: translateY(-3px);
+        }
+        
+        #prev-btn {
+            background-color: #ffdb58;
+            box-shadow: 0 4px 8px rgba(255, 219, 88, 0.4);
+        }
+        #prev-btn:hover {
+            background-color: #e5c544;
+            transform: translateY(-3px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #celebration-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #celebration-modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 2em;
+            color: #ff66a3;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            animation: bounceIn 0.8s;
+            line-height: 1.5; /* 分行後行高更舒適 */
+        }
+        
+        .modal-content p {
+            margin: 0;
+        }
+
+        @keyframes bounceIn {
+            0%, 20%, 40%, 60%, 80%, 100% {
+                transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+            }
+            0% { opacity: 0; transform: scale3d(.3, .3, .3); }
+            20% { transform: scale3d(1.1, 1.1, 1.1); }
+            40% { transform: scale3d(.9, .9, .9); }
+            60% { opacity: 1; transform: scale3d(1.03, 1.03, 1.03); }
+            80% { transform: scale3d(.97, .97, .97); }
+            100% { opacity: 1; transform: scale3d(1, 1, 1); }
+        }
+        
+        /* 愛心和氣球動畫樣式 */
+        .floating-object {
+            position: absolute;
+            animation: floatUp 5s ease-in forwards;
+            opacity: 0;
+        }
+        
+        .heart {
+            font-size: 2em;
+            color: #ff66a3;
+        }
+        
+        .balloon {
+            width: 30px;
+            height: 40px;
+            background-color: #ffb3d9;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform: rotate(-10deg);
+        }
+        
+        .balloon::after {
+            content: '';
+            position: absolute;
+            width: 1px;
+            height: 20px;
+            background-color: #777;
+            top: 100%;
+            left: 50%;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-800px) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>芷儀的字音字形複習本</h1>
+        <div class="card-container">
+            <div id="flashcard" class="card">
+                <div class="card-face card-front">
+                    <div id="character">讀取中...</div>
+                </div>
+                <div class="card-face card-back">
+                    <div id="pronunciation"></div>
+                    <div id="meaning"></div>
+                </div>
+            </div>
+        </div>
+        <div class="buttons">
+            <button id="prev-btn">上一題</button>
+            <button id="flip-btn">翻面</button>
+            <button id="next-btn">下一題</button>
+        </div>
+    </div>
+
+    <div id="celebration-modal">
+        <div class="modal-content" id="modal-message"></div>
+    </div>
+    
+    <script>
+        const sheetUrl = 'https://script.google.com/macros/s/AKfycbyvTGJK8lj_RUx61CxgLNa9TUCJF55am-X4jO8NSyqzP2o-mgLf1Q0pLeoeo2dGYJ0/exec';
+
+        const characterEl = document.getElementById('character');
+        const pronunciationEl = document.getElementById('pronunciation');
+        const meaningEl = document.getElementById('meaning');
+        const flashcardEl = document.getElementById('flashcard');
+        const flipBtn = document.getElementById('flip-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const modalEl = document.getElementById('celebration-modal');
+        const modalMessageEl = document.getElementById('modal-message');
+
+        let vocabulary = [];
+        let currentIndex = 0;
+        let reviewCount = 0;
+
+        async function fetchData() {
+            try {
+                const response = await fetch(sheetUrl);
+                const data = await response.json();
+                
+                vocabulary = data;
+                
+                if (vocabulary.length > 0) {
+                    currentIndex = 0; // 從第一筆資料開始
+                    showWord(currentIndex);
+                } else {
+                    characterEl.textContent = '沒有可顯示的詞語。';
+                }
+            } catch (error) {
+                console.error('讀取資料時發生錯誤:', error);
+                characterEl.textContent = '讀取失敗，請檢查網址或網路連線。';
+                pronunciationEl.textContent = '';
+                meaningEl.textContent = '';
+            }
+        }
+
+        function showWord(index) {
+            flashcardEl.classList.remove('flipped');
+            const word = vocabulary[index];
+            characterEl.textContent = word.character;
+            pronunciationEl.textContent = word.pronunciation;
+            meaningEl.textContent = word.meaning;
+        }
+
+        function showNextWord() {
+            // 無論卡片是否翻轉，都先將卡片轉回正面
+            flashcardEl.classList.remove('flipped');
+            
+            // 等待動畫完成再載入下一題
+            setTimeout(() => {
+                if (currentIndex < vocabulary.length - 1) {
+                    currentIndex++;
+                    showWord(currentIndex);
+                    reviewCount++;
+                    if (reviewCount > 0 && reviewCount % 5 === 0) {
+                        showEncouragement();
+                    }
+                } else {
+                    showFinalCelebration();
+                }
+            }, 400); // 這裡的 400ms 小於 CSS 的 transition 時間 0.8s
+        }
+
+        function showPrevWord() {
+            flashcardEl.classList.remove('flipped');
+            setTimeout(() => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    showWord(currentIndex);
+                }
+            }, 400);
+        }
+
+        function showEncouragement() {
+            const messages = [
+                '妳好棒！繼續努力！',
+                '複習五題了，妳真的很認真！',
+                '太厲害了，芷儀！',
+                '妳的學習之路，閃閃發光！'
+            ];
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            modalMessageEl.textContent = randomMessage;
+            modalEl.classList.add('show');
+            setTimeout(() => {
+                modalEl.classList.remove('show');
+            }, 2000);
+        }
+
+        function showFinalCelebration() {
+            modalMessageEl.innerHTML = '恭喜妳！所有單字都複習完畢了！<br>妳的努力和堅持是無價的寶藏。芷儀，妳是最棒的！';
+            modalEl.classList.add('show');
+            createFloatingObjects(50, 'heart');
+            createFloatingObjects(30, 'balloon');
+        }
+
+        function createFloatingObjects(count, type) {
+            const colors = ['#ff66a3', '#87cefa', '#ffa500', '#ffdb58', '#b3d9ff'];
+            for (let i = 0; i < count; i++) {
+                const obj = document.createElement('div');
+                obj.classList.add('floating-object');
+                
+                if (type === 'heart') {
+                    obj.classList.add('heart');
+                    obj.textContent = '❤️';
+                } else if (type === 'balloon') {
+                    obj.classList.add('balloon');
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    obj.style.backgroundColor = randomColor;
+                }
+                
+                obj.style.left = `${Math.random() * 100}vw`;
+                obj.style.animationDelay = `${Math.random() * 2}s`;
+                obj.style.animationDuration = `${5 + Math.random() * 3}s`;
+                document.body.appendChild(obj);
+            }
+        }
+
+        flipBtn.addEventListener('click', () => {
+            flashcardEl.classList.toggle('flipped');
+        });
+
+        nextBtn.addEventListener('click', showNextWord);
+        prevBtn.addEventListener('click', showPrevWord);
+
+        fetchData();
+    </script>
+</body>
+</html>
