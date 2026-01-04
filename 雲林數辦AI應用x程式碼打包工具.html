@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿婷數位點子 - AR 遊戲轉換器</title>
+    <style>
+        :root {
+            /* 定義配色變數：高雅藍 x 淺咖啡 */
+            --primary-blue: #2c5282;       /* 主色：高雅深藍 */
+            --primary-blue-hover: #1a365d; /* 深藍懸停色 */
+            --bg-beige: #fdfbf7;           /* 背景：更明亮的米色 */
+            --bg-gradient: linear-gradient(135deg, #fdfbf7 0%, #f3efe5 100%);
+            --text-dark: #1a202c;          /* 更深的文字色 */
+            --text-muted: #718096;         /* 輔助文字 */
+            --card-shadow: 0 20px 40px rgba(44, 82, 130, 0.08);
+            --border-color: #cbd5e0;
+            --warning-yellow: #d69e2e;     /* 警告色 */
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: var(--text-dark);
+        }
+        .container {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            border-top: 8px solid var(--primary-blue);
+        }
+        h1 {
+            color: var(--primary-blue);
+            margin-bottom: 10px;
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            line-height: 1.4;
+        }
+        p {
+            color: var(--text-muted);
+            font-size: 18px;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        
+        .step-label {
+            text-align: left;
+            font-size: 16px;
+            color: var(--primary-blue);
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+            margin-left: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 350px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            background-color: #f8fafc;
+            color: #2d3748;
+        }
+        textarea:focus {
+            border-color: var(--primary-blue);
+            background-color: #fff;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(44, 82, 130, 0.1);
+        }
+        textarea::placeholder {
+            color: #a0aec0;
+        }
+
+        .input-section {
+            background-color: #edf2f7;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+        
+        .input-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        input[type="text"] {
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            width: 100%; /* 讓它填滿 wrapper */
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            font-size: 18px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .hint-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            margin-left: 5px;
+        }
+
+        button {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(44, 82, 130, 0.2);
+            min-width: 200px;
+            height: auto; /* 確保高度適應 */
+        }
+        button:hover {
+            background-color: var(--primary-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(44, 82, 130, 0.25);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .footer {
+            margin-top: 35px;
+            font-size: 14px;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+        
+        /* Custom Toast Notification Styles */
+        #toast {
+            visibility: hidden;
+            min-width: 300px;
+            background-color: #c53030;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 16px 30px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            font-size: 16px;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            font-weight: 600;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 60px;
+        }
+        #toast.success {
+            background-color: #276749; /* 優雅綠 */
+        }
+        #toast.warning {
+            background-color: #d69e2e; /* 警告黃 */
+        }
+
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 28px;
+            }
+            textarea {
+                height: 250px;
+            }
+            .controls {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>✨雲林數辦AI應用 x 程式碼打包工具 ✨</h1>
+        <p>請將 Gemini 產生的完整程式碼貼在下方，即可一鍵打包！</p>
+        
+        <label class="step-label" for="codeArea">步驟 1：貼上程式碼</label>
+        <textarea id="codeArea" placeholder="請將 Gemini 生成的 HTML 程式碼完整複製並貼在這裡..."></textarea>
+        
+        <div class="input-section">
+            <label class="step-label" for="fileName">步驟 2：設定檔案名稱</label>
+            <div class="controls">
+                <div class="input-wrapper">
+                    <input type="text" id="fileName" value="my-ar-game" placeholder="例如：super-mario-ar">
+                    <div class="hint-text">💡 小撇步：取一個好記的名字，方便之後尋找喔！</div>
+                </div>
+                <button onclick="downloadHTML()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    下載 HTML 檔
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            Designed by 阿婷數位點子
+        </div>
+    </div>
+
+    <!-- Toast Notification Element -->
+    <div id="toast">請先貼上程式碼喔！</div>
+
+    <script>
+        const DEFAULT_FILENAME = "my-ar-game";
+        let hasConfirmedDefault = false;
+
+        // 當使用者開始打字時，重置確認狀態
+        document.getElementById('fileName').addEventListener('input', function() {
+            hasConfirmedDefault = false;
+        });
+
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            
+            // 移除所有舊的類型 class
+            toast.classList.remove('success', 'warning');
+
+            if (type === 'success') {
+                toast.classList.add('success');
+            } else if (type === 'warning') {
+                toast.classList.add('warning');
+            }
+            
+            toast.className = "show " + (type === 'success' ? 'success' : (type === 'warning' ? 'warning' : ''));
+            
+            setTimeout(function(){ 
+                toast.className = toast.className.replace("show", "").trim(); 
+            }, 3000);
+        }
+
+        function downloadHTML() {
+            // 1. 取得文字框的內容
+            const content = document.getElementById('codeArea').value;
+            
+            // 檢查是否有內容
+            if (!content.trim()) {
+                showToast("請先貼上程式碼喔！", "error");
+                return;
+            }
+
+            // 2. 取得檔案名稱
+            let filenameInput = document.getElementById('fileName').value;
+            let filename = filenameInput.trim();
+
+            // 如果檔名是空的，設回預設值
+            if (!filename) {
+                filename = DEFAULT_FILENAME;
+            }
+
+            // ** 檔名提醒機制 **
+            // 如果檔名是預設值，且尚未確認過
+            if (filename === DEFAULT_FILENAME && !hasConfirmedDefault) {
+                showToast("⚠️ 您尚未修改檔名！再次點擊即可下載。", "warning");
+                hasConfirmedDefault = true; // 標記為已提醒
+                return; // 暫停下載
+            }
+
+            // 確保結尾有 .html
+            if (!filename.endsWith(".html")) {
+                filename += ".html";
+            }
+
+            try {
+                // 3. 建立一個虛擬的檔案物件 (Blob)
+                const blob = new Blob([content], { type: 'text/html' });
+
+                // 4. 建立一個暫時的下載連結並點擊它
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                
+                // 觸發點擊
+                document.body.appendChild(link);
+                link.click();
+                
+                // 清理
+                document.body.removeChild(link);
+                
+                // 顯示成功訊息
+                showToast(`成功下載：${filename}`, "success");
+                
+                // 重置確認狀態，以便下次操作
+                hasConfirmedDefault = false;
+                
+            } catch (e) {
+                console.error(e);
+                showToast("下載失敗，請稍後再試", "error");
+            }
+        }
+    </script>
+
+</body>
+</html>
