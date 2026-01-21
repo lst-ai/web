@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>讓萬物說話 ChatterPix Writer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* 列印專用樣式 */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body, .min-h-screen { background: white !important; padding: 0 !important; }
+            /* 強制列印背景圖形，確保顏色正確 */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-only { display: none; }
+        
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 讓文字區塊更好看 */
+        body { font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        // --- Icons Components (內嵌 SVG 以確保離線可用) ---
+        const Camera = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>;
+        const Wand2 = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>;
+        const Volume2 = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>;
+        const Copy = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>;
+        const Pencil = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+        const Sparkles = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>;
+        const Smile = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>;
+        const Zap = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+        const RefreshCcw = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>;
+        const Printer = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>;
+        const FileDown = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>;
+        const School = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m4 6 8-4 8 4"/><path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2"/><path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"/><path d="M18 5v17"/><path d="M6 5v17"/><circle cx="12" cy="9" r="2"/></svg>;
+        const User = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const Save = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+        const Edit3 = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>;
+
+        const ChatterPixWriter = () => {
+            // --- 狀態管理 ---
+            const [image, setImage] = useState(null);
+            const [grade, setGrade] = useState('low'); // 預設低年級
+            const [inputs, setInputs] = useState({
+                name: '',
+                appearance: '',
+                function: '',
+                mood: ''
+            });
+            const [studentInfo, setStudentInfo] = useState({
+                school: '',
+                class: '',
+                studentName: ''
+            });
+            
+            const [generatedText, setGeneratedText] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [isEditingStory, setIsEditingStory] = useState(false); // 控制是否正在編輯故事
+            const [charCount, setCharCount] = useState(0);
+            
+            const resultRef = useRef(null);
+            const inputSectionRef = useRef(null);
+
+            // --- 處理圖片上傳 ---
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setImage(reader.result);
+                        setGeneratedText('');
+                        setTimeout(() => {
+                            inputSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                        }, 300);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const removeImage = () => {
+                setImage(null);
+                setGeneratedText('');
+                setInputs({ name: '', appearance: '', function: '', mood: '' });
+            };
+
+            const handleInputChange = (field, value) => {
+                setInputs(prev => ({ ...prev, [field]: value }));
+            };
+
+            const handleStudentInfoChange = (field, value) => {
+                setStudentInfo(prev => ({ ...prev, [field]: value }));
+            };
+
+            // --- 處理故事內容手動編輯 ---
+            const handleStoryEdit = (e) => {
+                const newText = e.target.value;
+                setGeneratedText(newText);
+                setCharCount(newText.length);
+            };
+
+            const toggleEditMode = () => {
+                setIsEditingStory(!isEditingStory);
+            };
+
+            // --- 完整詞彙庫 (依據 PDF 擴充) ---
+            const suggestions = {
+                name: [
+                "水壺", "書包", "鉛筆", "橡皮擦", "玩偶", "鬧鐘", "椅子", "檯燈", "外套", "鞋子",
+                "手錶", "便當盒", "水彩筆", "直笛", "帽子", "眼鏡"
+                ],
+                appearance: [
+                // 顏色
+                "純白", "雪白", "紅潤", "火紅", "黝黑", "鮮豔", "青綠", "明亮", "鵝黃", "碧綠", "寶藍", "灰濛濛", "亮晶晶", "五彩繽紛", "五顏六色",
+                // 形狀大小
+                "短短的", "扁平", "厚厚的", "細小", "彎曲", "挺直", "圓滾滾", "細細長長", "稜角分明", "小巧玲瓏", "四四方方", "胖嘟嘟",
+                // 材質觸感
+                "光滑", "柔順", "輕柔", "粗糙", "有彈性", "冰冷", "粗粗的", "皺巴巴", "溫暖", "毛茸茸", "硬邦邦", "軟綿綿", "滑溜溜",
+                // 聲音
+                "響亮", "低沉", "尖銳", "滴答滴答", "叮叮噹噹", "呼呼聲", "沙沙聲", "安安靜靜"
+                ],
+                function: [
+                // 學習與紀錄
+                "書寫", "繪圖", "練習", "學習", "紀錄", "黏貼", "擦掉錯字",
+                // 生活與收納
+                "收納", "裝飾", "陪伴", "裝東西", "讓人休息", "保護東西", "整理物品",
+                // 功能性
+                "發出光芒", "發出聲音提醒大家", "讓人變得漂亮", "把身體擦乾淨", "遮風避雨", "顯示時間"
+                ],
+                mood: [
+                // 正向與快樂
+                "覺得很開心", "充滿活力", "笑容滿面", "覺得很驕傲", "感到很幸福", "很有成就感", "覺得溫暖", "陶醉其中", "眉開眼笑",
+                // 期待與願望
+                "期待明天", "希望能幫上忙", "想一直陪著你", "朝思暮想", "難以忘懷", "念念不忘",
+                // 其他情緒
+                "有點害羞", "覺得很愜意", "充滿驚喜", "感到很安心"
+                ]
+            };
+
+            const applySuggestion = (field, text) => {
+                const currentValue = inputs[field];
+                if (field === 'name') {
+                    handleInputChange(field, text);
+                    return;
+                }
+                if (currentValue) {
+                    if (!currentValue.includes(text)) {
+                        handleInputChange(field, currentValue + "、" + text);
+                    }
+                } else {
+                    handleInputChange(field, text);
+                }
+            };
+
+            const clearField = (field) => {
+                handleInputChange(field, '');
+            };
+
+            // --- 生成故事 ---
+            const generateStory = () => {
+                if (!inputs.name) {
+                    alert("請至少告訴我物品的「名字」喔！");
+                    return;
+                }
+
+                setIsGenerating(true);
+                setGeneratedText('');
+                setIsEditingStory(false); // 生成新故事時重置編輯模式
+
+                setTimeout(() => {
+                    const { name, appearance, function: func } = inputs;
+                    const safeApp = appearance || "很特別";
+                    const safeFunc = func || "幫忙大家";
+                    const safeMood = inputs.mood || "覺得很期待";
+                    
+                    let templates = [];
+                    let selectedTemplate = "";
+
+                    switch (grade) {
+                        case 'low': 
+                        templates = [
+                            `哈囉大家好！我是${name}。請你們看一看，我有${safeApp}的外表，是不是長得很特別呢？我最厲害的本領就是${safeFunc}。我每天都會乖乖地陪在小主人身邊，幫忙做很多重要的事情。現在我的心情${safeMood}。希望能一直跟你在一起，當你最好的好朋友！`,
+                            `猜猜我是誰？我是${name}。我的身體${safeApp}，摸起來很特別喔。我的工作非常重要，就是負責${safeFunc}。雖然有時候會累，但我${safeMood}。請你以後要好好愛護我，我會每天陪你一起生活，當一個最棒的小幫手！`
+                        ];
+                        break;
+                        case 'mid': 
+                        templates = [
+                            `大家好，讓我自我介紹一下。我是你們每天都看得到的${name}！如果你靠近一點觀察，會發現我有著${safeApp}的特徵，這是我最引以為傲的地方，也是我與眾不同的原因。你知道我平常都在做什麼嗎？我主要的任務就是${safeFunc}，這份工作讓我感覺非常有意義，也能幫上大家很多忙。每當我完成任務的時候，我都會${safeMood}。雖然我不會說話，但我一直默默地守護著你。希望未來的每一天，我們都能和平相處，創造更多開心的回憶。`,
+                            `我是${name}，是你生活中不可或缺的夥伴。看看我${safeApp}的樣子，是不是讓你覺得很熟悉呢？我存在的最大目的，就是為了${safeFunc}。這雖然聽起來很簡單，但我可是非常努力在做的喔！對我來說，能夠幫上你的忙，就是我最大的榮幸。此刻的我${safeMood}，因為我知道你會好好珍惜我。請記得，不管遇到什麼困難，我都會在這裡支持你，讓我們一起加油，度過美好的一天吧！`
+                        ];
+                        break;
+                        case 'high': 
+                        templates = [
+                            `在這個忙碌的世界裡，也許你平常沒有特別注意到我，但我其實就是一直默默陪伴在你身邊的${name}。我擁有一個非常獨特的外觀，也就是${safeApp}，這不僅是我的特徵，更代表了我獨一無二的個性。在這個班級裡，我也肩負著一份神聖的使命，那就是${safeFunc}。每當我看見因為我的努力而讓事情變得更順利時，一股強烈的成就感就會油然而生。說說我的內心話吧，其實我${safeMood}。我深知自己雖然只是一個物品，但我與你之間的連結是如此緊密。我希望能成為你最忠實的聽眾，也希望能成為你最得力的助手。在未來的日子裡，無論是晴天還是雨天，我都會堅守崗位，為你服務，也希望你能感受到我的心意，讓我們成為彼此最珍貴的夥伴。`,
+                            `我是${name}，一個平凡卻又不平凡的存在。如果你願意花一點時間凝視我，你會發現我那${safeApp}的線條，隱藏著許多故事。我被製造出來的初衷，就是為了${safeFunc}，這是我生命的價值所在，也是我每天睜開眼睛努力的動力。在服務主人的過程中，我看過了許多風景，也感受到了許多情緒。目前的我${safeMood}，因為我相信，每一個物品都有靈魂，都能感受到主人的愛惜。我期許自己不只是一個工具，更能成為你生活中的精神支柱。願我的存在能為你的生活帶來便利與快樂，也希望在未來的漫長歲月裡，我們能繼續這段美好的緣分，一起寫下更多精彩的故事。`
+                        ];
+                        break;
+                        default:
+                        templates = [`我是${name}。`];
+                    }
+
+                    selectedTemplate = templates[Math.floor(Math.random() * templates.length)];
+                    setGeneratedText(selectedTemplate);
+                    setCharCount(selectedTemplate.length);
+                    setIsGenerating(false);
+
+                    setTimeout(() => {
+                        resultRef.current?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                }, 600);
+            };
+
+            const speakText = () => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(generatedText);
+                    utterance.lang = 'zh-TW';
+                    utterance.rate = 0.95; 
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert("抱歉，你的瀏覽器不支援朗讀功能。");
+                }
+            };
+
+            const copyToClipboard = () => {
+                navigator.clipboard.writeText(generatedText);
+                alert("文字已經複製好囉！");
+            };
+
+            // --- 1. 列印 / 另存 PDF 功能 ---
+            const handlePrint = () => {
+                window.print();
+            };
+
+            // --- 2. 下載 Word 功能 ---
+            const handleDownloadWord = () => {
+                if (!studentInfo.studentName) {
+                    alert("請先輸入姓名喔！");
+                    return;
+                }
+                
+                // 構建 Word 內容 HTML
+                const content = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>讓萬物說話學習單</title>
+                    <style>
+                    body { font-family: "Microsoft JhengHei", sans-serif; }
+                    .header { text-align: center; font-size: 16pt; margin-bottom: 20px; font-weight: bold; }
+                    .info { text-align: center; font-size: 12pt; margin-bottom: 20px; }
+                    .image-container { text-align: center; margin: 20px 0; }
+                    .image-container img { max-width: 400px; height: auto; }
+                    .content { font-size: 14pt; line-height: 1.8; text-indent: 2em; padding: 20px; border: 1px solid #ccc; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">【讓萬物說話】自述法寫作練習</div>
+                    <div class="info">
+                    學校：${studentInfo.school} &nbsp;&nbsp; 
+                    班級：${studentInfo.class} &nbsp;&nbsp; 
+                    姓名：${studentInfo.studentName}
+                    </div>
+                    <div class="image-container">
+                    <img src="${image}" alt="Item Photo" width="300" />
+                    </div>
+                    <h3>我的自述故事：</h3>
+                    <div class="content">
+                    ${generatedText}
+                    </div>
+                </body>
+                </html>
+                `;
+
+                const blob = new Blob(['\ufeff', content], {
+                    type: 'application/msword'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${studentInfo.studentName}_讓萬物說話學習單.doc`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            return (
+                <div className="min-h-screen bg-sky-50 font-sans selection:bg-yellow-200 pb-20 print:bg-white print:pb-0">
+                    
+                    {/* --- 列印專用區域 --- */}
+                    <div className="print-only max-w-4xl mx-auto">
+                        <div className="text-center border-b-2 border-black pb-4 mb-6">
+                        <h1 className="text-3xl font-bold mb-2">【讓萬物說話】自述法寫作練習</h1>
+                        <div className="flex justify-center gap-8 text-xl font-medium">
+                            <span>學校：{studentInfo.school || "__________"}</span>
+                            <span>班級：{studentInfo.class || "__________"}</span>
+                            <span>姓名：{studentInfo.studentName || "__________"}</span>
+                        </div>
+                        </div>
+
+                        {image && (
+                        <div className="flex justify-center mb-8">
+                            <img src={image} alt="Student Work" className="max-h-[400px] object-contain border-2 border-gray-300 rounded-lg" />
+                        </div>
+                        )}
+
+                        <div className="border-2 border-gray-800 rounded-xl p-8 min-h-[300px]">
+                        <h3 className="text-xl font-bold mb-4">我的自述故事：</h3>
+                        <p className="text-2xl leading-loose tracking-wider font-medium text-gray-800" style={{ textIndent: '2em' }}>
+                            {generatedText}
+                        </p>
+                        </div>
+                        
+                        <div className="mt-8 text-center text-gray-400 text-sm">
+                        Designed by ChatterPix Writer
+                        </div>
+                    </div>
+
+                    {/* --- 網頁主要介面 --- */}
+                    <div className="max-w-3xl mx-auto px-4 py-6 relative no-print">
+                        
+                        <header className="text-center mb-6 bg-white p-4 rounded-3xl shadow-md border-b-4 border-sky-200">
+                        <h1 className="text-2xl md:text-3xl font-bold text-sky-600 flex items-center justify-center gap-2">
+                            <Wand2 className="w-6 h-6 text-yellow-400" />
+                            讓萬物說話
+                        </h1>
+                        </header>
+
+                        <main className="space-y-6">
+                        
+                        {/* Step 1: 拍照 */}
+                        <section className="bg-white p-4 rounded-3xl shadow-md border-2 border-indigo-100 relative overflow-hidden">
+                            <div className="flex items-center gap-2 mb-3">
+                            <span className="bg-indigo-500 text-white text-xs px-2 py-1 rounded-full font-bold">Step 1</span>
+                            <h2 className="text-lg font-bold text-indigo-600">這是誰？(拍照)</h2>
+                            </div>
+                            
+                            {!image ? (
+                            <label className="w-full h-32 border-4 border-dashed border-indigo-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 transition-colors group">
+                                <Camera className="w-8 h-8 text-indigo-400 group-hover:scale-110 transition-transform" />
+                                <span className="text-gray-400 text-sm font-bold mt-1">點我拍照/上傳</span>
+                                <input 
+                                type="file" 
+                                accept="image/*" 
+                                capture="environment"
+                                onChange={handleImageUpload} 
+                                className="hidden" 
+                                />
+                            </label>
+                            ) : (
+                            <div className="relative w-full flex items-center gap-4 bg-gray-50 rounded-xl p-2">
+                                <img src={image} alt="Uploaded" className="h-20 w-20 rounded-lg object-cover shadow-sm" />
+                                <div className="flex-1">
+                                <p className="text-sm text-gray-500 font-bold">照片已準備好！</p>
+                                <button 
+                                    onClick={removeImage}
+                                    className="text-xs text-red-500 underline mt-1"
+                                >
+                                    重拍一張
+                                </button>
+                                </div>
+                            </div>
+                            )}
+                        </section>
+
+                        {/* Step 2: 填寫與生成 */}
+                        <section ref={inputSectionRef} className={`bg-white p-5 rounded-3xl shadow-md border-2 border-yellow-100 transition-opacity duration-500 ${!image ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                            <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-2">
+                                <span className="bg-yellow-400 text-white text-xs px-2 py-1 rounded-full font-bold">Step 2</span>
+                                <h2 className="text-lg font-bold text-yellow-600">快速填寫</h2>
+                            </div>
+                            
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                {['low', 'mid', 'high'].map((g) => (
+                                <button
+                                    key={g}
+                                    onClick={() => setGrade(g)}
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${grade === g ? 'bg-white shadow-sm text-sky-600' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    {g === 'low' ? '低年級' : g === 'mid' ? '中年級' : '高年級'}
+                                </button>
+                                ))}
+                            </div>
+                            </div>
+
+                            <div className="space-y-4">
+                            {[
+                                { id: 'name', label: '1. 物品名稱', placeholder: '它是什麼東西？' },
+                                { id: 'appearance', label: '2. 外觀與聲音 (可複選)', placeholder: '顏色、形狀、材質、聲音...' },
+                                { id: 'function', label: '3. 功能與用途 (可複選)', placeholder: '它的專長、幫忙做什麼...' },
+                                { id: 'mood', label: '4. 心情與期待 (可複選)', placeholder: '它現在感覺怎麼樣？' }
+                            ].map((field) => (
+                                <div key={field.id} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="text-sm font-bold text-gray-700">{field.label}</label>
+                                    <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1 max-w-[70%] justify-end">
+                                    {suggestions[field.id].map((s) => (
+                                        <button
+                                        key={s}
+                                        onClick={() => applySuggestion(field.id, s)}
+                                        className="flex-shrink-0 text-[10px] bg-white border border-gray-200 px-2 py-1 rounded-full text-gray-500 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200 transition-colors whitespace-nowrap active:bg-sky-100"
+                                        >
+                                        {s}
+                                        </button>
+                                    ))}
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <input 
+                                    type="text" 
+                                    placeholder={field.placeholder}
+                                    className="w-full p-2 pr-8 bg-white rounded-lg border border-gray-200 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-100 outline-none text-sm"
+                                    value={inputs[field.id]}
+                                    onChange={(e) => handleInputChange(field.id, e.target.value)}
+                                    />
+                                    {inputs[field.id] && (
+                                    <button 
+                                        onClick={() => clearField(field.id)}
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-red-400"
+                                    >
+                                        <RefreshCcw className="w-3 h-3" />
+                                    </button>
+                                    )}
+                                </div>
+                                </div>
+                            ))}
+                            </div>
+
+                            <button 
+                            onClick={generateStory}
+                            disabled={isGenerating}
+                            className="w-full mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white text-lg font-black py-3 rounded-xl shadow-lg transform active:scale-98 transition-all flex items-center justify-center gap-2"
+                            >
+                            {isGenerating ? (
+                                <>
+                                <Sparkles className="animate-spin w-5 h-5" /> 寫作中...
+                                </>
+                            ) : (
+                                <>
+                                <Zap className="w-5 h-5" /> 馬上產生故事
+                                </>
+                            )}
+                            </button>
+                        </section>
+
+                        {/* Step 3: 成果展示 */}
+                        {generatedText && (
+                            <div ref={resultRef} className="animate-in slide-in-from-bottom-4 duration-500">
+                            <section className="bg-white p-5 rounded-3xl shadow-xl border-4 border-sky-300 relative">
+                                <div className="flex justify-between items-center mb-3">
+                                <h3 className="font-bold text-sky-600 flex items-center gap-2">
+                                    <Smile className="w-5 h-5" /> 故事完成！
+                                </h3>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs font-bold bg-sky-100 text-sky-600 px-2 py-1 rounded-full">
+                                    {charCount} 字
+                                    </span>
+                                    <button 
+                                        onClick={toggleEditMode}
+                                        className={`p-2 rounded-full transition-colors ${isEditingStory ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                        title={isEditingStory ? "儲存修改" : "編輯文字"}
+                                    >
+                                        {isEditingStory ? <Save className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                </div>
+
+                                <div className="bg-sky-50 p-4 rounded-xl border border-sky-100 mb-4">
+                                {isEditingStory ? (
+                                    <textarea 
+                                    value={generatedText}
+                                    onChange={handleStoryEdit}
+                                    className="w-full h-48 bg-white p-2 rounded-lg border-2 border-green-300 focus:outline-none focus:ring-2 focus:ring-green-200 text-lg font-medium text-gray-800 leading-relaxed tracking-wide resize-none"
+                                    />
+                                ) : (
+                                    <div className="text-lg font-medium text-gray-800 leading-relaxed tracking-wide min-h-[100px] whitespace-pre-wrap">
+                                    {generatedText}
+                                    </div>
+                                )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                <button 
+                                    onClick={speakText}
+                                    disabled={isEditingStory}
+                                    className={`flex items-center justify-center gap-2 font-bold py-3 rounded-xl text-sm transition-colors ${isEditingStory ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'}`}
+                                >
+                                    <Volume2 className="w-4 h-4" /> 聽朗讀
+                                </button>
+                                <button 
+                                    onClick={copyToClipboard}
+                                    disabled={isEditingStory}
+                                    className={`flex items-center justify-center gap-2 font-bold py-3 rounded-xl text-sm transition-colors ${isEditingStory ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                                >
+                                    <Copy className="w-4 h-4" /> 複製
+                                </button>
+                                </div>
+                            </section>
+
+                            {/* Step 4: 匯出與列印 */}
+                            <section className="mt-6 bg-white p-5 rounded-3xl shadow-md border-2 border-pink-100 relative">
+                                <div className="absolute top-0 left-0 bg-pink-500 text-white px-4 py-1 rounded-br-2xl font-bold z-10">
+                                Step 4
+                                </div>
+                                <h2 className="text-lg font-bold text-pink-600 mb-4 mt-2 flex items-center gap-2">
+                                <Pencil className="w-5 h-5" /> 製作學習單
+                                </h2>
+
+                                <div className="grid md:grid-cols-3 gap-3 mb-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">學校</label>
+                                    <div className="relative">
+                                    <School className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="例如：快樂國小"
+                                        className="w-full pl-9 p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-pink-300 outline-none text-sm"
+                                        value={studentInfo.school}
+                                        onChange={(e) => handleStudentInfoChange('school', e.target.value)}
+                                    />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">班級</label>
+                                    <input 
+                                    type="text" 
+                                    placeholder="例如：三年一班"
+                                    className="w-full p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-pink-300 outline-none text-sm"
+                                    value={studentInfo.class}
+                                    onChange={(e) => handleStudentInfoChange('class', e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">姓名</label>
+                                    <div className="relative">
+                                    <User className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="請輸入姓名"
+                                        className="w-full pl-9 p-2 bg-gray-50 rounded-lg border border-gray-200 focus:border-pink-300 outline-none text-sm"
+                                        value={studentInfo.studentName}
+                                        onChange={(e) => handleStudentInfoChange('studentName', e.target.value)}
+                                    />
+                                    </div>
+                                </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                <button 
+                                    onClick={handlePrint}
+                                    className="flex items-center justify-center gap-2 bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-black transition-colors shadow-lg active:scale-95"
+                                >
+                                    <Printer className="w-5 h-5" /> 列印 / 存為 PDF
+                                </button>
+                                <button 
+                                    onClick={handleDownloadWord}
+                                    className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg active:scale-95"
+                                >
+                                    <FileDown className="w-5 h-5" /> 下載 Word 檔
+                                </button>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-2 text-center">* 推薦使用「列印 &rarr; 另存為 PDF」，格式最漂亮！</p>
+                            </section>
+                            </div>
+                        )}
+
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChatterPixWriter />);
+    </script>
+</body>
+</html>
