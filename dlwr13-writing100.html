@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寫作接句100招 - 一起快樂的來寫作</title>
+    
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 引入 Babel 用於解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 設定 Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        /* 自定義捲軸 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888; 
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Icons Components (內建圖示，無需額外引用) ---
+        const Search = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        );
+        const X = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>
+        );
+        const BookOpen = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        );
+        const Star = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        );
+        const Sparkles = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>
+        );
+        const Feather = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" x2="2" y1="8" y2="22"/><line x1="17.5" x2="9" y1="15" y2="15"/></svg>
+        );
+
+        // --- Data ---
+        const writingMethods = [
+            { id: 1, title: "加入動詞", example: "微風輕輕「吹」過樹梢，黃澄澄的落葉在空中「跳」著舞。" },
+            { id: 2, title: "加形容詞", example: "「彎彎」的月亮掛在天邊，就像一艘「金黃色」的小船。" },
+            { id: 3, title: "單位量詞", example: "池塘裡有一「朵」盛開的荷花，荷葉上停著兩「隻」紅蜻蜓。" },
+            { id: 4, title: "用摹色法", example: "稻田像一片「金黃色」的海浪，在陽光下閃閃發光。" },
+            { id: 5, title: "用摹聲法", example: "春雨「淅瀝淅瀝」地下著，喚醒了沉睡的大地。" },
+            { id: 6, title: "加入味道", example: "媽媽煮的玉米濃湯，喝起來「香甜濃郁」，充滿了愛的味道。" },
+            { id: 7, title: "加入氣味", example: "走進花園，一陣陣「淡淡的」桂花香撲鼻而來，令人心曠神怡。" },
+            { id: 8, title: "加入觸覺", example: "春風吹在臉上「暖暖的」，就像媽媽溫柔的手。" },
+            { id: 9, title: "外觀描述", example: "牽牛花像一個個「紫色的小喇叭」，對著太陽吹奏晨曲。" },
+            { id: 10, title: "用排比法", example: "春天是溫暖的，夏天是熱情的，秋天是涼爽的，冬天是寧靜的。" },
+            { id: 11, title: "使用對比", example: "「勤勞」的螞蟻在夏天努力存糧，「懶惰」的蟋蟀卻只顧著唱歌。" },
+            { id: 12, title: "用驚嘆！", example: "哇！這片五彩繽紛的花海，真是太迷人了！" },
+            { id: 13, title: "用疑問？", example: "這麼晚了，月亮姐姐為什麼還不睡覺，是不是在聽星星說故事？" },
+            { id: 14, title: "使用肯定", example: "只要我們肯努力，夢想「一定」會開花結果。" },
+            { id: 15, title: "使用否定", example: "失敗並「不是」結束，而是通往成功的另一個開始。" },
+            { id: 16, title: "使用諧音", example: "過年吃魚，象徵年年有「魚」（餘），希望每年都有剩餘的財富。" },
+            { id: 17, title: "用疊字詞", example: "天上的星星「亮晶晶」，好像無數隻眼睛在眨阿眨。" },
+            { id: 18, title: "使用對話", example: "小草說：「我要快快長大！」大樹說：「別怕，我會幫你擋風遮雨。」" },
+            { id: 19, title: "加入數據", example: "這棵老榕樹已經有「一百歲」了，樹下可以容納「十幾個人」乘涼。" },
+            { id: 20, title: "安排次序", example: "回到家，我「先」把手洗乾淨，「再」坐下來享用美味的點心。" },
+            { id: 21, title: "反面敘述", example: "如果不愛護地球，我們就再也看不到美麗的藍天白雲了。" },
+            { id: 22, title: "正面敘述", example: "多閱讀好書，可以增廣見聞，豐富我們的心靈。" },
+            { id: 23, title: "由近而遠", example: "眼前是綠油油的稻田，遠處是連綿起伏的高山。" },
+            { id: 24, title: "由遠而近", example: "天邊的烏雲慢慢飄過來，雨滴接著落在了我的窗前。" },
+            { id: 25, title: "用擬人法", example: "太陽公公露出了笑臉，溫暖了大地，花兒也抬起頭來打招呼。" },
+            { id: 26, title: "用擬物法", example: "頑皮的弟弟像一隻「小猴子」，整天在沙發上跳上跳下。" },
+            { id: 27, title: "用設問法", example: "幸福是什麼？幸福就是全家人健康快樂地在一起。" },
+            { id: 28, title: "用借代法", example: "看到那位「白衣天使」（護士）走進病房，病人的心裡安定了許多。" },
+            { id: 29, title: "用雙關法", example: "做人要腳踏實地，千萬不要「腳踏兩條船」，以免兩頭落空。" },
+            { id: 30, title: "用呼告法", example: "親愛的老師啊！謝謝您像園丁一樣，細心地灌溉我們。" },
+            { id: 31, title: "用引語法", example: "俗話說：「一寸光陰一寸金」，我們應該要珍惜寶貴的時間。" },
+            { id: 32, title: "用謙卑法", example: "我懂得還不夠多，就像大海裡的一滴水，還需要多多學習。" },
+            { id: 33, title: "用誇大法", example: "他的歌聲太驚人了，連窗戶的玻璃都快被震破了！" },
+            { id: 34, title: "用押韻法", example: "小小白兔，白白肚「肚」，跳起舞來真像漫「步」。" },
+            { id: 35, title: "解釋加長", example: "螢火蟲，一種尾巴會發光的小昆蟲，在夏夜的草叢裡提著燈籠飛舞。" },
+            { id: 36, title: "加諷刺句", example: "他說自己最大方，結果連一塊錢都捨不得拿出來，真是鐵公雞。" },
+            { id: 37, title: "用反正句", example: "雖然今天下著大雨，但是我的心情卻像晴天一樣開朗。" },
+            { id: 38, title: "連三四句", example: "讀書，寫字，運動，是我的校園生活三部曲。" },
+            { id: 39, title: "用聯珠法", example: "欣賞美景，美景如畫，畫中有詩，詩中有情。" },
+            { id: 40, title: "加入人物", example: "慈祥的奶奶坐在搖椅上，戴著老花眼鏡，縫補著我的舊衣服。" },
+            { id: 41, title: "加入時間", example: "「清晨」，公雞喔喔啼，喚醒了沉睡的大地，新的一天開始了。" },
+            { id: 42, title: "加入事情", example: "昨天學校舉辦了「運動會」，操場上充滿了加油的歡呼聲。" },
+            { id: 43, title: "加入地點", example: "我們來到了「陽明山」，這裡的花季總是吸引許多遊客。" },
+            { id: 44, title: "加入物件", example: "爸爸戴著「眼鏡」，手裡拿著「報紙」，專心地閱讀著。" },
+            { id: 45, title: "加入景觀", example: "阿里山的雲海，像白色的波浪一樣翻滾，壯觀極了。" },
+            { id: 46, title: "加入因果", example: "「因為」颱風帶來豪雨，「所以」山區的道路都封閉了。" },
+            { id: 47, title: "使用伏筆", example: "烏雲密布，燕子低飛，看來一場大雨即將來臨。" },
+            { id: 48, title: "加入譬喻", example: "老師像一支燃燒的蠟燭，燃燒自己，照亮了學生。" },
+            { id: 49, title: "加入事例", example: "許多偉人，例如愛迪生，都是經歷無數次失敗才成功的。" },
+            { id: 50, title: "使用押韻", example: "一二三，爬大「山」；四五六，翻筋「斗」。" },
+            { id: 51, title: "加入條列", example: "明天郊遊要準備：1.水壺、2.便當、3.遮陽帽。" },
+            { id: 52, title: "用百分法", example: "對於這次的考試，我有「百分之百」的信心可以拿到好成績。" },
+            { id: 53, title: "用細膩法", example: "晶瑩剔透的露珠在荷葉上滾動，像一顆顆透明的珍珠。" },
+            { id: 54, title: "用矛盾法", example: "雖然他是個外表粗曠的巨人，卻有一顆溫柔細膩的心。" },
+            { id: 55, title: "顛倒描述", example: "這裡的風景美如畫，真是畫如風景美，讓人流連忘返。" },
+            { id: 56, title: "用趣味詞", example: "弟弟「狼吞虎嚥」地吃著蛋糕，臉上沾滿了奶油，樣子真逗趣。" },
+            { id: 57, title: "加入幽默", example: "他長得很高，高到可以不用梯子就能換天花板的燈泡。" },
+            { id: 58, title: "加入動作", example: "棒球選手「揮動」球棒，「用力」一擊，球飛得好遠好遠。" },
+            { id: 59, title: "加入方向", example: "太陽從「東方」升起，帶來光明；從「西方」落下，帶來彩霞。" },
+            { id: 60, title: "分辨主次", example: "寫文章主旨要明確，形容詞只是修飾，不要喧賓奪主。" },
+            { id: 61, title: "用感受詞", example: "聽到這個好消息，我感到「無比興奮」，心跳都加速了。" },
+            { id: 62, title: "加修飾詞", example: "「五顏六色」的氣球，飄浮在「蔚藍」的天空中，像一顆顆寶石。" },
+            { id: 63, title: "加入句型", example: "我們「不但」要用功讀書，「還要」鍛鍊強健的體魄。" },
+            { id: 64, title: "加關聯詞", example: "「只要」堅持到底，不輕言放棄，「就」一定能獲得成功。" },
+            { id: 65, title: "說明為何", example: "樹木可以淨化空氣、涵養水源，「所以」我們要多種樹。" },
+            { id: 66, title: "結果怎樣", example: "他每天勤練鋼琴，日子久了，「結果」彈出一手好琴。" },
+            { id: 67, title: "哪裡發生", example: "這個溫馨的故事，就發生在「一個充滿愛的小村莊」裡。" },
+            { id: 68, title: "說出道理", example: "「助人為快樂之本」，幫助別人，自己也會感到快樂。" },
+            { id: 69, title: "心情轉換", example: "原本很「擔心」考試考不好，聽到老師的鼓勵，心情頓時「輕鬆」了。" },
+            { id: 70, title: "揣摩意義", example: "媽媽皺著眉頭看著冰箱，大概是在煩惱晚餐要煮什麼吧。" },
+            { id: 71, title: "用虛實法", example: "霧中的山景，若隱若現，彷彿傳說中的仙境一般。" },
+            { id: 72, title: "強化主旨", example: "這篇文章主要在告訴我們「誠實」的重要性，做人不能說謊。" },
+            { id: 73, title: "強化界說", example: "所謂「朋友」，就是當你遇到困難時，願意伸出援手的人。" },
+            { id: 74, title: "例子說明", example: "台灣有許多著名的美食，像是珍珠奶茶、臭豆腐和小籠包。" },
+            { id: 75, title: "加入幻想", example: "我想長出一對翅膀，飛到雲端上，和星星一起玩耍。" },
+            { id: 76, title: "假設說明", example: "「如果」我是一隻鳥，我要飛遍世界各地，欣賞美麗的風景。" },
+            { id: 77, title: "評論對錯", example: "在圖書館大聲喧嘩，是影響別人閱讀的「錯誤行為」。" },
+            { id: 78, title: "起承轉合", example: "種子發芽(起)，長出綠葉(承)，開花結果(轉)，枯萎凋謝(合)。" },
+            { id: 79, title: "倒敘敘述", example: "看著這張泛黃的舊照片，我不禁想起了童年在鄉下的快樂時光。" },
+            { id: 80, title: "氣氛營造", example: "考試時，教室裡靜得連一根針掉在地上的聲音都聽得見。" },
+            { id: 81, title: "抓住題眼", example: "題目的重點是「快樂」，所以我們要描寫生活中開心的事情。" },
+            { id: 82, title: "確立範圍", example: "我們這次討論的主題範圍，僅限於「校園內的安全」問題。" },
+            { id: 83, title: "加入層遞", example: "他的成績從全班第十名，進步到第五名，最後拿到了第一名。" },
+            { id: 84, title: "分分分合", example: "春天有花，夏天有蟬，秋天有月，冬天有雪，四季都有獨特的美景。" },
+            { id: 85, title: "散列安排", example: "公園裡，有人在跑步，有人在跳舞，也有人在樹下下棋。" },
+            { id: 86, title: "寬中求窄", example: "在眾多的水果中，我「最喜歡」的是香甜多汁的芒果。" },
+            { id: 87, title: "窄中求寬", example: "從一粒沙裡看世界，從一朵花裡見天堂，細微處也有大學問。" },
+            { id: 88, title: "融入自述", example: "我是一棵大樹，站在路邊，張開手臂守護著過路的人們。" },
+            { id: 89, title: "綱要擬定", example: "寫作前先列出大綱，安排好段落，文章結構才會完整清晰。" },
+            { id: 90, title: "詳略側寫", example: "詳細描寫主角的表情動作，簡單帶過背景的環境，才能突顯重點。" },
+            { id: 91, title: "回憶一下", example: "記得小時候，外婆常坐在庭院裡，唱著搖籃曲哄我入睡。" },
+            { id: 92, title: "想想過程", example: "做實驗時，要仔細觀察每一個步驟的變化，才能得出正確的結論。" },
+            { id: 93, title: "寫出原因", example: "因為下雨路滑，所以走路要特別小心，以免滑倒受傷。" },
+            { id: 94, title: "加入感動", example: "看到那一幕互助的畫面，我不禁熱淚盈眶，心裡充滿了感動。" },
+            { id: 95, title: "加入故事", example: "很久很久以前，山裡住著一位神仙，他專門幫助善良的人..." },
+            { id: 96, title: "解釋字詞", example: "「推敲」這個詞，是形容寫作時反覆思考、斟酌字句的過程。" },
+            { id: 97, title: "切入聯想", example: "看到天上圓圓的月亮，我就想到了中秋節好吃的月餅。" },
+            { id: 98, title: "綜合感官", example: "看著紅紅的營火，聽著柴火劈啪聲，聞著烤肉香，感覺真溫暖。" },
+            { id: 99, title: "喜怒哀樂", example: "人生就像一齣戲，充滿了歡笑與淚水，有喜怒也有哀樂。" },
+            { id: 100, title: "祈禱祝福", example: "祝福大家身體健康，萬事如意，每天都充滿了笑容！" },
+        ];
+
+        const App = () => {
+            const [selectedMethod, setSelectedMethod] = useState(null);
+            const [searchTerm, setSearchTerm] = useState("");
+            const [filteredMethods, setFilteredMethods] = useState(writingMethods);
+
+            useEffect(() => {
+                setFilteredMethods(
+                    writingMethods.filter((method) =>
+                        method.title.includes(searchTerm) || method.id.toString().includes(searchTerm)
+                    )
+                );
+            }, [searchTerm]);
+
+            const handleMethodClick = (method) => {
+                setSelectedMethod(method);
+            };
+
+            const closeModal = () => {
+                setSelectedMethod(null);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-100 font-sans relative overflow-hidden flex flex-col">
+                    {/* 裝飾背景 */}
+                    <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none z-0">
+                        <div className="w-full h-full" style={{ 
+                            backgroundImage: 'radial-gradient(#3b82f6 2px, transparent 2px)', 
+                            backgroundSize: '30px 30px' 
+                        }}></div>
+                    </div>
+
+                    {/* Header */}
+                    <header className="bg-red-600 text-white p-4 shadow-lg sticky top-0 z-20 border-b-8 border-slate-800">
+                        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between">
+                            <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                                <div className="bg-white p-2 rounded-full border-4 border-slate-800">
+                                    <BookOpen className="text-red-600 w-8 h-8" />
+                                </div>
+                                <div>
+                                    <h1 className="text-4xl md:text-6xl font-bold tracking-wider mb-2" style={{ textShadow: '3px 3px 0 #1e293b' }}>
+                                        寫作接句100招
+                                    </h1>
+                                    <p className="text-sm md:text-base font-bold text-yellow-300 tracking-wide flex items-center">
+                                        <Feather className="w-4 h-4 mr-1" />
+                                        一起快樂的來寫作
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="relative w-full md:w-64">
+                                <input
+                                    type="text"
+                                    placeholder="搜尋技巧 (例如: 擬人)"
+                                    className="w-full pl-10 pr-4 py-2 rounded-full border-4 border-slate-800 text-slate-800 focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <div className="absolute left-3 top-3 text-slate-500 w-5 h-5 pointer-events-none">
+                                    <Search className="w-5 h-5" />
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content Grid */}
+                    <main className="max-w-6xl mx-auto p-4 relative z-10 flex-grow w-full">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-slate-700 font-bold text-lg flex items-center">
+                                <Star className="w-5 h-5 text-yellow-500 mr-2 fill-current" />
+                                寫作技巧列表
+                            </h2>
+                            <span className="bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-bold">
+                                已顯示: {filteredMethods.length} / 100
+                            </span>
+                        </div>
+                    
+                        {/* Adjusted Grid: grid-cols-4 for large screens to make exactly 25 rows */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {filteredMethods.map((method) => (
+                                <button
+                                    key={method.id}
+                                    onClick={() => handleMethodClick(method)}
+                                    className="group relative bg-white border-b-4 border-r-4 border-slate-300 hover:border-yellow-500 active:border-b-0 active:border-r-0 active:translate-y-1 active:translate-x-1 rounded-xl px-4 py-3 flex items-center justify-start transition-all duration-100"
+                                >
+                                    {/* Layout Change: Inline ID and Title with Large Font */}
+                                    <div className="text-left w-full">
+                                        <span className="font-bold text-slate-700 group-hover:text-blue-600 text-[32px] leading-tight block truncate">
+                                            {method.id}、{method.title}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                        <Sparkles className="w-6 h-6 text-yellow-400 fill-current" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {filteredMethods.length === 0 && (
+                            <div className="text-center py-20 text-slate-400 font-bold text-xl">
+                                找不到這個技巧... 試試看別的關鍵字？
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="bg-slate-800 text-slate-300 py-6 mt-8 border-t-4 border-red-600 relative z-10 w-full">
+                        <div className="max-w-6xl mx-auto px-4 text-center">
+                            <p className="font-bold text-lg tracking-wider">
+                                ＠劉宏龍設計編寫 ｜ 呂舒婷製作
+                            </p>
+                        </div>
+                    </footer>
+
+                    {/* Modal / Data Screen */}
+                    {selectedMethod && (
+                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                            <div 
+                                className="bg-red-600 w-full max-w-2xl rounded-2xl p-2 border-4 border-slate-900 shadow-2xl relative"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* Modal Header */}
+                                <div className="flex justify-between items-center mb-2 px-2 pt-2">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-8 h-8 rounded-full bg-blue-400 border-4 border-white shadow-inner animate-pulse"></div>
+                                        <div className="w-3 h-3 rounded-full bg-red-800"></div>
+                                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                    </div>
+                                    <button 
+                                        onClick={closeModal}
+                                        className="text-white hover:text-yellow-300 transition-colors"
+                                    >
+                                        <X className="w-8 h-8" />
+                                    </button>
+                                </div>
+
+                                {/* Screen Container */}
+                                <div className="bg-slate-200 p-4 rounded-xl rounded-bl-3xl border-4 border-slate-800 relative">
+                                
+                                    {/* Screen Display */}
+                                    <div className="bg-green-100 rounded-lg border-2 border-slate-400 p-8 relative overflow-hidden min-h-[250px] flex flex-col justify-center items-center">
+                                        {/* Scanlines effect */}
+                                        <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
+                                        
+                                        <div className="relative z-10 w-full">
+                                            <div className="text-center mb-4">
+                                                <div className="text-sm font-bold text-slate-500 mb-1 tracking-widest">
+                                                    技巧 #{selectedMethod.id}
+                                                </div>
+                                                <h3 className="text-4xl font-black text-slate-800 bg-white/60 inline-block px-6 py-2 rounded-full shadow-sm">
+                                                    {selectedMethod.title}
+                                                </h3>
+                                            </div>
+                                            
+                                            <div className="bg-white/90 p-6 rounded-xl border-l-8 border-green-500 shadow-md transform -rotate-1">
+                                                <p className="text-2xl md:text-3xl font-medium text-slate-800 leading-relaxed text-left font-serif">
+                                                    <span className="text-green-600 mr-2 text-4xl align-top">“</span>
+                                                    {selectedMethod.example}
+                                                    <span className="text-green-600 ml-2 text-4xl align-bottom">”</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Controls Decoration */}
+                                    <div className="mt-4 flex justify-between items-center px-4">
+                                        <div className="w-10 h-10 rounded-full bg-slate-800 shadow-inner"></div>
+                                        <div className="flex space-x-3">
+                                            <div className="w-20 h-6 bg-red-800 rounded-full shadow-inner"></div>
+                                            <div className="w-20 h-6 bg-blue-800 rounded-full shadow-inner"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
