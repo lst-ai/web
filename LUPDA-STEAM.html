@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEAM LUPDA 學生能力檢核系統</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (使用穩定的 18.2.0 版本) -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .gradient-text { background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(to right, #2563eb, #9333ea); }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 列印專用樣式 */
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white; padding: 0; margin: 0; }
+            #root { margin: 0; padding: 0; }
+            .print-container { box-shadow: none !important; border: none !important; padding: 0 !important; }
+            .print-break-inside { break-inside: avoid; }
+            
+            /* 優化列印時的圖表與文字大小 */
+            svg { max-height: 350px; } 
+            
+            /* 強制背景顏色與邊框列印出來 */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            
+            /* 報表邊框樣式 */
+            .report-box { border: 2px solid #000 !important; background-color: #fff !important; }
+            .report-header { border-bottom: 2px solid #000 !important; }
+            .report-text { color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- 1. 內建圖示元件 ---
+        const Icons = {
+            Brain: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-4A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-4A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+            ),
+            Wrench: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            ),
+            Hammer: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V7.86c0-.55-.45-1-1-1H14.5c-.55 0-1 .45-1 1v.38c0 .85-.33 1.65-.93 2.25L11.3 11.7"/><path d="m15 2 2 2-2 2-2-2 2-2Z"/></svg>
+            ),
+            Palette: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            ),
+            Calculator: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+            ),
+            CheckCircle: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            ),
+            ArrowRight: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            ),
+            Star: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            ),
+            RefreshCw: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            ),
+            Download: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            ),
+            User: (props) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            )
+        };
+
+        // --- 2. 客製化雷達圖元件 ---
+        const CustomRadarChart = ({ data, size = 300 }) => {
+            const center = size / 2;
+            const radius = (size / 2) - 40; 
+            const angleStep = (Math.PI * 2) / 5;
+            const maxScore = 4;
+            
+            const getCoordinates = (value, index) => {
+                const adjustedAngle = index * angleStep - (Math.PI / 2);
+                return {
+                    x: center + (value / maxScore) * radius * Math.cos(adjustedAngle),
+                    y: center + (value / maxScore) * radius * Math.sin(adjustedAngle)
+                };
+            };
+
+            const gridLevels = [1, 2, 3, 4];
+            const dataPoints = data.map((d, i) => getCoordinates(d.score, i));
+            const pathData = dataPoints.map((p, i) => (i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(' ') + ' Z';
+
+            return (
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
+                    {gridLevels.map((level) => {
+                        const points = data.map((_, i) => {
+                            const p = getCoordinates(level, i);
+                            return `${p.x},${p.y}`;
+                        }).join(' ');
+                        return <polygon key={level} points={points} fill="none" stroke="#e5e7eb" strokeWidth="1" />;
+                    })}
+
+                    {data.map((item, i) => {
+                        const p = getCoordinates(4, i);
+                        return (
+                            <g key={i}>
+                                <line x1={center} y1={center} x2={p.x} y2={p.y} stroke="#e5e7eb" strokeWidth="1" />
+                                <text 
+                                    x={p.x * 1.15 - (center * 0.15)} 
+                                    y={p.y * 1.15 - (center * 0.15)} 
+                                    textAnchor="middle" 
+                                    dominantBaseline="middle" 
+                                    fill="#4b5563"
+                                    fontSize="12"
+                                    fontWeight="bold"
+                                >
+                                    {item.label}
+                                </text>
+                            </g>
+                        );
+                    })}
+
+                    <path d={pathData} fill="rgba(59, 130, 246, 0.5)" stroke="#2563eb" strokeWidth="2" />
+                    {dataPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill="#2563eb" />)}
+                </svg>
+            );
+        };
+
+        // --- 3. LUPDA 資料結構 ---
+        const lupdaData = [
+            {
+                id: 'L',
+                dimension: 'Learn (學習)',
+                subject: 'Science (科學)',
+                IconComponent: Icons.Brain,
+                color: 'bg-blue-100 text-blue-700',
+                borderColor: 'border-blue-300',
+                description: '像科學家一樣思考，提出假設並驗證。',
+                indicators: [
+                    { id: 'L1', text: '能針對問題提出假設，並做實驗來驗證它。' },
+                    { id: 'L2', text: '能收集實驗數據，並分析結果是怎麼來的。' },
+                    { id: 'L3', text: '能根據實驗結果做出合理的推論和結論。' }
+                ]
+            },
+            {
+                id: 'U',
+                dimension: 'Use (使用)',
+                subject: 'Technology (技術)',
+                IconComponent: Icons.Wrench,
+                color: 'bg-purple-100 text-purple-700',
+                borderColor: 'border-purple-300',
+                description: '正確選擇並使用工具，靈活調整。',
+                indicators: [
+                    { id: 'U1', text: '能選出最適合這個任務的材料和工具。' },
+                    { id: 'U2', text: '能依照正確的規範和安全方式使用工具。' },
+                    { id: 'U3', text: '能根據工具測量出來的結果，修改或調整模型。' }
+                ]
+            },
+            {
+                id: 'P',
+                dimension: 'Practice (實踐)',
+                subject: 'Engineering (工程)',
+                IconComponent: Icons.Hammer,
+                color: 'bg-orange-100 text-orange-700',
+                borderColor: 'border-orange-300',
+                description: '動手組裝系統，找出問題並修復。',
+                indicators: [
+                    { id: 'P1', text: '了解作品中每一個零件的功能是什麼。' },
+                    { id: 'P2', text: '能正確地把零件組裝起來，讓系統運作。' },
+                    { id: 'P3', text: '當系統出錯時，能找出原因並修復它。' }
+                ]
+            },
+            {
+                id: 'D',
+                dimension: 'Design (設計)',
+                subject: 'Art (藝術)',
+                IconComponent: Icons.Palette,
+                color: 'bg-pink-100 text-pink-700',
+                borderColor: 'border-pink-300',
+                description: '發揮創意美學，展現獨特風格。',
+                indicators: [
+                    { id: 'D1', text: '作品具有美感，視覺上令人賞心悅目。' },
+                    { id: 'D2', text: '設計獨特，展現了個人的風格。' },
+                    { id: 'D3', text: '在作品中發揮了豐富的想像力和創造力。' }
+                ]
+            },
+            {
+                id: 'A',
+                dimension: 'Apply (應用)',
+                subject: 'Mathematics (數學)',
+                IconComponent: Icons.Calculator,
+                color: 'bg-green-100 text-green-700',
+                borderColor: 'border-green-300',
+                description: '運用數據分析，找出趨勢規律。',
+                indicators: [
+                    { id: 'A1', text: '能使用適當的工具進行精準的測量。' },
+                    { id: 'A2', text: '能把測量出來的數據畫成圖表（如長條圖、折線圖）。' },
+                    { id: 'A3', text: '能從圖表中看出數據變化的趨勢和規律。' }
+                ]
+            }
+        ];
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('intro');
+            const [scores, setScores] = useState({});
+            const [studentInfo, setStudentInfo] = useState({
+                date: new Date().toISOString().split('T')[0], 
+                school: '',
+                className: '',
+                name: ''
+            });
+            
+            useEffect(() => {
+                const initialScores = {};
+                lupdaData.forEach(dim => {
+                    dim.indicators.forEach(ind => {
+                        initialScores[ind.id] = 2; // Default 2
+                    });
+                });
+                setScores(initialScores);
+            }, []);
+
+            const handleScoreChange = (indicatorId, value) => {
+                setScores(prev => ({
+                    ...prev,
+                    [indicatorId]: parseInt(value)
+                }));
+            };
+
+            const handleInfoChange = (e) => {
+                const { name, value } = e.target;
+                setStudentInfo(prev => ({
+                    ...prev,
+                    [name]: value
+                }));
+            };
+
+            const calculateDimensionScore = (dimId) => {
+                const dim = lupdaData.find(d => d.id === dimId);
+                const total = dim.indicators.reduce((acc, curr) => acc + (scores[curr.id] || 0), 0);
+                return (total / 3).toFixed(1); 
+            };
+
+            const getRadarData = () => {
+                return lupdaData.map(dim => ({
+                    label: dim.subject.split(' ')[0], 
+                    score: parseFloat(calculateDimensionScore(dim.id))
+                }));
+            };
+
+            const resetQuiz = () => {
+                const resetScores = {};
+                lupdaData.forEach(dim => {
+                    dim.indicators.forEach(ind => {
+                        resetScores[ind.id] = 2;
+                    });
+                });
+                setScores(resetScores);
+                setActiveTab('intro');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+            const maxScore = 15 * 4;
+            const percentage = Math.round((totalScore / maxScore) * 100);
+
+            // PDF Export Function
+            const handlePrint = () => {
+                window.print();
+            };
+
+            return (
+                <div className="min-h-screen pb-12 font-sans">
+                    {/* Header - Hidden in Print */}
+                    <header className="bg-white shadow-sm sticky top-0 z-10 no-print">
+                        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <span className="text-2xl">🚀</span>
+                                <h1 className="text-xl font-bold text-gray-800">LUPDA STEAM 學生能力檢核系統</h1>
+                            </div>
+                            <nav className="flex gap-2 text-sm font-medium">
+                                <button 
+                                    onClick={() => setActiveTab('intro')}
+                                    className={`px-3 py-2 rounded-full transition-colors ${activeTab === 'intro' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                >
+                                    認識模型
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('quiz')}
+                                    className={`px-3 py-2 rounded-full transition-colors ${activeTab === 'quiz' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                >
+                                    檢核表
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('result')}
+                                    className={`px-3 py-2 rounded-full transition-colors ${activeTab === 'result' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                >
+                                    分析報告
+                                </button>
+                            </nav>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto px-4 mt-8">
+                        
+                        {/* Tab: Intro */}
+                        {activeTab === 'intro' && (
+                            <div className="animate-fade-in space-y-8">
+                                <div className="text-center space-y-4">
+                                    <h2 className="text-4xl font-extrabold gradient-text leading-tight p-2">
+                                        解鎖學生的 STEAM 學習密碼
+                                    </h2>
+                                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                                        LUPDA 是一個專門用來評估「超學科」能力的模型。
+                                        透過此工具，教師可以全面評估學生如何將科學、技術、工程、藝術和數學
+                                        <span className="font-bold text-blue-600"> 整合應用於解決問題</span>。
+                                    </p>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {lupdaData.map((item) => (
+                                        <div key={item.id} className={`p-6 rounded-2xl border-2 ${item.borderColor} bg-white card-hover transition-all duration-300`}>
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className={`p-3 rounded-xl ${item.color}`}>
+                                                    <item.IconComponent size={32} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-gray-800">{item.dimension}</h3>
+                                                    <span className="text-sm text-gray-500 font-medium tracking-wider">{item.subject}</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-600 leading-relaxed mb-4">
+                                                {item.description}
+                                            </p>
+                                            <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-500">
+                                                <strong className="block mb-1 text-gray-700">關鍵能力：</strong>
+                                                <ul className="list-disc list-inside space-y-1">
+                                                    {item.indicators.map(ind => (
+                                                        <li key={ind.id} className="truncate">{ind.text.split('，')[0]}...</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="text-center pt-8">
+                                    <button 
+                                        onClick={() => {
+                                            setActiveTab('quiz');
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:shadow-lg transform hover:scale-105 transition-all"
+                                    >
+                                        開始填寫檢核表 <Icons.ArrowRight size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Quiz (Checklist) */}
+                        {activeTab === 'quiz' && (
+                            <div className="space-y-6 animate-fade-in">
+                                {/* 學生資料輸入區 */}
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500 mb-6">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <Icons.User className="text-blue-500" /> 受評學生基本資料
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">評量日期</label>
+                                            <input 
+                                                type="date" 
+                                                name="date"
+                                                value={studentInfo.date}
+                                                onChange={handleInfoChange}
+                                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">學校名稱</label>
+                                            <input 
+                                                type="text" 
+                                                name="school"
+                                                placeholder="請輸入學校"
+                                                value={studentInfo.school}
+                                                onChange={handleInfoChange}
+                                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">班級</label>
+                                            <input 
+                                                type="text" 
+                                                name="className"
+                                                placeholder="請輸入班級"
+                                                value={studentInfo.className}
+                                                onChange={handleInfoChange}
+                                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">學生姓名</label>
+                                            <input 
+                                                type="text" 
+                                                name="name"
+                                                placeholder="請輸入姓名"
+                                                value={studentInfo.name}
+                                                onChange={handleInfoChange}
+                                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                        <Icons.CheckCircle className="text-green-500" /> 檢核表填寫說明
+                                    </h3>
+                                    <p className="text-gray-600 text-sm">
+                                        請針對下列 15 個項目，評估學生在最近一次專題或課程中的表現。
+                                        <br/>
+                                        <span className="font-bold text-blue-600">4分 (優秀)：</span> 完全掌握，能主動做到甚至教別人。
+                                        <br/>
+                                        <span className="font-bold text-blue-600">3分 (良好)：</span> 能依照要求完成任務。
+                                        <br/>
+                                        <span className="font-bold text-blue-600">2分 (普通)：</span> 需要協助才能完成。
+                                        <br/>
+                                        <span className="font-bold text-blue-600">1分 (待加強)：</span> 不太知道該怎麼做。
+                                    </p>
+                                </div>
+
+                                {lupdaData.map((section) => (
+                                    <div key={section.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                                        <div className={`px-6 py-4 border-b ${section.color} bg-opacity-20 flex items-center gap-3`}>
+                                            <section.IconComponent size={24} />
+                                            <h3 className="text-lg font-bold text-gray-800">{section.dimension} - {section.subject}</h3>
+                                        </div>
+                                        <div className="p-6 space-y-8">
+                                            {section.indicators.map((ind) => (
+                                                <div key={ind.id} className="space-y-3">
+                                                    <div className="flex justify-between items-end">
+                                                        <label className="text-gray-700 font-medium block">{ind.text}</label>
+                                                        <span className={`text-xl font-bold ${
+                                                            scores[ind.id] === 4 ? 'text-green-600' : 
+                                                            scores[ind.id] === 3 ? 'text-blue-600' :
+                                                            scores[ind.id] === 2 ? 'text-yellow-600' : 'text-red-500'
+                                                        }`}>
+                                                            {scores[ind.id]} 分
+                                                        </span>
+                                                    </div>
+                                                    <input 
+                                                        type="range" 
+                                                        min="1" 
+                                                        max="4" 
+                                                        step="1"
+                                                        value={scores[ind.id]}
+                                                        onChange={(e) => handleScoreChange(ind.id, e.target.value)}
+                                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                                    />
+                                                    <div className="flex justify-between text-xs text-gray-400 px-1">
+                                                        <span>待加強 (1)</span>
+                                                        <span>普通 (2)</span>
+                                                        <span>良好 (3)</span>
+                                                        <span>優秀 (4)</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="flex justify-center pt-6 pb-12">
+                                    <button 
+                                        onClick={() => {
+                                            setActiveTab('result');
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="bg-green-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-green-700 shadow-lg transition-all"
+                                    >
+                                        提交並查看分析報告
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Result */}
+                        {activeTab === 'result' && (
+                            <div className="space-y-8 animate-fade-in pb-12">
+                                
+                                {/* 報告標題與學生資料 (正式表格樣式，列印時強化邊框) */}
+                                <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 report-box mb-8">
+                                    <div className="text-center mb-6 border-b pb-4 report-header">
+                                        <h1 className="text-3xl font-bold text-gray-800 report-text">LUPDA STEAM 能力分析報告</h1>
+                                        <p className="text-gray-500 mt-1 report-text text-sm">LUPDA: Comprehensive Rubrics-based Assessment Model</p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+                                        <div>
+                                            <span className="text-gray-500 text-sm block mb-1 report-text uppercase tracking-wide">學校 School</span>
+                                            <span className="text-xl font-bold text-gray-800 report-text border-b border-gray-300 block pb-1 w-full">
+                                                {studentInfo.school || '---'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-sm block mb-1 report-text uppercase tracking-wide">班級 Class</span>
+                                            <span className="text-xl font-bold text-gray-800 report-text border-b border-gray-300 block pb-1 w-full">
+                                                {studentInfo.className || '---'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-sm block mb-1 report-text uppercase tracking-wide">姓名 Name</span>
+                                            <span className="text-xl font-bold text-gray-800 report-text border-b border-gray-300 block pb-1 w-full">
+                                                {studentInfo.name || '---'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-sm block mb-1 report-text uppercase tracking-wide">評量日期 Date</span>
+                                            <span className="text-xl font-bold text-gray-800 report-text border-b border-gray-300 block pb-1 w-full">
+                                                {studentInfo.date}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Actions - Hidden in Print */}
+                                <div className="flex justify-end no-print">
+                                    <button 
+                                        onClick={handlePrint}
+                                        className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+                                    >
+                                        <Icons.Download size={18} /> 匯出 PDF / 列印報告
+                                    </button>
+                                </div>
+
+                                {/* Quote Section - Daily Inspiration */}
+                                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-2xl border border-orange-100 flex items-start gap-4 print-container report-box">
+                                    <Icons.Star className="text-orange-400 flex-shrink-0 mt-1" />
+                                    <div>
+                                        <h4 className="text-sm font-bold text-orange-800 uppercase tracking-wider mb-2 report-text">Daily Inspiration</h4>
+                                        <p className="text-lg font-serif text-gray-800 italic report-text">"Believe you can and you're halfway there."</p>
+                                        <p className="text-md text-gray-600 mt-1 report-text">相信你能做到，你就已經成功了一半。</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-8 print:block print:space-y-8">
+                                    {/* Chart Section */}
+                                    <div className="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 flex flex-col items-center justify-center min-h-[400px] print-break-inside print-container report-box">
+                                        <h3 className="text-xl font-bold text-gray-700 mb-4 report-text">STEAM 能力雷達圖</h3>
+                                        <div className="w-full flex justify-center items-center">
+                                            <CustomRadarChart data={getRadarData()} size={300} />
+                                        </div>
+                                        <div className="text-center mt-6">
+                                            <p className="text-gray-500 text-sm report-text">總分潛力指數</p>
+                                            <p className="text-3xl font-extrabold text-blue-600 report-text">{percentage}%</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Analysis & Advice */}
+                                    <div className="space-y-4 print-break-inside">
+                                        <h3 className="text-xl font-bold text-gray-800 report-text">各維度分析</h3>
+                                        {lupdaData.map((item) => {
+                                            const score = parseFloat(calculateDimensionScore(item.id));
+                                            return (
+                                                <div key={item.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 print-container print-break-inside report-box">
+                                                    <div className={`p-2 rounded-lg ${item.color} print:border print:border-gray-300`}>
+                                                        <item.IconComponent size={24} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="font-bold text-gray-700 report-text">{item.dimension}</span>
+                                                            <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${
+                                                                score >= 3.5 ? 'bg-green-100 text-green-700' :
+                                                                score >= 2.5 ? 'bg-blue-100 text-blue-700' :
+                                                                'bg-yellow-100 text-yellow-700'
+                                                            } print:border print:border-gray-500 report-text`}>
+                                                                {score >= 3.5 ? '表現優異' : score >= 2.5 ? '表現良好' : '待加強'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2 print:border print:border-gray-400">
+                                                            <div 
+                                                                className={`h-2 rounded-full transition-all duration-1000 ${
+                                                                    item.id === 'L' ? 'bg-blue-500' :
+                                                                    item.id === 'U' ? 'bg-purple-500' :
+                                                                    item.id === 'P' ? 'bg-orange-500' :
+                                                                    item.id === 'D' ? 'bg-pink-500' : 'bg-green-500'
+                                                                } print:bg-black`}
+                                                                style={{ width: `${(score/4)*100}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 report-text">
+                                                            得分：{score} / 4.0
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                        
+                                        <button 
+                                            onClick={resetQuiz}
+                                            className="w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 no-print"
+                                        >
+                                            <Icons.RefreshCw size={18} /> 評估下一位學生
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer - Hidden in Print */}
+                    <footer className="max-w-4xl mx-auto px-4 mt-12 text-center text-gray-400 text-sm no-print">
+                        <p>Based on the paper: "LUPDA: a Comprehensive Rubrics-based Assessment Model for STEAM Education"</p>
+                        <p>雲林縣數位學習推動辦公室</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
