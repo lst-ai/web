@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 阿婷的數位點子- 程式碼打包下載器</title>
+    <!-- 使用 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 引入較粗的字體以符合遊戲風格 */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #FFCB05; /* 經典亮黃色 */
+            /* 加入一點點復古網點背景效果 */
+            background-image: radial-gradient(#e5b704 20%, transparent 20%);
+            background-size: 20px 20px;
+        }
+
+        /* 遊戲風格的粗黑框與強烈陰影 */
+        .game-border {
+            border: 4px solid #000000;
+        }
+        .game-shadow {
+            box-shadow: 8px 8px 0px 0px #000000;
+        }
+        .game-button-shadow {
+            box-shadow: 6px 6px 0px 0px #000000;
+        }
+        .game-button-shadow:active {
+            box-shadow: 0px 0px 0px 0px #000000;
+            transform: translate(6px, 6px);
+        }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #fff; border-left: 4px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #3D7DCA; border: 2px solid #000; border-radius: 6px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4 text-black">
+
+    <!-- 主要容器 -->
+    <main class="w-full max-w-4xl bg-white rounded-2xl game-border game-shadow overflow-hidden relative">
+        
+        <!-- 頂部裝飾條 (紅色) -->
+        <div class="h-4 bg-[#CC0000] border-b-4 border-black w-full"></div>
+
+        <!-- 標題區域 -->
+        <header class="bg-[#3D7DCA] px-8 py-8 text-center border-b-4 border-black relative">
+            <div class="absolute top-6 left-6 w-4 h-4 rounded-full bg-red-500 border-2 border-black"></div>
+            <div class="absolute top-6 right-6 w-4 h-4 rounded-full bg-yellow-400 border-2 border-black"></div>
+            
+            <h1 class="text-3xl md:text-4xl font-black text-white mb-3 tracking-wide" style="text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">
+                阿婷的數位點子- 程式碼打包下載器 <span class="text-xl md:text-2xl text-yellow-300 ml-1 inline-block transform -rotate-6">2nd</span>
+            </h1>
+            <p class="text-white font-bold text-base md:text-lg bg-black/20 inline-block px-4 py-1 rounded-full border-2 border-black/30">
+                您的好幫手！把程式碼貼在下方，一鍵轉換成可立即執行的網頁檔案。
+            </p>
+        </header>
+
+        <!-- 操作區域 -->
+        <section class="p-8 space-y-8 bg-white">
+            
+            <!-- 咒語秘笈 (防呆教育) -->
+            <div class="bg-blue-50 border-4 border-[#3D7DCA] rounded-xl p-5 relative">
+                <div class="absolute -top-4 left-6 bg-[#3D7DCA] text-white px-4 py-1 rounded-full font-black game-border text-sm transform -rotate-2">
+                    💡 召喚 AI 的推薦咒語 (可複製給AI)
+                </div>
+                <p class="mt-2 text-sm md:text-base font-bold text-gray-700 leading-relaxed">
+                    為了確保檔案能 100% 順利執行，建議您在請 AI 寫程式時加上這段話：<br>
+                    <span class="inline-block mt-2 bg-white px-3 py-2 rounded border-2 border-dashed border-gray-400 text-blue-800 font-mono text-sm break-all select-all">
+                        「請給我單一檔案的 React 程式碼，使用 Tailwind CSS，<strong class="text-red-600">不要使用 shadcn/ui 或任何需要安裝的外部 UI 庫</strong>，圖示請限定使用 lucide-react。」
+                    </span>
+                </p>
+            </div>
+
+            <!-- 步驟一：貼上程式碼 -->
+            <div class="space-y-3">
+                <label for="codeInput" class="block text-xl font-black flex items-center gap-3 text-[#CC0000]">
+                    <span class="bg-[#FFCB05] text-black game-border rounded-full w-8 h-8 flex items-center justify-center text-lg">1</span>
+                    貼上 AI 生成的程式碼
+                </label>
+                <textarea id="codeInput" 
+                    class="w-full h-80 p-4 rounded-xl game-border focus:border-[#3D7DCA] focus:ring-0 focus:outline-none transition-all resize-y font-mono text-sm bg-gray-50 text-gray-800 placeholder-gray-400 font-bold" 
+                    placeholder="請將產生的程式碼直接貼到這裡...&#10;&#10;✨ 系統會自動清理多餘符號、解析環境並處理！"></textarea>
+            </div>
+
+            <!-- 步驟二：設定檔名 -->
+            <div class="space-y-3">
+                <label for="filenameInput" class="block text-xl font-black flex items-center gap-3 text-[#3D7DCA]">
+                    <span class="bg-[#FFCB05] text-black game-border rounded-full w-8 h-8 flex items-center justify-center text-lg">2</span>
+                    為您的檔案命名
+                </label>
+                <div class="flex items-center">
+                    <input type="text" id="filenameInput" 
+                        class="flex-1 max-w-xs px-4 py-3 rounded-l-xl border-y-4 border-l-4 border-black focus:bg-yellow-50 focus:outline-none text-black font-bold placeholder-gray-400 transition-colors" 
+                        placeholder="請輸入新檔名" value="game">
+                    <div class="px-4 py-3 bg-gray-200 border-y-4 border-r-4 border-black rounded-r-xl text-black font-black font-mono">
+                        .html
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步驟三：打包下載 -->
+            <div class="pt-8 flex flex-col items-center justify-center relative">
+                <!-- 置中顯眼的防呆提醒 -->
+                <div class="mb-5">
+                    <p id="nameWarning" class="inline-block bg-red-100 text-[#CC0000] font-black px-6 py-2 rounded-full border-2 border-[#CC0000] text-sm md:text-base animate-bounce shadow-md">
+                        記得修改預設的檔名才能下載喔！
+                    </p>
+                </div>
+
+                <button onclick="handlePackageAndDownload()" 
+                    class="group relative inline-flex items-center justify-center gap-3 px-12 py-5 bg-[#CC0000] text-white text-2xl font-black rounded-2xl game-border game-button-shadow transition-all w-full md:w-auto hover:bg-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-12 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    一鍵打包並下載
+                </button>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- 底部版權/說明 -->
+    <footer class="mt-10 mb-10 text-center space-y-3">
+        <p class="text-black font-bold bg-white/90 inline-block px-4 py-2 rounded-lg game-border text-sm md:text-base">
+            💡 100% 安全提示：本工具純前端運行，您的程式碼不會上傳到任何伺服器。
+        </p>
+        <p class="text-black font-black text-base md:text-xl block mt-2" style="text-shadow: 2px 2px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 1px 1px 0px #fff;">
+            阿婷的數位點子｜陪你一起快樂學習｜呂舒婷設計
+        </p>
+    </footer>
+
+    <!-- 自訂提示訊息框 (置中彈跳視窗) -->
+    <div id="toast-wrapper" class="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none transition-all duration-300 opacity-0 bg-black/20 backdrop-blur-sm">
+        <div id="toast" class="px-8 py-6 bg-white game-border shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-black font-black flex flex-col md:flex-row items-center gap-4 rounded-2xl transform scale-90 transition-transform duration-300 max-w-sm md:max-w-md w-11/12">
+            <span id="toastIcon" class="flex items-center justify-center w-12 h-12 rounded-full game-border shrink-0"></span>
+            <span id="toastMessage" class="text-xl md:text-2xl text-center md:text-left"></span>
+        </div>
+    </div>
+
+    <script>
+        // 顯示提示訊息的函式
+        function showToast(message, type = 'success') {
+            const toastWrapper = document.getElementById('toast-wrapper');
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            
+            if (type === 'success') {
+                toastIcon.className = 'flex items-center justify-center w-12 h-12 rounded-full game-border bg-green-400 text-black shrink-0';
+                toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            } else {
+                toastIcon.className = 'flex items-center justify-center w-12 h-12 rounded-full game-border bg-red-500 text-white shrink-0';
+                toastIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+            }
+
+            toastWrapper.classList.remove('opacity-0', 'pointer-events-none');
+            toastWrapper.classList.add('opacity-100');
+            toast.classList.remove('scale-90');
+            toast.classList.add('scale-100');
+
+            setTimeout(() => {
+                toastWrapper.classList.remove('opacity-100');
+                toastWrapper.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.remove('scale-100');
+                toast.classList.add('scale-90');
+            }, 3000);
+        }
+
+        // 核心打包邏輯 (防彈升級版)
+        function handlePackageAndDownload() {
+            let rawCode = document.getElementById('codeInput').value.trim();
+            let rawFilename = document.getElementById('filenameInput').value.trim();
+            const nameWarning = document.getElementById('nameWarning');
+            
+            // 防呆 1：是否為空
+            if (!rawCode) {
+                showToast('請先貼上程式碼喔！', 'error');
+                document.getElementById('codeInput').focus();
+                return;
+            }
+
+            // 防呆 2：檔名是否修改
+            if (rawFilename === 'game' || rawFilename === '') {
+                showToast('請為檔案輸入一個新的名稱！', 'error');
+                const inputEl = document.getElementById('filenameInput');
+                inputEl.classList.add('bg-red-100');
+                
+                nameWarning.classList.remove('animate-bounce');
+                nameWarning.classList.add('bg-red-500', 'text-white');
+                setTimeout(() => {
+                    inputEl.classList.remove('bg-red-100');
+                    nameWarning.classList.remove('bg-red-500', 'text-white');
+                    nameWarning.classList.add('animate-bounce');
+                }, 1500);
+                
+                inputEl.focus();
+                return;
+            }
+
+            let filename = rawFilename;
+            if (!filename.toLowerCase().endsWith('.html')) filename += '.html';
+
+            // 深度清理 Markdown 標籤 (支援 ```html, ```javascript, ```jsx 等各種格式)
+            rawCode = rawCode.replace(/^```[a-zA-Z]*\n?/gm, '').replace(/```$/gm, '').trim();
+
+            let finalHtmlContent = '';
+            
+            // 判斷是否為純 HTML 檔 (包含基本的 html 或 DOCTYPE 標籤)
+            const isFullHtml = /<\s*html/i.test(rawCode) || /<!DOCTYPE\s+html>/i.test(rawCode);
+
+            if (isFullHtml) {
+                finalHtmlContent = rawCode;
+            } else {
+                // ==========================================
+                // React / JSX 處理邏輯
+                // ==========================================
+                
+                // 1. 強健提取 lucide-react Icons (支援多行提取與 as 別名寫法)
+                let lucideIcons = [];
+                const lucideMatch = rawCode.match(/import\s+\{([\s\S]*?)\}\s+from\s+['"]lucide-react['"]/);
+                if (lucideMatch) {
+                    const rawItems = lucideMatch[1].split(',');
+                    rawItems.forEach(item => {
+                        let cleanItem = item.trim();
+                        if (!cleanItem || cleanItem.startsWith('//')) return;
+                        // 處理 alias (e.g., Activity as ActivityIcon)
+                        if (cleanItem.includes(' as ')) {
+                            cleanItem = cleanItem.split(' as ')[1].trim();
+                        }
+                        lucideIcons.push(cleanItem);
+                    });
+                }
+                
+                const iconMocks = lucideIcons.map(icon => 
+                    `const ${icon} = ({ size=24, className='', color='currentColor', strokeWidth=2, ...props }) => (<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>);`
+                ).join('\n');
+
+                // 2. 智慧尋找主元件名稱 (支援 export default / export const 等各種寫法)
+                let componentName = "App";
+                const defaultExportMatch = rawCode.match(/export\s+default\s+(?:function\s+)?([A-Za-z0-9_]+)/);
+                if (defaultExportMatch && defaultExportMatch[1]) {
+                    componentName = defaultExportMatch[1];
+                } else {
+                    const fallbackMatch = rawCode.match(/(?:const|function|let|var)\s+([A-Z][A-Za-z0-9_]*)/);
+                    if (fallbackMatch && fallbackMatch[1]) componentName = fallbackMatch[1];
+                }
+
+                // 3. 處理 AI 常用的進階視覺庫 (Recharts 繪圖庫 / Framer Motion 動畫庫)
+                let extraCdnScripts = "";
+                let extraDestructuring = "";
+                
+                if (/recharts/i.test(rawCode)) {
+                    extraCdnScripts += `<script src="https://unpkg.com/recharts/umd/Recharts.js"><\/script>\n`;
+                    extraDestructuring += `const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, ResponsiveContainer } = window.Recharts;\n`;
+                }
+                if (/framer-motion/i.test(rawCode)) {
+                    extraCdnScripts += `<script src="https://unpkg.com/framer-motion/dist/framer-motion.js"><\/script>\n`;
+                    extraDestructuring += `const { motion, AnimatePresence } = window.Motion || {};\n`;
+                }
+
+                // 4. 徹底清理不支援的 import/export 語法
+                let cleanedCode = rawCode
+                    .replace(/import\s+React[\s\S]*?from\s+['"][^'"]+['"];?/g, '') // 移除 import React
+                    .replace(/import\s+\{[\s\S]*?\}\s+from\s+['"][^'"]+['"];?/g, '') // 移除多行 import {...}
+                    .replace(/import\s+[^{]+?\s+from\s+['"][^'"]+['"];?/g, '') // 移除 import X from 'Y'
+                    .replace(/import\s+['"][^'"]+['"];?/g, '') // 移除 import 'style.css'
+                    .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'function $1') // 清理 export default function
+                    .replace(/export\s+default\s+([A-Za-z0-9_]+);?/g, '') // 清理 export default App;
+                    .replace(/export\s+(const|let|var|function|class)/g, '$1'); // 清理其餘 export
+
+                // 5. 組裝最強防彈 HTML 環境
+                finalHtmlContent = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${filename.replace('.html', '')}</title>
+    
+    <!-- 基礎套件：Tailwind, React, Babel -->
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin><\/script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin><\/script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+    
+    <!-- 自動掛載 AI 常用的進階套件 -->
+    ${extraCdnScripts}
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+        #root { min-height: 100vh; display: flex; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react,env">
+        // 核心 React Hooks 解構
+        const { useState, useEffect, useRef, useMemo, useCallback, useReducer, useContext } = React;
+        
+        // 進階套件解構區
+        ${extraDestructuring}
+
+        // --- Icon 佔位防呆區 ---
+        ${iconMocks}
+
+        // =====================================
+        // === 用戶 AI 程式碼開始 ===
+        // =====================================
+        ${cleanedCode}
+        // =====================================
+        // === 用戶 AI 程式碼結束 ===
+        // =====================================
+
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            const ComponentToRender = typeof ${componentName} !== 'undefined' ? ${componentName} : (typeof App !== 'undefined' ? App : null);
+            
+            if (ComponentToRender) {
+                root.render(<ComponentToRender />);
+            } else {
+                root.render(
+                    <div className="p-8 max-w-md mx-auto mt-10 bg-red-50 text-red-600 rounded-2xl border-2 border-red-200 shadow-lg">
+                        <h2 className="text-2xl font-black mb-3 text-red-700">⚠️ 渲染失敗</h2>
+                        <p className="font-bold">系統找不到名為 <strong>${componentName}</strong> 或 <strong>App</strong> 的主要元件。</p>
+                        <p className="mt-2 text-sm text-gray-600">💡 建議檢查程式碼結尾是否有 <code>export default App;</code> 或主要的元件名稱是否有誤。</p>
+                    </div>
+                );
+            }
+        } catch (error) {
+            console.error("React 渲染錯誤：", error);
+            document.getElementById('root').innerHTML = 
+                '<div style="max-w: 600px; margin: 40px auto; padding: 20px; border: 4px solid #CC0000; border-radius: 16px; background: #fff5f5; font-family: sans-serif;">' +
+                '<h2 style="color: #CC0000; margin-top: 0; font-weight: 900;">程式碼有錯誤無法執行 🚨</h2>' +
+                '<p style="font-weight: bold; color: #333;">錯誤訊息：' + error.message + '</p>' +
+                '<p style="color: #666; font-size: 14px;">💡 可能原因：AI 給予的程式碼使用了此工具不支援的外部函式庫（如 shadcn/ui），建議參考打包工具上的「咒語秘笈」重新請 AI 產生程式碼。</p>' +
+                '</div>';
+        }
+    <\/script>
+</body>
+</html>`;
+            }
+
+            // 執行下載
+            try {
+                const blob = new Blob([finalHtmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                
+                document.body.appendChild(a);
+                a.click();
+                
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast(`🎉 太棒了！檔案已成功下載為 ${filename}`);
+            } catch (err) {
+                console.error(err);
+                showToast('下載失敗，請重試。', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
