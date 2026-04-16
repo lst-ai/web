@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲林數辦AI應用 x 文本分頁工具</title>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 配置 Tailwind 自定義顏色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            600: '#2563eb', 
+                            700: '#1d4ed8', 
+                            800: '#1e40af', 
+                        },
+                        accent: {
+                            500: '#f97316', 
+                            600: '#ea580c', 
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 自定義 CSS -->
+    <style>
+        html {
+            font-size: 20px; 
+        }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+      }
+    }
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+
+        // --- 圖標元件 ---
+        const IconSparkles = () => (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+        );
+
+        const IconLightBulb = () => (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        );
+
+        const IconEdit = () => (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        );
+
+        const IconSave = () => (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        );
+
+        const IconCopy = () => (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+        );
+
+        const IconCheck = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+        );
+
+        const IconChevronDown = () => (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+        );
+
+        // --- 邏輯輔助函數 ---
+
+        function toChineseNum(num) {
+            const digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+            if (num < 10) return digits[num];
+            if (num === 10) return '十';
+            if (num < 20) return '十' + digits[num % 10];
+            const ten = Math.floor(num / 10);
+            const unit = num % 10;
+            return digits[ten] + '十' + (unit === 0 ? '' : digits[unit]);
+        }
+
+        function smartSplit(content) {
+            const chunks = [];
+            let current = "";
+            let inQuote = false;
+            
+            for (let i = 0; i < content.length; i++) {
+                const char = content[i];
+                current += char;
+                if (['「', '『', '“'].includes(char)) inQuote = true;
+                if (['」', '』', '”'].includes(char)) inQuote = false;
+
+                const isPunctuation = /[，。！？!?：:；;]/.test(char);
+                const isClosingQuote = /[」』”’]/.test(char);
+                
+                if (isPunctuation || isClosingQuote) {
+                    const nextChar = content[i+1];
+                    if (nextChar && /[」』”’]/.test(nextChar)) continue;
+                    if (inQuote && current.length < 25 && !isClosingQuote) continue;
+                    chunks.push(current);
+                    current = "";
+                }
+            }
+            if (current) chunks.push(current);
+            return chunks.filter(c => c.trim().length > 0);
+        }
+
+        function generateSmartPrompt(title, rawContent, pageCount, style) {
+            if (!rawContent) return "";
+            let content = rawContent.trim();
+            let goldenSentence = "";
+
+            const goldenRegex = /(品德金句|金句|總結)[：:]\s*(.*)$/;
+            const match = content.match(goldenRegex);
+            if (match) {
+                goldenSentence = match[0].trim(); 
+                content = content.replace(goldenRegex, "").trim();
+            }
+
+            const chunks = smartSplit(content);
+            const totalLength = content.length;
+            const totalPages = pageCount;
+            const pagesForStory = goldenSentence ? totalPages - 1 : totalPages;
+            
+            let output = `請將內容分成${toChineseNum(totalPages)}頁生成，以${style || '可愛繪本'}風格繪製，文字要一字不漏的呈現。\n\n`;
+            output += `繪本名稱：${title || '自訂故事'}\n\n`;
+            output += `課文內容:\n\n`;
+
+            let currentChunkIndex = 0;
+            let remainingTextLength = totalLength;
+
+            for (let i = 0; i < pagesForStory; i++) {
+                const pageNum = i + 1;
+                const chineseNum = toChineseNum(pageNum);
+                const remainingPages = pagesForStory - i;
+                const targetLength = remainingTextLength / remainingPages;
+                
+                let currentContent = "";
+                let currentLength = 0;
+
+                while (currentChunkIndex < chunks.length) {
+                    const nextChunk = chunks[currentChunkIndex];
+                    const nextLen = nextChunk.length;
+                    const distWithout = Math.abs(currentLength - targetLength);
+                    const distWith = Math.abs((currentLength + nextLen) - targetLength);
+
+                    if (currentLength >= targetLength) break;
+                    
+                    const endsWithStrongPunct = /[。！？!?]/.test(currentContent);
+                    if (endsWithStrongPunct && currentLength > (targetLength * 0.85) && remainingPages > 1) {
+                         if (distWith < distWithout) {} else { break; }
+                    }
+
+                    if (remainingPages > 1 && currentLength + nextLen > targetLength * 1.4) break;
+
+                    currentContent += nextChunk;
+                    currentLength += nextLen;
+                    currentChunkIndex++;
+                }
+
+                remainingTextLength -= currentLength;
+                if (!currentContent && currentChunkIndex < chunks.length) {
+                    currentContent = chunks[currentChunkIndex];
+                    currentChunkIndex++;
+                } else if (!currentContent) {
+                    currentContent = "(請延續上文情境繪製插圖)";
+                }
+                output += `第${chineseNum}頁：${currentContent}\n\n`;
+            }
+
+            if (goldenSentence) {
+                const chineseNum = toChineseNum(totalPages);
+                output += `第${chineseNum}頁：${goldenSentence}\n`;
+            }
+
+            return output;
+        }
+
+        const TITLE_INSPIRATIONS = [
+            { label: "公式：[角色]的[形容詞][名詞]", examples: ["小兔子的神奇寶盒", "小星的奇幻冒險", "大象的秘密森林"] },
+            { label: "公式：[品質/情緒]的[角色]", examples: ["勇敢的小老鼠", "誠實的小刺蝟", "愛幫忙的長頸鹿"] },
+            { label: "公式：當[角色]遇到了[事件]", examples: ["當小明弄丟了筆", "當小花遇到大巨人", "當小黑狗不想洗澡"] },
+            { label: "公式：[動詞]吧！[角色]", examples: ["奔跑吧！機器人", "飛翔吧！小小鳥", "微笑吧！雲朵先生"] }
+        ];
+
+        // --- 元件 ---
+
+        const StepHeader = ({ step, title }) => (
+            <div className="flex items-center mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-accent-500 text-white flex items-center justify-center text-xl font-bold shadow-md mr-3">
+                    {step}
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+            </div>
+        );
+
+        const App = () => {
+            const [style, setStyle] = useState('');
+            const [storyTitle, setStoryTitle] = useState('');
+            const [storyContent, setStoryContent] = useState('');
+            const [pageCount, setPageCount] = useState(12);
+            const [promptOutput, setPromptOutput] = useState('');
+            const [isEditing, setIsEditing] = useState(false);
+            const [isCopied, setIsCopied] = useState(false);
+            const [showInspiration, setShowInspiration] = useState(false);
+            const promptRef = useRef(null);
+
+            useEffect(() => {
+                if (storyContent && !isEditing) {
+                    const prompt = generateSmartPrompt(storyTitle, storyContent, pageCount, style);
+                    setPromptOutput(prompt);
+                }
+            }, [storyTitle, storyContent, style, pageCount, isEditing]);
+
+            const handleCopy = () => {
+                if (!promptOutput) return;
+                const textArea = document.createElement("textarea");
+                textArea.value = promptOutput;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 3000);
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            const toggleEdit = () => {
+                setIsEditing(!isEditing);
+                if (!isEditing) setTimeout(() => promptRef.current?.focus(), 50);
+            };
+
+            return (
+                <div className="flex flex-col min-h-screen bg-slate-50">
+                    {/* 頁首 */}
+                    <header className="bg-gradient-to-r from-primary-800 to-primary-600 shadow-lg sticky top-0 z-50">
+                        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <IconSparkles />
+                                <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
+                                    雲林數辦AI應用
+                                    <span className="text-primary-200 text-lg md:text-xl font-normal ml-3">| 文本分頁工具</span>
+                                </h1>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* 主要內容 */}
+                    <main className="flex-grow w-full max-w-7xl mx-auto px-6 py-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            
+                            {/* 左側控制欄 */}
+                            <div className="lg:col-span-5 space-y-6">
+                                
+                                {/* 步驟 1: 風格 */}
+                                <div className="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+                                    <StepHeader step={1} title="選擇繪本風格" />
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full bg-slate-50 border border-slate-300 text-gray-700 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-600 appearance-none cursor-pointer"
+                                            value={style}
+                                            onChange={(e) => setStyle(e.target.value)}
+                                        >
+                                            <option value="" disabled>請選擇一種風格...</option>
+                                            <optgroup label="A. 動畫與卡通風">
+                                                <option value="迪士尼皮克斯風 (Disney Pixar Style)">1. 迪士尼皮克斯風</option>
+                                                <option value="吉卜力宮崎駿風 (Studio Ghibli Style)">2. 吉卜力宮崎駿風</option>
+                                                <option value="日系少年動漫風 (Shonen Anime Style)">3. 日系少年動漫風</option>
+                                                <option value="美式超級英雄漫畫風 (American Comic Style)">4. 美式超級英雄漫畫風</option>
+                                                <option value="Q版可愛風 (Chibi Style)">5. Q版可愛風</option>
+                                                <option value="探險活寶風 (Adventure Time Style)">6. 探險活寶風</option>
+                                            </optgroup>
+                                            <optgroup label="B. 手工與材質風">
+                                                <option value="3D 黏土定格動畫風 (Claymation Style)">7. 3D 黏土定格動畫風</option>
+                                                <option value="剪紙藝術風 (Paper Cutout Art Style)">8. 剪紙藝術風</option>
+                                                <option value="羊毛氈質感風 (Wool Texture Style)">9. 羊毛氈質感風</option>
+                                                <option value="樂高積木風 (Lego Style)">10. 樂高積木風</option>
+                                                <option value="摺紙藝術風 (Origami Style)">11. 摺紙藝術風</option>
+                                                <option value="像素遊戲風 (Pixel Art Style)">12. 像素遊戲風</option>
+                                            </optgroup>
+                                            <optgroup label="C. 繪畫藝術風">
+                                                <option value="水彩畫風 (Watercolor Style)">13. 水彩畫風</option>
+                                                <option value="蠟筆塗鴉風 (Crayon Drawing Style)">14. 蠟筆塗鴉風</option>
+                                                <option value="粉筆黑板畫風 (Chalkboard Art Style)">15. 粉筆黑板畫風</option>
+                                                <option value="油畫風 (Oil Painting Style)">16. 油畫風</option>
+                                                <option value="水墨畫風 (Chinese Ink Wash Style)">17. 水墨畫風</option>
+                                                <option value="素描手繪風 (Pencil Sketch Style)">18. 素描手繪風</option>
+                                            </optgroup>
+                                            <optgroup label="D. 現代與設計風">
+                                                <option value="扁平化設計風 (Flat Design Style)">19. 扁平化設計風</option>
+                                                <option value="賽博龐克風 (Cyberpunk Style)">20. 賽博龐克風</option>
+                                                <option value="3D 低多邊形風 (Low Poly Style)">21. 3D 低多邊形風</option>
+                                                <option value="波普藝術風 (Pop Art Style)">22. 波普藝術風</option>
+                                                <option value="向量插畫風 (Vector Illustration)">23. 向量插畫風</option>
+                                                <option value="蒸汽龐克風 (Steampunk)">24. 蒸汽龐克風</option>
+                                            </optgroup>
+                                            <optgroup label="E. 特殊與創意風">
+                                                <option value="貼紙拼貼風 (Sticker Art Style)">25. 貼紙拼貼風</option>
+                                                <option value="浮世繪風 (Ukiyo-e Style)">26. 浮世繪風</option>
+                                                <option value="拼貼藝術風 (Collage Art Style)">27. 拼貼藝術風</option>
+                                                <option value="微縮模型攝影風 (Miniature Photography)">28. 微縮模型攝影風</option>
+                                                <option value="韋斯·安德森風 (Wes Anderson Style)">29. 韋斯·安德森風</option>
+                                                <option value="復古 80 年代城市風 (City Pop Style)">30. 復古 80 年代城市風</option>
+                                            </optgroup>
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                                            <IconChevronDown />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 步驟 2: 內容與標題助手 */}
+                                <div className="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+                                    <StepHeader step={2} title="設定繪本標題與文本" />
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <input 
+                                                type="text" 
+                                                placeholder="請輸入繪本標題..."
+                                                className="w-full bg-slate-50 border border-slate-300 text-gray-700 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-600 transition-all"
+                                                value={storyTitle}
+                                                onChange={(e) => setStoryTitle(e.target.value)}
+                                            />
+                                            <button 
+                                                onClick={() => setShowInspiration(!showInspiration)}
+                                                className="mt-2 text-xs text-indigo-600 font-medium flex items-center hover:text-indigo-800 transition-colors"
+                                            >
+                                                <IconLightBulb /> {showInspiration ? "隱藏標題靈感" : "需要標題靈感？"}
+                                            </button>
+
+                                            {showInspiration && (
+                                                <div className="mt-3 bg-indigo-50 rounded-xl p-4 border border-indigo-100 text-sm animate-fade-in space-y-3">
+                                                    {TITLE_INSPIRATIONS.map((item, idx) => (
+                                                        <div key={idx} className="border-b border-indigo-200 pb-2 last:border-0">
+                                                            <p className="font-bold text-indigo-800 mb-1">{item.label}</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {item.examples.map((ex, exIdx) => (
+                                                                    <button 
+                                                                        key={exIdx} 
+                                                                        onClick={() => {setStoryTitle(ex); setShowInspiration(false);}}
+                                                                        className="bg-white px-2 py-1 rounded border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all text-[11px]"
+                                                                    >
+                                                                        {ex}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <textarea 
+                                            placeholder="請貼上您要分頁的文本內容... (例如：故事、課文)"
+                                            className="w-full h-48 bg-slate-50 border border-slate-300 text-gray-700 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-600 resize-none transition-all"
+                                            value={storyContent}
+                                            onChange={(e) => setStoryContent(e.target.value)}
+                                        ></textarea>
+                                    </div>
+                                </div>
+
+                                {/* 步驟 3: 頁數 */}
+                                <div className="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+                                    <StepHeader step={3} title="設定頁數" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex gap-2">
+                                            {[8, 10, 12, 13].map((p) => (
+                                                <button 
+                                                    key={p}
+                                                    onClick={() => setPageCount(p)}
+                                                    className={`py-2 px-4 rounded-lg border transition-all text-sm font-bold ${
+                                                        pageCount === p 
+                                                        ? 'bg-accent-500 text-white border-accent-600 shadow-inner' 
+                                                        : 'bg-white text-slate-600 border-slate-200 hover:border-accent-400'
+                                                    }`}
+                                                >
+                                                    {p}頁
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="flex-grow flex items-center bg-slate-50 rounded-lg border border-slate-200 px-3">
+                                            <span className="text-slate-400 text-sm mr-2">自訂:</span>
+                                            <input 
+                                                type="number" 
+                                                className="w-full bg-transparent border-none py-2 text-center font-bold text-primary-700 focus:ring-0"
+                                                value={pageCount}
+                                                onChange={(e) => setPageCount(Number(e.target.value) || 1)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {/* 右側預覽區 */}
+                            <div className="lg:col-span-7 flex flex-col">
+                                <div className="bg-white rounded-2xl shadow-xl border border-slate-200 flex flex-col h-full overflow-hidden">
+                                    <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                                        <div className="flex items-center">
+                                            <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center text-xl font-bold shadow-sm mr-3">
+                                                4
+                                            </div>
+                                            <h2 className="text-xl font-bold text-gray-800">提示詞預覽</h2>
+                                        </div>
+                                        <button onClick={toggleEdit} className="text-slate-400 hover:text-primary-600 p-2 rounded-full transition-all">
+                                            {isEditing ? <IconSave /> : <IconEdit />}
+                                        </button>
+                                    </div>
+
+                                    <div className="flex-grow p-4 min-h-[500px]">
+                                        <textarea 
+                                            ref={promptRef}
+                                            value={promptOutput}
+                                            onChange={(e) => setPromptOutput(e.target.value)}
+                                            readOnly={!isEditing}
+                                            className={`w-full h-full p-6 text-base leading-relaxed resize-none focus:outline-none rounded-xl border font-mono ${
+                                                isEditing ? 'bg-white ring-2 ring-primary-600 border-transparent' : 'bg-slate-50/50 border-slate-100'
+                                            }`}
+                                            placeholder="填寫 Step 2 的內容後，分頁提示詞將自動生成於此..."
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="p-4 bg-slate-50 border-t border-slate-200">
+                                        <button 
+                                            onClick={handleCopy}
+                                            className={`w-full text-white font-bold text-lg py-4 rounded-xl shadow-lg transition-all flex justify-center items-center active:scale-[0.98] ${
+                                                isCopied ? 'bg-green-600' : 'bg-primary-600 hover:bg-primary-700'
+                                            }`}
+                                        >
+                                            {isCopied ? <><IconCheck /><span className="ml-2">已複製</span></> : <><IconCopy />複製完整提示詞</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    {/* 頁尾 */}
+                    <footer className="bg-slate-800 text-slate-300 py-6 mt-12 border-t-4 border-accent-500">
+                        <div className="max-w-7xl mx-auto px-6 text-center">
+                            <p className="text-xs font-medium">阿婷的數位點子｜陪你一起快樂學習｜呂舒婷設計</p>
+                            <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-widest">© 2026 Yunlin Digital Learning - AI Picture Book Creation Tool</p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
